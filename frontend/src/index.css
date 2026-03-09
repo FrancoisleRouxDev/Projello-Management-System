@@ -1,3 +1,92 @@
+:root {
+  color-scheme: light dark;
+  --background: #28332B;
+  --accent-1: #A6AB8D;
+  --accent-2: #28332B;
+  --accent-3: #E0C05D;
+  --accent-2-10_Opacity: rgba(40, 51, 43, 0.1);
+  --accent-2-40_Opacity: rgba(40, 51, 43, 0.4);
+  --success-green: #BDD04E;
+  --error-red: #C34949;
+  --warning-yellow: #DEAB3D;
+  --info-blue: #49B7C3;
+  --shadow-gray: #E5E5E2;
+  --text-light: #F7F7F3;
+  --text-dark: #28332B;
+  --secondary-background: #F7F7F3;
+  --white: #FFFFFF;
+  --black: #000000;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #141A16;
+    --accent-1: #A6AB8D;
+    --accent-2: #F7F7F3;
+    --accent-3: #E0C05D;
+    --accent-2-10_Opacity: rgba(247, 247, 243, 0.1);
+    --accent-2-40_Opacity: rgba(247, 247, 243, 0.4);
+    --success-green: #BDD04E;
+    --error-red: #C34949;
+    --warning-yellow: #DEAB3D;
+    --info-blue: #49B7C3;
+    --shadow-gray: #1A1A19;
+    --text-light: #28332B;
+    --text-dark: #F7F7F3;
+    --secondary-background: #28332B;
+    --white: #FFFFFF;
+    --black: #000000;
+  }
+}
+
+title{
+  font-family: 'Roboto', sans-serif;
+  font-size: 8rem;
+  font-weight: 900;
+  letter-spacing: 0.1rem;
+  color: var(--text-light);
+}
+
+h1 {
+  font-family: 'Roboto', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--text-dark);
+}
+
+h2{
+  font-family: 'Roboto', sans-serif;
+  font-size: 2rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  color: var(--text-dark);
+}
+
+h3 {
+  font-family: 'Roboto', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+  color: var(--text-dark);
+}
+
+h4 {
+  font-family: 'Roboto', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin-bottom: 0.25rem;
+  color: var(--text-dark);
+}
+
+h5{
+  font-family: 'Roboto', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 400;
+  margin-bottom: 0.25rem;
+  color: var(--text-dark);
+}
+
 body {
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
@@ -5,4 +94,6 @@ body {
   margin: auto;
   max-width: 38rem;
   padding: 2rem;
+  background-color: var(--background);
+  color: var(--text-dark);
 }

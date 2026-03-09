@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\24107\\Desktop\\Projello-Management-System\\backend\\Projello.Api\\Projello.Api.csproj": {}
+    "C:\\Users\\poals\\Documents\\Web Apps\\Projello-Management-System\\backend\\Projello.Api\\Projello.Api.csproj": {}
   },
   "projects": {
-    "C:\\Users\\24107\\Desktop\\Projello-Management-System\\backend\\Projello.Api\\Projello.Api.csproj": {
+    "C:\\Users\\poals\\Documents\\Web Apps\\Projello-Management-System\\backend\\Projello.Api\\Projello.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\24107\\Desktop\\Projello-Management-System\\backend\\Projello.Api\\Projello.Api.csproj",
+        "projectUniqueName": "C:\\Users\\poals\\Documents\\Web Apps\\Projello-Management-System\\backend\\Projello.Api\\Projello.Api.csproj",
         "projectName": "Projello.Api",
-        "projectPath": "C:\\Users\\24107\\Desktop\\Projello-Management-System\\backend\\Projello.Api\\Projello.Api.csproj",
-        "packagesPath": "C:\\Users\\24107\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\24107\\Desktop\\Projello-Management-System\\backend\\Projello.Api\\obj\\",
+        "projectPath": "C:\\Users\\poals\\Documents\\Web Apps\\Projello-Management-System\\backend\\Projello.Api\\Projello.Api.csproj",
+        "packagesPath": "C:\\Users\\poals\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\poals\\Documents\\Web Apps\\Projello-Management-System\\backend\\Projello.Api\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\24107\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\poals\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
