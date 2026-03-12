@@ -4,6 +4,7 @@ namespace Projello.Api.Models;
 
 public class ProgressUpdate
 {
+    [Key]
     public int UpdateID { get; set; }
 
     [Required]

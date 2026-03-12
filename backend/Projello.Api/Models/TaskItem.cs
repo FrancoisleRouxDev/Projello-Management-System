@@ -4,6 +4,7 @@ namespace Projello.Api.Models;
 
 public class TaskItem
 {
+    [Key]
     public int TaskID { get; set; }
 
     [Required]
