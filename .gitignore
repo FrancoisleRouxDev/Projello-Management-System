@@ -1,6 +1,16 @@
-*.json
+# Sensitive config
+appsettings.Development.json
+
+# Build outputs
 *.dll
-*.json
 *.cache
 *.props
-backend/Projello.Api/bin/Debug/net10.0/Projello.Api.exe
+bin/
+obj/
+
+# Docker
+.env
+
+# VS stuff
+.vs/
+*.user
