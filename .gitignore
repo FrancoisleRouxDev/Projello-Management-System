@@ -3,3 +3,4 @@
 *.json
 *.cache
 *.props
+backend/Projello.Api/bin/Debug/net10.0/Projello.Api.exe
