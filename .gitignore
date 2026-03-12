@@ -1,5 +1,16 @@
-*.json
+# Sensitive config
+appsettings.Development.json
+
+# Build outputs
 *.dll
-*.json
 *.cache
 *.props
+bin/
+obj/
+
+# Docker
+.env
+
+# VS stuff
+.vs/
+*.user
