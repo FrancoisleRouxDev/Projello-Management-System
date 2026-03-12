@@ -1,5 +1,6 @@
 # Sensitive config
 appsettings.Development.json
+appsettings.json
 
 # Build outputs
 *.dll
@@ -14,3 +15,5 @@ obj/
 # VS stuff
 .vs/
 *.user
+backend/Projello.Api/appsettings.json
+*.json

@@ -1,28 +1,31 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Projello.Api.Models;
 
 public class TaskItem
 {
-    [Key]
-    public int TaskId { get; set; }
+    public int TaskID { get; set; }
 
     [Required]
-    public int MilestoneId { get; set; }
-
-    [ForeignKey(nameof(MilestoneId))]
-    public Milestone? Milestone { get; set; }
+    public int MilestoneID { get; set; }
 
     [Required]
-    [StringLength(255)]
-    public string Title { get; set; } = string.Empty;
+    [MaxLength(255)]
+    public string Title { get; set; } = null!;
 
     public string? Description { get; set; }
+    public string? AssignedToUserID { get; set; }
+    public DateOnly? DueDate { get; set; }
 
-    public int? AssignedToUserId { get; set; }
+    [MaxLength(20)]
+    public string Status { get; set; } = "NotStarted";
 
-    public string Status { get; set; } = "Pending";
+    [MaxLength(10)]
+    public string Priority { get; set; } = "Medium";
 
-    public string Priority { get; set; } = "Normal";
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public Milestone Milestone { get; set; } = null!;
+    public User? AssignedTo { get; set; }
+    public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
 }
