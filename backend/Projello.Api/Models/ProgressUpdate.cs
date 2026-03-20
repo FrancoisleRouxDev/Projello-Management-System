@@ -22,3 +22,5 @@ public class ProgressUpdate
     public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
     public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
 }
+
+//test
