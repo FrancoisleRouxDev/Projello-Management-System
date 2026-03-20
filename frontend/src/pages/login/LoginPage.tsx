@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import Logo from "../../assets/Frame 106.svg";
+import backgroundImg from "../../assets/pexels-pixabay-416405.jpg";
+import backgroundSvg from "../../assets/LoginSignupBackground.svg";
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
