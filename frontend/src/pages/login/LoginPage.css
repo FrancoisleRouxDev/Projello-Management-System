@@ -39,15 +39,23 @@
   margin-bottom: 8px;
 }
 .login-input {
-  background-color: #e0e0da;
+  border-radius: 1000px;
+  background: var(--Shadow-Gray, #e5e5e2);
+  box-shadow:
+    0 -2px 4px 0 rgba(249, 251, 236, 0.25) inset,
+    0 2px 4px 0 rgba(0, 0, 0, 0.25) inset;
   border: none;
-  border-radius: 50px;
   padding: 16px 24px;
   font-size: 15px;
   color: #444;
   outline: none;
   width: 100%;
   box-sizing: border-box;
+  transition: background 0.3s ease-in-out;
+}
+.login-input:focus,
+.login-input:active {
+  background: #dddddd;
 }
 .login-signup-text {
   text-align: center;
@@ -65,27 +73,45 @@
   gap: 12px;
   margin-top: 8px;
 }
+/* Cancel and submit button base styles */
 .login-cancel-btn {
   flex: 1;
   padding: 14px;
-  border-radius: 50px;
+  border-radius: 1000px;
   border: none;
-  background-color: #a6ab8d;
+  background: #aaaba4;
+  box-shadow: 0 4px 0 0 rgba(40, 51, 43, 0.5);
   color: #fff;
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
+  transition:
+    box-shadow 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
+}
+.login-cancel-btn:active {
+  box-shadow: 0 4px 0 0 rgba(40, 51, 43, 0.5) inset;
+  transform: translateY(4px);
 }
 .login-submit-btn {
   flex: 1;
   padding: 14px;
-  border-radius: 50px;
+  border-radius: 1000px;
   border: none;
-  background-color: #4a5e4a;
+  background: #a6ab8d;
+  box-shadow: 0 4px 0 0 rgba(40, 51, 43, 0.5);
   color: #fff;
   font-weight: 700;
   font-size: 15px;
   cursor: pointer;
+  transition:
+    box-shadow 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
+}
+
+.login-submit-btn:active {
+  box-shadow: 0 4px 0 0 rgba(40, 51, 43, 0.5) inset;
+  transform: translateY(4px);
 }
 .login-right {
   flex: 1;
