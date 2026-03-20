@@ -1,141 +1,6 @@
 import React, { useState } from "react";
 import Logo from "../../assets/Frame 106.svg";
-import backgroundImg from "../../assets/pexels-pixabay-416405.jpg";
-import backgroundSvg from "../../assets/LoginSignupBackground.svg";
-
-const styles: Record<string, React.CSSProperties> = {
-  container: {
-    display: "flex",
-    height: "100vh",
-    width: "100vw",
-    backgroundColor: "#283332",
-    fontFamily: "'Segoe UI', sans-serif",
-    overflow: "hidden",
-    position: "fixed",
-    top: 0,
-    left: 0,
-    zIndex: 9999,
-  },
-  left: {
-    flex: 1,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "40px",
-    minWidth: "50%",
-    boxSizing: "border-box",
-  },
-  card: {
-    backgroundColor: "#f0f0ec",
-    borderRadius: "32px",
-    padding: "48px 40px",
-    width: "100%",
-    maxWidth: "420px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
-    boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-  },
-  title: {
-    fontSize: "36px",
-    fontWeight: "800",
-    color: "#1a2420",
-    textAlign: "center",
-    marginBottom: "8px",
-  },
-  input: {
-    backgroundColor: "#e0e0da",
-    border: "none",
-    borderRadius: "50px",
-    padding: "16px 24px",
-    fontSize: "15px",
-    color: "#444",
-    outline: "none",
-    width: "100%",
-    boxSizing: "border-box",
-  },
-  signupText: {
-    textAlign: "center",
-    fontSize: "13px",
-    color: "#666",
-  },
-  link: {
-    color: "#c8a84b",
-    cursor: "pointer",
-    textDecoration: "none",
-    fontWeight: "600",
-  },
-  buttonRow: {
-    display: "flex",
-    gap: "12px",
-    marginTop: "8px",
-  },
-  cancelBtn: {
-    flex: 1,
-    padding: "14px",
-    borderRadius: "50px",
-    border: "none",
-    backgroundColor: "#a6ab8d",
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: "15px",
-    cursor: "pointer",
-  },
-  submitBtn: {
-    flex: 1,
-    padding: "14px",
-    borderRadius: "50px",
-    border: "none",
-    backgroundColor: "#4a5e4a",
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: "15px",
-    cursor: "pointer",
-  },
-  right: {
-    flex: 1,
-    position: "relative",
-    overflow: "hidden",
-    minWidth: "50%",
-    backgroundImage:
-      "url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800')",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  },
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0,0,0,0.35)",
-  },
-  logo: {
-    position: "absolute",
-    top: "32px",
-    right: "32px",
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    zIndex: 2,
-  },
-  logoText: {
-    fontSize: "36px",
-    fontWeight: "800",
-    color: "#fff",
-    letterSpacing: "-1px",
-  },
-  circle: {
-    position: "absolute",
-    bottom: "-80px",
-    left: "-80px",
-    width: "400px",
-    height: "400px",
-    borderRadius: "50%",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    zIndex: 2,
-  },
-};
+import "./LoginPage.css";
 
 interface LoginPageProps {
   onSwitchToSignUp: () => void;
@@ -173,14 +38,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
   };
 
   return (
-    <div style={styles.container}>
+    <div className="login-container">
       {/* Left - Form */}
-      <div style={styles.left}>
-        <div style={styles.card}>
-          <h1 style={styles.title}>Log In</h1>
+      <div className="login-left">
+        <div className="login-card">
+          <h1 className="login-title">Log In</h1>
 
           <input
-            style={styles.input}
+            className="login-input"
             type="email"
             placeholder="Email..."
             value={email}
@@ -188,7 +53,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
           />
 
           <input
-            style={styles.input}
+            className="login-input"
             type="password"
             placeholder="Password..."
             value={password}
@@ -196,21 +61,21 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
           />
 
           {error && (
-            <p style={{ color: "red", textAlign: "center", fontSize: "13px" }}>
+            <p className="login-error-text">
               {error}
             </p>
           )}
 
-          <p style={styles.signupText}>
+          <p className="login-signup-text">
             I don't have an Account,{" "}
-            <span style={styles.link} onClick={onSwitchToSignUp}>
+            <span className="login-link" onClick={onSwitchToSignUp}>
               Sign Up
             </span>
           </p>
 
-          <div style={styles.buttonRow}>
+          <div className="login-button-row">
             <button
-              style={styles.cancelBtn}
+              className="login-cancel-btn"
               onClick={() => {
                 setEmail("");
                 setPassword("");
@@ -219,7 +84,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
               Cancel
             </button>
             <button
-              style={styles.submitBtn}
+              className="login-submit-btn"
               onClick={handleLogin}
               disabled={loading}
             >
@@ -230,12 +95,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
       </div>
 
       {/* Right - Photo */}
-      <div style={styles.right}>
-        <div style={styles.overlay} />
-      <div style={styles.logo}>
-<img src={require("../../assets/Frame 106.svg")} alt="Projello" style={{ height: "60px" }} />
-</div>
-        <div style={styles.circle} />
+      <div className="login-right">
+        <div className="login-overlay" />
+        <div className="login-logo">
+          <img src={Logo} alt="Projello" className="login-logo-img" />
+        </div>
+        <div className="login-circle" />
       </div>
     </div>
   );
