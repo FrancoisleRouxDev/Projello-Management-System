@@ -8,6 +8,15 @@ rules.push({
   use: [{ loader: 'style-loader' }, { loader: 'css-loader' }],
 });
 
+rules.push({
+  test: /\.svg$/,
+  use: [{ 
+    loader: 'file-loader',
+    options: {
+      esModule: false,
+    }
+  }],
+});
 export const rendererConfig: Configuration = {
   module: {
     rules,
