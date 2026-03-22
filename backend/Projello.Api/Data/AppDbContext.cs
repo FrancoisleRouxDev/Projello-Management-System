@@ -19,6 +19,9 @@ namespace Projello.Api.Data
         public DbSet<Reaction> Reactions { get; set; } = null!;
         public DbSet<Attachment> Attachments { get; set; } = null!;
 
+
+
+//Section below is extra rule for the database, This one is so no client can be blacklisted by default, they have to be manually blacklisted by an admin.
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

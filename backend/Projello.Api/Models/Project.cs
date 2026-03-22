@@ -23,4 +23,5 @@ public class Project
     public User CreatedBy { get; set; } = null!;
     public ICollection<Milestone> Milestones { get; set; } = new List<Milestone>();
     public ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();
+    //test//  
 }
