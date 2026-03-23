@@ -15,36 +15,36 @@ const SignUpPage: React.FC<SignUpPageProps> = ({ onSwitchToLogin }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleRegister = async () => {
-    setError("");
+const handleRegister = async () => {
+  setError("");
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+  if (password !== confirmPassword) {
+    setError("Passwords do not match.");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const response = await fetch("http://localhost:5049/api/Auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fullName, email, password, roleID }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      setError(data[0]?.description || "Registration failed.");
       return;
     }
 
-    setLoading(true);
-    try {
-      const response = await fetch("http://localhost:5049/api/Auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName, email, password, roleID }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        setError(data[0]?.description || "Registration failed.");
-        return;
-      }
-
-      alert("Account created! Please log in.");
-      onSwitchToLogin();
-    } catch {
-      setError("Could not connect to server.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // No alert - just navigate directly
+    onSwitchToLogin();
+  } catch {
+    setError("Could not connect to server.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="signup-container">

@@ -1,45 +1,50 @@
 import React, { useState } from "react";
 import Logo from "../../assets/Frame 106.svg";
 import "./LoginPage.css";
-
+const godzillaRoar = require("../../assets/zilla-1.mp3");
 interface LoginPageProps {
   onSwitchToSignUp: () => void;
+  onLoginSuccess: () => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp, onLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await fetch("http://localhost:5049/api/Auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+const handleLogin = async () => {
+  setLoading(true);
+  setError("");
+  try {
+    const response = await fetch("http://localhost:5049/api/Auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-      if (!response.ok) {
-        setError("Invalid email or password.");
-        return;
-      }
-
-      const data = await response.json();
-      localStorage.setItem("token", data.token);
-      alert(`Welcome back, ${data.user}!`);
-    } catch {
-      setError("Could not connect to server.");
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      setError("Invalid email or password.");
+      return;
     }
-  };
+
+    const data = await response.json();
+    localStorage.setItem("token", data.token);
+
+    // 🦎 Godzilla approves
+    const roar = new Audio(godzillaRoar);
+    roar.play();
+
+    onLoginSuccess();
+  } catch {
+    setError("Could not connect to server.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="login-container">
-      {/* Left - Form */}
       <div className="login-left">
         <div className="login-card">
           <h1 className="login-title">Log In</h1>
@@ -60,11 +65,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          {error && (
-            <p className="login-error-text">
-              {error}
-            </p>
-          )}
+          {error && <p className="login-error-text">{error}</p>}
 
           <p className="login-signup-text">
             I don't have an Account,{" "}
@@ -94,7 +95,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
         </div>
       </div>
 
-      {/* Right - Photo */}
       <div className="login-right">
         <div className="login-overlay" />
         <div className="login-logo">
