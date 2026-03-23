@@ -42,7 +42,8 @@ const handleLogin = async () => {
     setLoading(false);
   }
 };
-
+//nice to have, if we can just hit the enter button to log in, instead of having to click the submit button
+// need a new way to show a success message, instead of an alert so we dont have that wierd bug again , applies the same with sign up.
   return (
     <div className="login-container">
       <div className="login-left">
