@@ -20,32 +20,32 @@ public class AuthController : ControllerBase
         _config = config;
     }
 
-    [HttpPost("register")]
+    [HttpPost("register")]// API endpoint: POST /api/Auth/register
     public async Task<IActionResult> Register([FromBody] UserRegisterDto model)
     {
         var user = new User { 
-            UserName = model.Email, 
+            UserName = model.Email,  // Sets username to email for Identity
             Email = model.Email, 
             FullName = model.FullName,
             RoleID = model.RoleID 
         };
         
-        var result = await _userManager.CreateAsync(user, model.Password);
+        var result = await _userManager.CreateAsync(user, model.Password);// Hashes password, saves to DB
 
-        if (result.Succeeded) return Ok(new { Message = "User created successfully" });
-        return BadRequest(result.Errors);
+        if (result.Succeeded) return Ok(new { Message = "User created successfully" }); // 200 OK response
+        return BadRequest(result.Errors);// 400 with validation errors
     }
 
-    [HttpPost("login")]
+    [HttpPost("login")] // API endpoint: POST /api/Auth/login
     public async Task<IActionResult> Login([FromBody] UserLoginDto model)
     {
-        var user = await _userManager.FindByEmailAsync(model.Email);
-        if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
+        var user = await _userManager.FindByEmailAsync(model.Email);// Queries DB by email
+        if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))// Verifies hash
         {
-            var token = GenerateJwtToken(user);
-            return Ok(new { Token = token, User = user.FullName });
+            var token = GenerateJwtToken(user); // Creates signed JWT with user info
+            return Ok(new { Token = token, User = user.FullName });// Returns token + user info
         }
-        return Unauthorized();
+        return Unauthorized();// 401 if invalid
     }
 
     private string GenerateJwtToken(User user)

@@ -14,32 +14,32 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp, onLoginSuccess 
   const [error, setError] = useState("");
 
 const handleLogin = async () => {
-  setLoading(true);
-  setError("");
+  setLoading(true);// Shows loading spinner
+  setError("");// Clears previous errors
   try {
-    const response = await fetch("http://localhost:5049/api/Auth/login", {
+    const response = await fetch("http://localhost:5049/api/Auth/login", {// Calls backend API
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      headers: { "Content-Type": "application/json" },// Sends JSON
+      body: JSON.stringify({ email, password }),// Serializes form data
     });
 
-    if (!response.ok) {
-      setError("Invalid email or password.");
+    if (!response.ok) {// Checks HTTP status
+      setError("Invalid email or password.");// User-friendly error
       return;
     }
 
-    const data = await response.json();
-    localStorage.setItem("token", data.token);
+    const data = await response.json();// Parses JSON response
+    localStorage.setItem("token", data.token);// Stores JWT for persistence
 
     // 🦎 Godzilla approves
     const roar = new Audio(godzillaRoar);
     roar.play();
 
-    onLoginSuccess();
+    onLoginSuccess();// Navigates to app
   } catch {
-    setError("Could not connect to server.");
+    setError("Could not connect to server.");// Network error
   } finally {
-    setLoading(false);
+    setLoading(false);// Hides spinner
   }
 };
 //nice to have, if we can just hit the enter button to log in, instead of having to click the submit button
