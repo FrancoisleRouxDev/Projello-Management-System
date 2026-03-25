@@ -11,9 +11,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentity<User, IdentityRole>(options => {// Configures Identity with custom User
-    options.Password.RequireDigit = true;// Enforces strong passwords
-    options.Password.RequiredLength = 8;
+builder.Services.AddIdentity<User, IdentityRole>(options => //congigures identity with custom user
+{
+    options.Password.RequireDigit = true;           // must have at least one number
+    options.Password.RequiredLength = 8;            // minimum 8 characters
+    options.Password.RequireLowercase = true;       
+    options.Password.RequireUppercase = true;       
+    options.Password.RequireNonAlphanumeric = false; // This fixes your error
 })
 .AddEntityFrameworkStores<AppDbContext>()// Stores users in our DB context
 .AddDefaultTokenProviders();// Enables password reset, etc.
