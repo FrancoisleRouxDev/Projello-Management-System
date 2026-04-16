@@ -27,7 +27,7 @@ namespace Projello.Api.Controllers
         public async Task<IActionResult> Register([FromBody] UserRegisterDto model)
         {
             var user = new User { 
-                UserName = model.Email, 
+                UserName = model.Email, // Using Email as UserName is standard practice for Identity
                 Email = model.Email, 
                 FullName = model.FullName,
                 RoleID = model.RoleID 

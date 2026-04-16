@@ -19,7 +19,8 @@ public class TaskItem
     public DateOnly? DueDate { get; set; }
 
     [MaxLength(20)]
-    public string Status { get; set; } = "NotStarted";
+    public Status Status { get; set; } = Status.NotStarted;
+
 
     [MaxLength(10)]
     public string Priority { get; set; } = "Medium";
@@ -29,4 +30,12 @@ public class TaskItem
     public Milestone Milestone { get; set; } = null!;
     public User? AssignedTo { get; set; }
     public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
+}
+
+public enum Status
+{
+    NotStarted,
+    InProgress,
+    Completed,
+    Blocked
 }
