@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import Logo from "../../assets/Frame 106.svg";
 import "./LoginPage.css";
+import { useNavigate } from "react-router-dom";
+
+
+
 const godzillaRoar = require("../../assets/zilla-1.mp3");
 interface LoginPageProps {
   onSwitchToSignUp: () => void;
@@ -42,6 +46,9 @@ const handleLogin = async () => {
     setLoading(false);
   }
 };
+
+  const navigate = useNavigate();
+
 //nice to have, if we can just hit the enter button to log in, instead of having to click the submit button
 // need a new way to show a success message, instead of an alert so we dont have that wierd bug again , applies the same with sign up.
   return (
@@ -99,7 +106,15 @@ const handleLogin = async () => {
       <div className="login-right">
         <div className="login-overlay" />
         <div className="login-logo">
-          <img src={Logo} alt="Projello" className="login-logo-img" />
+
+          <img
+          className="login-logo-img"
+          src={Logo}
+          alt="Projello Logo"
+          style={{ cursor: "pointer" }}
+          onClick={() => navigate("/dashboard")}
+          />
+
         </div>
         <div className="login-circle" />
       </div>

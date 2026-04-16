@@ -1,0 +1,19 @@
+body{
+    margin: 0;
+    padding: 0;
+    left: 0;
+    top: 0;
+    width: 100vw;
+}
+
+.dashboard-page{
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.hi{
+    color: var(--Accent-2, #28332B);
+    font-size: 2.5rem;
+}

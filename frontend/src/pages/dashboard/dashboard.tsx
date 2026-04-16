@@ -1,4 +1,10 @@
 import React from "react";
+import "./dashboard.css";
+
 export default function DashboardPage() {
-  return <h2>Dashboard Page</h2>;
+  return (
+    <div className="dashboard-page">
+      <h2 className="hi">Dashboard Page</h2>
+    </div>
+  );
 }

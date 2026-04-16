@@ -1,4 +1,10 @@
 import React from "react";
+import "./management.css";
+
 export default function ManagementPage() {
-  return <h2>Management Page</h2>;
+  return (
+    <div>
+      <h2>Management Page</h2>
+    </div>
+  );
 }
