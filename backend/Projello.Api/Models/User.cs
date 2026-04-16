@@ -5,13 +5,17 @@ namespace Projello.Api.Models
 {
     public class User : IdentityUser
     {
-        [Required] // Field must be provided
-        [MaxLength(150)] // Limits string length to match DB column
+        [Required]
+        [MaxLength(150)]
         public string FullName { get; set; } = string.Empty;
 
         [Required]
-        public int RoleID { get; set; } // Custom role field: 1 = Admin, 2 = Foreman, 3 = Worker
-        
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // Auto-set on creation, UTC for timezone consistency
+        public int RoleID { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public string? TwoFactorSecret { get; set; }
+
+        public bool IsTwoFactorEnabled { get; set; } = false;
     }
 }
