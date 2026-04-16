@@ -24,7 +24,7 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] UserRegisterDto model)
     {
         var user = new User { 
-            UserName = model.Email, 
+            UserName = model.FullName, 
             Email = model.Email, 
             FullName = model.FullName,
             RoleID = model.RoleID 
