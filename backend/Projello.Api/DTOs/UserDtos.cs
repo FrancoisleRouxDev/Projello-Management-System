@@ -21,5 +21,15 @@ namespace Projello.Api.DTOs
         public string Email { get; set; } = null!;
         public string Role { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
+        
+        // NEW: Let the frontend know if 2FA is currently turned on for this user
+        public bool IsTwoFactorEnabled { get; set; }
+    }
+
+    // NEW: DTO for the second step of the login process
+    public class Verify2FaDto
+    {
+        public string Email { get; set; } = null!;
+        public string Code { get; set; } = null!;
     }
 }

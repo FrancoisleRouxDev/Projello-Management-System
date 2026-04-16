@@ -13,5 +13,9 @@ namespace Projello.Api.Models
         public int RoleID { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public string? TwoFactorSecret { get; set; }
+        
+        public bool IsTwoFactorEnabled { get; set; } = false;
     }
 }
