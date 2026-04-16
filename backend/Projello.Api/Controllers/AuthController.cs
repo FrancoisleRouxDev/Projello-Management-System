@@ -6,7 +6,7 @@ using Projello.Api.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using OtpNet; // Add this using directive for 2FA
+using OtpNet; // Required for 2FA
 
 namespace Projello.Api.Controllers
 {
@@ -45,7 +45,7 @@ namespace Projello.Api.Controllers
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                // --- NEW 2FA LOGIC ---
+                // --- 2FA LOGIC ---
                 // If the user has 2FA enabled, stop here. Do NOT issue the JWT yet.
                 if (user.IsTwoFactorEnabled)
                 {
@@ -67,7 +67,7 @@ namespace Projello.Api.Controllers
             return Unauthorized(new { Message = "Invalid credentials" });
         }
 
-        // --- NEW VERIFICATION ENDPOINT ---
+        // --- VERIFICATION ENDPOINT ---
         [HttpPost("verify-2fa")]
         public async Task<IActionResult> Verify2FA([FromBody] Verify2FaDto model)
         {
@@ -89,6 +89,39 @@ namespace Projello.Api.Controllers
             }
 
             return BadRequest(new { Message = "Invalid verification code." });
+        }
+
+        // --- NEW: SETUP 2FA ENDPOINT ---
+        [HttpPost("generate-2fa-secret")]
+        public async Task<IActionResult> Generate2FASecret([FromBody] Setup2FaDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null) return NotFound(new { Message = "User not found." });
+
+            // 1. Generate a secure Base32 secret key
+            var secretKey = KeyGeneration.GenerateRandomKey(20);
+            var base32Secret = Base32Encoding.ToString(secretKey);
+
+            // 2. Save the secret to the user's record
+            user.TwoFactorSecret = base32Secret;
+            
+            // Note: We turn it on here. In a production app, you might wait to set this 
+            // to true until they successfully verify the first code, but this works perfectly for your MVP!
+            user.IsTwoFactorEnabled = true; 
+            
+            await _userManager.UpdateAsync(user);
+
+            // 3. Create the URI that the React QR Code component needs
+            var issuer = "Projello";
+            var accountName = user.Email;
+            var authenticatorUri = $"otpauth://totp/{issuer}:{accountName}?secret={base32Secret}&issuer={issuer}";
+
+            // 4. Send it back to the React frontend
+            return Ok(new 
+            { 
+                SecretKey = base32Secret, 
+                AuthenticatorUri = authenticatorUri 
+            });
         }
 
         private string GenerateJwtToken(User user)

@@ -12,7 +12,7 @@ using Projello.Api.Data;
 namespace Projello.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260312182311_InitialCreate")]
+    [Migration("20260416181612_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -165,12 +165,19 @@ namespace Projello.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AttachmentID"));
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("FileUrl")
+                    b.Property<string>("FileName")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("FileType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("FileURL")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<int?>("MilestoneID")
                         .HasColumnType("integer");
@@ -178,11 +185,24 @@ namespace Projello.Api.Migrations
                     b.Property<int?>("ProgressUpdateUpdateID")
                         .HasColumnType("integer");
 
-                    b.Property<int>("TaskID")
+                    b.Property<int?>("SizeBytes")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("TaskItemTaskID")
+                    b.Property<int?>("TaskID")
                         .HasColumnType("integer");
+
+                    b.Property<int?>("UpdateID")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UploadedById")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UploadedByUserID")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("AttachmentID");
 
@@ -190,7 +210,9 @@ namespace Projello.Api.Migrations
 
                     b.HasIndex("ProgressUpdateUpdateID");
 
-                    b.HasIndex("TaskItemTaskID");
+                    b.HasIndex("TaskID");
+
+                    b.HasIndex("UploadedById");
 
                     b.ToTable("Attachments");
                 });
@@ -449,10 +471,9 @@ namespace Projello.Api.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -495,6 +516,9 @@ namespace Projello.Api.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<bool>("IsTwoFactorEnabled")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");
 
@@ -526,6 +550,9 @@ namespace Projello.Api.Migrations
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("TwoFactorSecret")
+                        .HasColumnType("text");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
@@ -596,17 +623,29 @@ namespace Projello.Api.Migrations
 
             modelBuilder.Entity("Projello.Api.Models.Attachment", b =>
                 {
-                    b.HasOne("Projello.Api.Models.Milestone", null)
+                    b.HasOne("Projello.Api.Models.Milestone", "Milestone")
                         .WithMany("Attachments")
                         .HasForeignKey("MilestoneID");
 
-                    b.HasOne("Projello.Api.Models.ProgressUpdate", null)
+                    b.HasOne("Projello.Api.Models.ProgressUpdate", "ProgressUpdate")
                         .WithMany("Attachments")
                         .HasForeignKey("ProgressUpdateUpdateID");
 
-                    b.HasOne("Projello.Api.Models.TaskItem", null)
+                    b.HasOne("Projello.Api.Models.TaskItem", "Task")
                         .WithMany("Attachments")
-                        .HasForeignKey("TaskItemTaskID");
+                        .HasForeignKey("TaskID");
+
+                    b.HasOne("Projello.Api.Models.User", "UploadedBy")
+                        .WithMany()
+                        .HasForeignKey("UploadedById");
+
+                    b.Navigation("Milestone");
+
+                    b.Navigation("ProgressUpdate");
+
+                    b.Navigation("Task");
+
+                    b.Navigation("UploadedBy");
                 });
 
             modelBuilder.Entity("Projello.Api.Models.Milestone", b =>

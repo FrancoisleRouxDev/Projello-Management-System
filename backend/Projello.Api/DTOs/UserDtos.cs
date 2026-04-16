@@ -26,10 +26,16 @@ namespace Projello.Api.DTOs
         public bool IsTwoFactorEnabled { get; set; }
     }
 
-    // NEW: DTO for the second step of the login process
+    // DTO for the second step of the login process
     public class Verify2FaDto
     {
         public string Email { get; set; } = null!;
         public string Code { get; set; } = null!;
+    }
+
+    // NEW: DTO for requesting the initial QR code setup
+    public class Setup2FaDto
+    {
+        public string Email { get; set; } = null!;
     }
 }
