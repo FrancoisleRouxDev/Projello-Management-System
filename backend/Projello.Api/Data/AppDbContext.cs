@@ -31,4 +31,7 @@ namespace Projello.Api.Data
                 .HasDefaultValue(false);
         }
     }
+
+    public DbSet<Milestone> Milestones => Set<Milestone>();
+    public DbSet<TaskItem> Tasks => Set<TaskItem>();
 }
