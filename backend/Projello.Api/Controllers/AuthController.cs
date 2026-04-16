@@ -6,106 +6,111 @@ using Projello.Api.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using OtpNet; // Add this using directive for 2FA
 
-[Route("api/[controller]")]
-[ApiController]
-public class AuthController : ControllerBase
+namespace Projello.Api.Controllers
 {
-    private readonly UserManager<User> _userManager;
-    private readonly IConfiguration _config;
-
-    public AuthController(UserManager<User> userManager, IConfiguration config)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class AuthController : ControllerBase
     {
-        _userManager = userManager;
-        _config = config;
-    }
+        private readonly UserManager<User> _userManager;
+        private readonly IConfiguration _config;
 
-    [HttpPost("register")]// API endpoint: POST /api/Auth/register
-    public async Task<IActionResult> Register([FromBody] UserRegisterDto model)
-    {
-        // Check if email already exists
-        if (await _userManager.FindByEmailAsync(model.Email) != null)
+        public AuthController(UserManager<User> userManager, IConfiguration config)
         {
-            return BadRequest(new { Message = "Email is already registered." });
+            _userManager = userManager;
+            _config = config;
         }
 
-        var user = new User { 
-            UserName = model.Email,  // Sets username to email for Identity
-            Email = model.Email, 
-            FullName = model.FullName,
-            RoleID = model.RoleID 
-        };
-        
-        var result = await _userManager.CreateAsync(user, model.Password);// Hashes password, saves to DB
-
-        if (result.Succeeded)
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] UserRegisterDto model)
         {
-            // Return safe response using UserReadDto (NO password!)
-            var responseDto = new UserReadDto
+            var user = new User { 
+                UserName = model.Email, // Using Email as UserName is standard practice for Identity
+                Email = model.Email, 
+                FullName = model.FullName,
+                RoleID = model.RoleID 
+            };
+            
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded) return Ok(new { Message = "User created successfully" });
+            return BadRequest(result.Errors);
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] UserLoginDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                Id = user.Id,
-                FullName = user.FullName,
-                Email = user.Email,
-                Role = "User",                    //don't care about role names for now
-                CreatedAt = user.CreatedAt
+                // --- NEW 2FA LOGIC ---
+                // If the user has 2FA enabled, stop here. Do NOT issue the JWT yet.
+                if (user.IsTwoFactorEnabled)
+                {
+                    return Ok(new { 
+                        Requires2FA = true, 
+                        Email = user.Email,
+                        Message = "Two-Step Verification required."
+                    });
+                }
+
+                // If 2FA is not enabled, proceed to issue the JWT normally.
+                var token = GenerateJwtToken(user);
+                return Ok(new { 
+                    Token = token, 
+                    User = user.FullName, 
+                    Requires2FA = false 
+                });
+            }
+            return Unauthorized(new { Message = "Invalid credentials" });
+        }
+
+        // --- NEW VERIFICATION ENDPOINT ---
+        [HttpPost("verify-2fa")]
+        public async Task<IActionResult> Verify2FA([FromBody] Verify2FaDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null) return BadRequest(new { Message = "User not found." });
+
+            if (string.IsNullOrEmpty(user.TwoFactorSecret))
+                return BadRequest(new { Message = "2FA is not configured for this user." });
+
+            // Validate the 6-digit code against the user's secret
+            var totp = new Totp(Base32Encoding.ToBytes(user.TwoFactorSecret));
+            bool isValid = totp.VerifyTotp(model.Code, out long timeStepMatched);
+
+            if (isValid)
+            {
+                // Code is correct! Issue the real JWT token now.
+                var token = GenerateJwtToken(user);
+                return Ok(new { Token = token, User = user.FullName });
+            }
+
+            return BadRequest(new { Message = "Invalid verification code." });
+        }
+
+        private string GenerateJwtToken(User user)
+        {
+            var claims = new[] {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Email!),
+                new Claim("FullName", user.FullName),
+                new Claim("RoleID", user.RoleID.ToString())
             };
 
-            return Ok(new 
-            { 
-                Message = "User registered successfully",
-                User = responseDto 
-            });
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddDays(1),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
-        return BadRequest(result.Errors);
     }
-
-    [HttpPost("login")] // API endpoint: POST /api/Auth/login
-    public async Task<IActionResult> Login([FromBody] UserLoginDto model)   //Fixed: Added IActionResult
-    {
-        var user = await _userManager.FindByEmailAsync(model.Email);
-
-        if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password)) 
-        { 
-            return Unauthorized(new { Message = "Invalid email or password" }); 
-        }
-
-        var token = GenerateJwtToken(user);
-
-        // Safe response DTO - no password sent 
-        var userDto = new UserReadDto 
-        { 
-            Id = user.Id, 
-            FullName = user.FullName, 
-            Email = user.Email, 
-            Role = "User", 
-            CreatedAt = user.CreatedAt 
-        };
-
-        return Ok(new { Token = token, User = userDto }); 
-    }
-
-private string GenerateJwtToken(User user)
-{
-    var claims = new[]
-    {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Id),           // Subject - usually the unique user ID
-        new Claim(JwtRegisteredClaimNames.Email, user.Email!),     // Email claim so we can identify the user
-        new Claim("FullName", user.FullName),                      // Custom claim: stores user's full name
-        new Claim("RoleID", user.RoleID.ToString())                // Custom claim: stores the RoleID (1,2,3...)
-    };
-
-    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!)); // Secret key from appsettings.json
-    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);         // Signing credentials using HMAC-SHA256
-
-    var token = new JwtSecurityToken(
-        issuer: _config["Jwt:Issuer"],                    // Who created this token (your API)
-        audience: _config["Jwt:Audience"],                // Who is allowed to receive/use this token
-        claims: claims,                                   // All the user data we want inside the token
-        expires: DateTime.UtcNow.AddHours(24),            // Token expires after 24 hours
-        signingCredentials: creds                         // The key + algorithm used to sign the token
-    );
-
-    return new JwtSecurityTokenHandler().WriteToken(token); // Convert token object to string
-}
 }
