@@ -37,7 +37,26 @@ export default function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
 
       if (!response.ok) {
         const data = await response.json();
-        setError(data[0]?.description || "Registration failed.");
+        
+        let errorMessage = "Registration failed. Please check your information.";
+        
+        // Format 1: Standard .NET Identity Error Array
+        if (Array.isArray(data) && data[0]?.description) {
+          errorMessage = data[0].description;
+        } 
+        // Format 2: .NET ValidationProblemDetails (Common for 400 errors)
+        else if (data.errors) {
+          const firstErrorKey = Object.keys(data.errors)[0];
+          errorMessage = data.errors[firstErrorKey][0];
+        } 
+        // Format 3: Simple message object
+        else if (typeof data === "string") {
+          errorMessage = data;
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
+
+        setError(errorMessage);
         setLoading(false);
         return;
       }
