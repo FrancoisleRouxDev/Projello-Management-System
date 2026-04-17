@@ -20,65 +20,34 @@ export default function LoginPage({ onSwitchToSignUp, onLoginSuccess }: LoginPag
   const [successMsg, setSuccessMsg] = useState("");
   const [requires2FA, setRequires2FA] = useState(false);
 
-  const navigate = useNavigate();
+const handleLogin = async () => {
+  setLoading(true);// Shows loading spinner
+  setError("");// Clears previous errors
+  try {
+    const response = await fetch("http://localhost:5049/api/Auth/login", {// Calls backend API
+      method: "POST",
+      headers: { "Content-Type": "application/json" },// Sends JSON
+      body: JSON.stringify({ email, password }),// Serializes form data
+    });
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Prevents page reload on 'Enter' key submit
-    setLoading(true);
-    setError("");
-    setSuccessMsg("");
-
-    try {
-      const response = await fetch("http://localhost:5049/api/Auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || "Invalid email or password.");
-        setLoading(false);
-        return;
-      }
-
-      // Check if 2FA is required for this user
-      if (data.requires2FA) {
-        setRequires2FA(true);
-        setLoading(false);
-      } else {
-        completeLogin(data.token);
-      }
-    } catch {
-      setError("Could not connect to server.");
-      setLoading(false);
+    if (!response.ok) {// Checks HTTP status
+      setError("Invalid email or password.");// User-friendly error
+      return;
     }
   };
 
-  const completeLogin = (token: string) => {
-    localStorage.setItem("token", token);
-    
-    setSuccessMsg("Login successful! Redirecting...");
-    
+    const data = await response.json();// Parses JSON response
+    localStorage.setItem("token", data.token);// Stores JWT for persistence
+
     // 🦎 Godzilla approves
     const roar = new Audio(godzillaRoar);
     roar.play();
 
-    setTimeout(() => {
-      onLoginSuccess();
-    }, 1000);
-  };
-
-  // 2FA Intercept Screen
-  if (requires2FA) {
-    return (
-      <Verify2FA 
-        email={email} 
-        onVerificationSuccess={(token: string) => completeLogin(token)} 
-        onCancel={() => setRequires2FA(false)} 
-      />
-    );
+    onLoginSuccess();// Navigates to app
+  } catch {
+    setError("Could not connect to server.");// Network error
+  } finally {
+    setLoading(false);// Hides spinner
   }
 
   return (
