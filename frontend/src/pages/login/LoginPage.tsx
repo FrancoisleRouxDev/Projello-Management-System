@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import Logo from "../../assets/Frame 106.svg";
 import "./LoginPage.css";
-import Verify2FA from "./Verify2FA"; // Importing new 2FA component
+import { useNavigate } from "react-router-dom";
+import Verify2FA from "./Verify2FA"; // Make sure this import is here
+
 const godzillaRoar = require("../../assets/zilla-1.mp3");
 
 interface LoginPageProps {
@@ -9,13 +11,16 @@ interface LoginPageProps {
   onLoginSuccess: () => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp, onLoginSuccess }) => {
+// Exported as a standard function to prevent TS2786 errors
+export default function LoginPage({ onSwitchToSignUp, onLoginSuccess }: LoginPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState(""); // State for success message
-  const [requires2FA, setRequires2FA] = useState(false); // State to trigger 2FA view
+  const [successMsg, setSuccessMsg] = useState("");
+  const [requires2FA, setRequires2FA] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Prevents page reload on 'Enter' key submit
@@ -38,12 +43,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp, onLoginSuccess 
         return;
       }
 
-      // Check if the backend is asking for 2FA verification
+      // Check if 2FA is required for this user
       if (data.requires2FA) {
         setRequires2FA(true);
         setLoading(false);
       } else {
-        // Normal login flow
         completeLogin(data.token);
       }
     } catch {
@@ -52,35 +56,31 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp, onLoginSuccess 
     }
   };
 
-  // Helper function to finish the login process so Verify2FA can also call it
   const completeLogin = (token: string) => {
     localStorage.setItem("token", token);
     
-    // Show in-UI success message instead of an alert
     setSuccessMsg("Login successful! Redirecting...");
     
     // 🦎 Godzilla approves
     const roar = new Audio(godzillaRoar);
     roar.play();
 
-    // Give a 1-second delay so the user can see the message and hear the roar
     setTimeout(() => {
       onLoginSuccess();
     }, 1000);
   };
 
-  // If 2FA is required, render the Verify2FA component instead of the login form
+  // 2FA Intercept Screen
   if (requires2FA) {
     return (
       <Verify2FA 
         email={email} 
-        onVerificationSuccess={(token) => completeLogin(token)} 
+        onVerificationSuccess={(token: string) => completeLogin(token)} 
         onCancel={() => setRequires2FA(false)} 
       />
     );
   }
 
-  // Otherwise, render the normal Login Form
   return (
     <div className="login-container">
       <div className="login-left">
@@ -119,7 +119,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp, onLoginSuccess 
 
             <div className="login-button-row">
               <button
-                type="button" // Type "button" prevents it from triggering form submit
+                type="button"
                 className="login-cancel-btn"
                 onClick={() => {
                   setEmail("");
@@ -130,7 +130,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp, onLoginSuccess 
                 Cancel
               </button>
               <button
-                type="submit" // Type "submit" triggers the form's onSubmit event
+                type="submit"
                 className="login-submit-btn"
                 disabled={loading}
               >
@@ -144,12 +144,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp, onLoginSuccess 
       <div className="login-right">
         <div className="login-overlay" />
         <div className="login-logo">
-          <img src={Logo} alt="Projello" className="login-logo-img" />
+          <img
+            className="login-logo-img"
+            src={Logo}
+            alt="Projello Logo"
+            style={{ cursor: "pointer" }}
+            onClick={() => navigate("/dashboard")}
+          />
         </div>
         <div className="login-circle" />
       </div>
     </div>
   );
-};
-
-export default LoginPage;
+}
