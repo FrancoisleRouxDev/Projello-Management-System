@@ -10,25 +10,59 @@
   justify-content: space-between;
 }
 
-.ItemNames{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding-left: 20px;
+.ItemNames {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 20px;
+  flex: 4 1 0;
+  min-width: 0;
 }
 
 .Item_ClientName {
-    font-family: Roboto, sans-serif;
-    font-style: normal;
-    color: var(--Accent-1, #A6AB8D);
-    font-weight: 400;
-    /* text-shadow: 0px 1px 3px rgba(40, 51, 43, 0.3); */
+  font-family: Roboto, sans-serif;
+  font-style: normal;
+  color: var(--Accent-1, #a6ab8d);
+  font-weight: 400;
+  /* text-shadow: 0px 1px 3px rgba(40, 51, 43, 0.3); */
 }
 
 .JelloInfo {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 20px;
-    padding-right: 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  /* padding-right: 20px; */
+  flex: 3.34 1 0;
+  min-width: 0;
+  height: 100%;
+}
+
+.JelloInfo > div {
+  flex: 1 0 0;
+  min-width: 0;
+  text-align: center;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  border-left: 1px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
+  height: 100%;
+  width: 100%;
+}
+
+.filterBar .searchBar {
+  flex: 2 0 0;
+  min-width: 0;
+}
+.filterBar #AZsorter,
+.filterBar #prioritySorter {
+  flex: 1 0 0;
+  min-width: 0;
+}
+.filterBar #dateSorter,
+.filterBar #progressSorter,
+.filterBar #activeWorkersSorter {
+  flex: 1 0 0;
+  min-width: 0;
 }
