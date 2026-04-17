@@ -67,7 +67,7 @@ export default function DashboardPage() {
           />
         </div>
         <div className="sorter" id="activeWorkersSorter">
-          <h5>Active Workers</h5>
+          <h5>Workers</h5>
           <img
             src={SortArrow}
             alt="Sort Arrow"
