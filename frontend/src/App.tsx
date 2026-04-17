@@ -6,6 +6,10 @@ import SignUpPage from "./pages/signup/SignupPage";
 import ManagementPage from "./pages/management/management";
 import SettingsPage from "./pages/settings/settings";
 import SingleProjectViewPage from "./pages/single-view/single-project-view";
+import HistoryPage from "./pages/history/history";
+import SideNavBar from "./components/SideNavBar";
+import { useLocation } from "react-router-dom";
+import BodyBlock from "./components/BodyBlock";
 
 function LoginWrapper() {
   const navigate = useNavigate();
@@ -23,19 +27,40 @@ function SignUpWrapper() {
   return <SignUpPage key="signup" onSwitchToLogin={() => navigate("/login")} />;
 }
 
+function AppLayout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const hideNav = ["/login", "/signup", "/"].includes(location.pathname);
+  return (
+    <div style={{ display: "flex" }}>
+      {!hideNav && <SideNavBar />}
+      <div style={{ flex: 1, marginLeft: !hideNav ? 225 : 0 }}>
+        {!hideNav ? (
+          <BodyBlock>
+            {children}
+          </BodyBlock>
+        ) : (
+          children
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <HashRouter>
-      {/* ← remove the entire <nav> block, it sits on top of your pages */}
-      <Routes>
-        <Route path="/" element={<LoginWrapper />} />
-        <Route path="/login" element={<LoginWrapper />} />
-        <Route path="/signup" element={<SignUpWrapper />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/management" element={<ManagementPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/single-view" element={<SingleProjectViewPage />} />
-      </Routes>
+      <AppLayout>
+        <Routes>
+          <Route path="/" element={<LoginWrapper />} />
+          <Route path="/login" element={<LoginWrapper />} />
+          <Route path="/signup" element={<SignUpWrapper />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/management" element={<ManagementPage />} />
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/single-view" element={<SingleProjectViewPage />} />
+        </Routes>
+      </AppLayout>
     </HashRouter>
   );
 }

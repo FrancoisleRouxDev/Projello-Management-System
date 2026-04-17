@@ -17,3 +17,4 @@ obj/
 *.user
 backend/Projello.Api/appsettings.json
 *.json
+/node_modules

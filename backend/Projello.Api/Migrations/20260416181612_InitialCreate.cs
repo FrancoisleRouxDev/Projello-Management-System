@@ -34,6 +34,8 @@ namespace Projello.Api.Migrations
                     FullName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
                     RoleID = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    TwoFactorSecret = table.Column<string>(type: "text", nullable: true),
+                    IsTwoFactorEnabled = table.Column<bool>(type: "boolean", nullable: false),
                     UserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
@@ -302,7 +304,7 @@ namespace Projello.Api.Migrations
                     Description = table.Column<string>(type: "text", nullable: true),
                     AssignedToUserID = table.Column<string>(type: "text", nullable: true),
                     DueDate = table.Column<DateOnly>(type: "date", nullable: true),
-                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Status = table.Column<int>(type: "integer", maxLength: 20, nullable: false),
                     Priority = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     AssignedToId = table.Column<string>(type: "text", nullable: true)
@@ -358,16 +360,26 @@ namespace Projello.Api.Migrations
                 {
                     AttachmentID = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    TaskID = table.Column<int>(type: "integer", nullable: false),
-                    FileUrl = table.Column<string>(type: "text", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     MilestoneID = table.Column<int>(type: "integer", nullable: true),
+                    TaskID = table.Column<int>(type: "integer", nullable: true),
+                    UpdateID = table.Column<int>(type: "integer", nullable: true),
+                    FileName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    FileURL = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    FileType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    SizeBytes = table.Column<int>(type: "integer", nullable: true),
+                    UploadedByUserID = table.Column<string>(type: "text", nullable: false),
+                    UploadedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     ProgressUpdateUpdateID = table.Column<int>(type: "integer", nullable: true),
-                    TaskItemTaskID = table.Column<int>(type: "integer", nullable: true)
+                    UploadedById = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Attachments", x => x.AttachmentID);
+                    table.ForeignKey(
+                        name: "FK_Attachments_AspNetUsers_UploadedById",
+                        column: x => x.UploadedById,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Attachments_Milestones_MilestoneID",
                         column: x => x.MilestoneID,
@@ -379,8 +391,8 @@ namespace Projello.Api.Migrations
                         principalTable: "ProgressUpdates",
                         principalColumn: "UpdateID");
                     table.ForeignKey(
-                        name: "FK_Attachments_Tasks_TaskItemTaskID",
-                        column: x => x.TaskItemTaskID,
+                        name: "FK_Attachments_Tasks_TaskID",
+                        column: x => x.TaskID,
                         principalTable: "Tasks",
                         principalColumn: "TaskID");
                 });
@@ -433,9 +445,14 @@ namespace Projello.Api.Migrations
                 column: "ProgressUpdateUpdateID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Attachments_TaskItemTaskID",
+                name: "IX_Attachments_TaskID",
                 table: "Attachments",
-                column: "TaskItemTaskID");
+                column: "TaskID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Attachments_UploadedById",
+                table: "Attachments",
+                column: "UploadedById");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Milestones_ProjectID",
