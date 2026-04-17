@@ -44,7 +44,7 @@
 .pageNavContainer a h5 {
   margin: 0 0 0 18px;
   font-size: 1.1rem;
-  font-weight: 500;
+  font-weight: 700;
   color: inherit;
   display: flex;
   align-items: center;
@@ -60,14 +60,14 @@
   background: var(--accent-3);
   border: 2px solid var(--white);
   color: var(--background, #28332b);
-  font-family: Roboto;
-  font-weight: 600;
+  font-family: Roboto, sans-serif;
+  font-weight: 700;
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.5);
 }
 .pageNavContainer a.active h5 {
   color: var(--background, #28332b);
-  font-family: Roboto;
-  font-weight: 600;
+  font-family: Roboto, sans-serif;
+  font-weight: 700;
 }
 
 .side-nav-footer {
@@ -97,7 +97,7 @@
 .side-nav-footer a h5 {
   margin: 0 0 0 18px;
   font-size: 1.1rem;
-  font-weight: 500;
+  font-weight: 700;
   color: inherit;
   display: flex;
   align-items: center;
@@ -114,6 +114,7 @@
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
 }
 .side-nav-footer a.active h5 {
+  color: var(--white);
 }
 
 .userInfo {
@@ -153,7 +154,7 @@
   margin: 0;
   font-size: 0.8rem;
   font-style: italic;
-  font-family: Roboto;
+  font-family: Roboto, sans-serif;
   font-weight: 400;
   color: var(--white);
   opacity: 0.7;
