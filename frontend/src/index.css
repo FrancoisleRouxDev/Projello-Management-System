@@ -1,46 +1,58 @@
-:root {
-  color-scheme: light dark;
-  --background: #28332B;
-  --accent-1: #A6AB8D;
-  --accent-2: #28332B;
-  --accent-3: #E0C05D;
+@import url("https://fonts.googleapis.com/css?family=Roboto:400,500,700,900&display=swap");
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  x-overflow: hidden;
+}
+
+/* Theme switching: use [data-theme="dark"] for dark mode, [data-theme="light"] for light mode */
+:root,
+[data-theme="light"] {
+  --background: #28332b;
+  --accent-1: #a6ab8d;
+  --accent-2: #28332b;
+  --accent-3: #d6ae34;
   --accent-2-10_Opacity: rgba(40, 51, 43, 0.1);
   --accent-2-40_Opacity: rgba(40, 51, 43, 0.4);
-  --success-green: #BDD04E;
-  --error-red: #C34949;
-  --warning-yellow: #DEAB3D;
-  --info-blue: #49B7C3;
-  --shadow-gray: #E5E5E2;
-  --text-light: #F7F7F3;
-  --text-dark: #28332B;
-  --secondary-background: #F7F7F3;
-  --white: #FFFFFF;
+  --success-green: #bdd04e;
+  --error-red: #c34949;
+  --warning-yellow: #deab3d;
+  --info-blue: #49b7c3;
+  --shadow-gray: #e5e5e2;
+  --text-light: #f7f7f3;
+  --text-dark: #28332b;
+  --secondary-background: #f7f7f3;
+  --white: #ffffff;
+  --black: #000000;
+}
+
+[data-theme="dark"] {
+  --background: #141a16;
+  --accent-1: #a6ab8d;
+  --accent-2: #f7f7f3;
+  --accent-3: #e0c05d;
+  --accent-2-10_Opacity: rgba(247, 247, 243, 0.1);
+  --accent-2-40_Opacity: rgba(247, 247, 243, 0.4);
+  --success-green: #bdd04e;
+  --error-red: #c34949;
+  --warning-yellow: #deab3d;
+  --info-blue: #49b7c3;
+  --shadow-gray: #1a1a19;
+  --text-light: #28332b;
+  --text-dark: #f7f7f3;
+  --secondary-background: #28332b;
+  --white: #ffffff;
   --black: #000000;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #141A16;
-    --accent-1: #A6AB8D;
-    --accent-2: #F7F7F3;
-    --accent-3: #E0C05D;
-    --accent-2-10_Opacity: rgba(247, 247, 243, 0.1);
-    --accent-2-40_Opacity: rgba(247, 247, 243, 0.4);
-    --success-green: #BDD04E;
-    --error-red: #C34949;
-    --warning-yellow: #DEAB3D;
-    --info-blue: #49B7C3;
-    --shadow-gray: #1A1A19;
-    --text-light: #28332B;
-    --text-dark: #F7F7F3;
-    --secondary-background: #28332B;
-    --white: #FFFFFF;
-    --black: #000000;
-  }
+  /* Remove theme override so only the toggle controls the theme */
 }
 
-title{
-  font-family: 'Roboto', sans-serif;
+title {
+  font-family: "Roboto", sans-serif;
   font-size: 8rem;
   font-weight: 900;
   letter-spacing: 0.1rem;
@@ -48,48 +60,48 @@ title{
 }
 
 h1 {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
   color: var(--text-dark);
 }
 
-h2{
-  font-family: 'Roboto', sans-serif;
+h2 {
+  font-family: "Roboto", sans-serif;
   font-size: 2rem;
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 0.75rem;
   color: var(--text-dark);
 }
 
 h3 {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 1.75rem;
-  font-weight: 400;
+  font-weight: 500;
   margin-bottom: 0.5rem;
   color: var(--text-dark);
 }
 
 h4 {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 1.5rem;
-  font-weight: 400;
+  font-weight: 500;
   margin-bottom: 0.25rem;
   color: var(--text-dark);
 }
 
-h5{
-  font-family: 'Roboto', sans-serif;
+h5 {
+  font-family: "Roboto", sans-serif;
   font-size: 1.25rem;
-  font-weight: 400;
-  margin-bottom: 0.25rem;
+  font-weight: 500 !important;
+  margin-bottom: 0.1rem;
   color: var(--text-dark);
 }
 
 body {
   font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
     sans-serif;
   margin: auto;
   max-width: 38rem;
