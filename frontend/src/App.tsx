@@ -1,5 +1,5 @@
 import React from "react";
-import { HashRouter, Routes, Route, Link, useNavigate } from "react-router-dom";
+import { HashRouter, Routes, Route, useNavigate } from "react-router-dom"; // ← remove Link
 import DashboardPage from "./pages/dashboard/dashboard";
 import LoginPage from "./pages/login/LoginPage";
 import SignUpPage from "./pages/signup/SignupPage";
@@ -9,25 +9,24 @@ import SingleProjectViewPage from "./pages/single-view/single-project-view";
 
 function LoginWrapper() {
   const navigate = useNavigate();
-  return <LoginPage onSwitchToSignUp={() => navigate("/signup")} />;
+  return (
+    <LoginPage
+      key="login"
+      onSwitchToSignUp={() => navigate("/signup")}
+      onLoginSuccess={() => navigate("/dashboard")}
+    />
+  );
 }
 
 function SignUpWrapper() {
   const navigate = useNavigate();
-  return <SignUpPage onSwitchToLogin={() => navigate("/login")} />;
+  return <SignUpPage key="signup" onSwitchToLogin={() => navigate("/login")} />;
 }
 
 export default function App() {
   return (
     <HashRouter>
-      <nav>
-        <Link to="/dashboard">Dashboard</Link> |{" "}
-        <Link to="/login">Login</Link> |{" "}
-        <Link to="/signup">Sign Up</Link> |{" "}
-        <Link to="/management">Management</Link> |{" "}
-        <Link to="/settings">Settings</Link> |{" "}
-        <Link to="/single-view">Single Project View</Link>
-      </nav>
+      {/* ← remove the entire <nav> block, it sits on top of your pages */}
       <Routes>
         <Route path="/" element={<LoginWrapper />} />
         <Route path="/login" element={<LoginWrapper />} />

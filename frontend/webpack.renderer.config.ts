@@ -9,6 +9,16 @@ rules.push({
 });
 
 rules.push({
+  test: /\.mp3$/,
+  use: [{ 
+    loader: 'file-loader',
+    options: {
+      esModule: false,
+    }
+  }],
+});
+
+rules.push({
   test: /\.svg$/,
   use: [{ 
     loader: 'file-loader',

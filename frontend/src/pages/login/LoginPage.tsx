@@ -1,45 +1,51 @@
 import React, { useState } from "react";
 import Logo from "../../assets/Frame 106.svg";
 import "./LoginPage.css";
-
+const godzillaRoar = require("../../assets/zilla-1.mp3");
 interface LoginPageProps {
   onSwitchToSignUp: () => void;
+  onLoginSuccess: () => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp, onLoginSuccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await fetch("http://localhost:5049/api/Auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+const handleLogin = async () => {
+  setLoading(true);// Shows loading spinner
+  setError("");// Clears previous errors
+  try {
+    const response = await fetch("http://localhost:5049/api/Auth/login", {// Calls backend API
+      method: "POST",
+      headers: { "Content-Type": "application/json" },// Sends JSON
+      body: JSON.stringify({ email, password }),// Serializes form data
+    });
 
-      if (!response.ok) {
-        setError("Invalid email or password.");
-        return;
-      }
-
-      const data = await response.json();
-      localStorage.setItem("token", data.token);
-      alert(`Welcome back, ${data.user}!`);
-    } catch {
-      setError("Could not connect to server.");
-    } finally {
-      setLoading(false);
+    if (!response.ok) {// Checks HTTP status
+      setError("Invalid email or password.");// User-friendly error
+      return;
     }
-  };
 
+    const data = await response.json();// Parses JSON response
+    localStorage.setItem("token", data.token);// Stores JWT for persistence
+
+    // 🦎 Godzilla approves
+    const roar = new Audio(godzillaRoar);
+    roar.play();
+
+    onLoginSuccess();// Navigates to app
+  } catch {
+    setError("Could not connect to server.");// Network error
+  } finally {
+    setLoading(false);// Hides spinner
+  }
+};
+//nice to have, if we can just hit the enter button to log in, instead of having to click the submit button
+// need a new way to show a success message, instead of an alert so we dont have that wierd bug again , applies the same with sign up.
   return (
     <div className="login-container">
-      {/* Left - Form */}
       <div className="login-left">
         <div className="login-card">
           <h1 className="login-title">Log In</h1>
@@ -60,11 +66,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          {error && (
-            <p className="login-error-text">
-              {error}
-            </p>
-          )}
+          {error && <p className="login-error-text">{error}</p>}
 
           <p className="login-signup-text">
             I don't have an Account,{" "}
@@ -94,7 +96,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onSwitchToSignUp }) => {
         </div>
       </div>
 
-      {/* Right - Photo */}
       <div className="login-right">
         <div className="login-overlay" />
         <div className="login-logo">

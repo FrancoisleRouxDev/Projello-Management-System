@@ -11,27 +11,31 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentity<User, IdentityRole>(options => {
-    options.Password.RequireDigit = true;
-    options.Password.RequiredLength = 8;
+builder.Services.AddIdentity<User, IdentityRole>(options => //congigures identity with custom user
+{
+    options.Password.RequireDigit = true;           // must have at least one number
+    options.Password.RequiredLength = 8;            // minimum 8 characters
+    options.Password.RequireLowercase = true;       
+    options.Password.RequireUppercase = true;       
+    options.Password.RequireNonAlphanumeric = false; // This fixes your error
 })
-.AddEntityFrameworkStores<AppDbContext>()
-.AddDefaultTokenProviders();
+.AddEntityFrameworkStores<AppDbContext>()// Stores users in our DB context
+.AddDefaultTokenProviders();// Enables password reset, etc.
 
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "Your_Super_Secret_Key_At_Least_32_Chars";
-builder.Services.AddAuthentication(options => {
+builder.Services.AddAuthentication(options => {// Sets JWT as default auth scheme
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
-.AddJwtBearer(options => {
+.AddJwtBearer(options => { // Validates incoming JWTs
     options.TokenValidationParameters = new TokenValidationParameters {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidateIssuer = true,// Checks token issuer
+        ValidateAudience = true,// Checks intended recipient
+        ValidateLifetime = true,// Ensures not expired
+        ValidateIssuerSigningKey = true, // Verifies signature
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],// From appsettings for flexibility
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)) // Secret key
     };
 });
 
