@@ -26,13 +26,13 @@ namespace Projello.Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto model)
         {
-            var user = new User { 
+            var user = new User {
                 UserName = model.Email, // Using Email as UserName is standard practice for Identity
-                Email = model.Email, 
+                Email = model.Email,
                 FullName = model.FullName,
-                RoleID = model.RoleID 
+                RoleID = model.RoleID
             };
-            
+
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded) return Ok(new { Message = "User created successfully" });

@@ -4,7 +4,7 @@ import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
 import Verify2FA from "./Verify2FA"; // Make sure this import is here
 
-const godzillaRoar = require("../../assets/zilla-1.mp3");
+const godzillaRoar = require("../../assets/zilla-1.mp3").default; // Importing the Godzilla roar sound
 
 interface LoginPageProps {
   onSwitchToSignUp: () => void;
