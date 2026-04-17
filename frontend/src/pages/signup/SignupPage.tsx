@@ -15,10 +15,10 @@ export default function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
   const [roleID, setRoleID] = useState(3);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [successMsg, setSuccessMsg] = useState(""); // NEW: State for success message
+  const [successMsg, setSuccessMsg] = useState("");
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault(); // NEW: Prevents page reload on 'Enter' key submit
+    e.preventDefault();
     setError("");
     setSuccessMsg("");
 
@@ -36,24 +36,27 @@ export default function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        
         let errorMessage = "Registration failed. Please check your information.";
         
-        // Format 1: Standard .NET Identity Error Array
-        if (Array.isArray(data) && data[0]?.description) {
-          errorMessage = data[0].description;
-        } 
-        // Format 2: .NET ValidationProblemDetails (Common for 400 errors)
-        else if (data.errors) {
-          const firstErrorKey = Object.keys(data.errors)[0];
-          errorMessage = data.errors[firstErrorKey][0];
-        } 
-        // Format 3: Simple message object
-        else if (typeof data === "string") {
-          errorMessage = data;
-        } else if (data.message) {
-          errorMessage = data.message;
+        try {
+          // Attempt to parse the JSON error response
+          const data = await response.json();
+          
+          if (Array.isArray(data) && data[0]?.description) {
+            errorMessage = data[0].description;
+          } else if (data.errors) {
+            const firstErrorKey = Object.keys(data.errors)[0];
+            errorMessage = data.errors[firstErrorKey][0];
+          } else if (typeof data === "string") {
+            errorMessage = data;
+          } else if (data.message) {
+            errorMessage = data.message;
+          }
+        } catch (jsonError) {
+          // Fallback if the server sends a raw 500 HTML page instead of JSON
+          if (response.status === 500) {
+            errorMessage = "Internal Server Error (500). The database or backend crashed.";
+          }
         }
 
         setError(errorMessage);
@@ -61,26 +64,23 @@ export default function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
         return;
       }
 
-      // NEW: Show success message, then delay the redirect so the user can read it
       setSuccessMsg("Registration successful! Redirecting to login...");
       setTimeout(() => {
         onSwitchToLogin();
       }, 1500);
       
     } catch {
-      setError("Could not connect to server.");
+      setError("Could not connect to server. Is the API running?");
       setLoading(false);
     }
   };
 
   return (
     <div className="signup-container">
-      {/* Left - Form */}
       <div className="signup-left">
         <div className="signup-card">
           <h1 className="signup-title">Sign Up</h1>
 
-          {/* NEW: Form wrapper allows the "Enter" key to submit the data */}
           <form onSubmit={handleRegister}>
             <input
               className="signup-input"
@@ -149,7 +149,7 @@ export default function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
 
             <div className="signup-button-row">
               <button
-                type="button" // NEW: Prevents cancel button from submitting form
+                type="button"
                 className="signup-cancel-btn"
                 onClick={() => {
                   setFullName("");
@@ -162,7 +162,7 @@ export default function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
                 Cancel
               </button>
               <button
-                type="submit" // NEW: Triggers the form's onSubmit event
+                type="submit"
                 className="signup-submit-btn"
                 disabled={loading}
               >
@@ -173,7 +173,6 @@ export default function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
         </div>
       </div>
 
-      {/* Right - Photo */}
       <div className="signup-right">
         <div className="signup-overlay" />
         <div className="signup-logo">
