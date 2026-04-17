@@ -28,7 +28,7 @@ body {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   background: var(--Accent-1, #a6ab8d);
   border-radius: 20px;
   height: 50px;
@@ -98,4 +98,22 @@ body {
 }
 .sort-arrow.flipped {
   transform: scaleY(-1);
+}
+
+.jelloGallery {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  min-height: 200px;
+}
+
+.jelloGallery-outer {
+  min-height: 200px;
+  width: 100%;
+  position: relative;
 }

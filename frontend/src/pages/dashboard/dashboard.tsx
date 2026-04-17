@@ -3,6 +3,7 @@ import "./dashboard.css";
 import BearLogo from "../../assets/Logo/SVG_Logo.svg";
 import SearchIcon from "../../assets/Logo/SearchIcon.svg";
 import SortArrow from "../../assets/Logo/SortArrow.svg";
+import JelloItem from "../../components/JelloItem";
 
 export default function DashboardPage() {
   const [flipped, setFlipped] = useState({
@@ -76,7 +77,17 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="jelloGallery"></div>
+      <div className="jelloGallery-outer">
+        <div className="jelloGallery">
+          <JelloItem />
+          <JelloItem />
+          <JelloItem />
+          <JelloItem />
+          <JelloItem />
+          <JelloItem />
+          <JelloItem />
+        </div>
+      </div>
     </div>
   );
 }
