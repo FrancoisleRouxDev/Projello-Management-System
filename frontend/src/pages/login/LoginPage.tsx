@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import Logo from "../../assets/Frame 106.svg";
 import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
-import Verify2FA from "./Verify2FA"; // Make sure this import is here
 
 const godzillaRoar = require("../../assets/zilla-1.mp3").default; // Importing the Godzilla roar sound
 
@@ -11,19 +10,17 @@ interface LoginPageProps {
   onLoginSuccess: () => void;
 }
 
-// Exported as a standard function to prevent TS2786 errors
 export default function LoginPage({ onSwitchToSignUp, onLoginSuccess }: LoginPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-  const [requires2FA, setRequires2FA] = useState(false);
 
   const navigate = useNavigate();
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Prevents page reload on 'Enter' key submit
+    e.preventDefault(); 
     setLoading(true);
     setError("");
     setSuccessMsg("");
@@ -43,10 +40,10 @@ export default function LoginPage({ onSwitchToSignUp, onLoginSuccess }: LoginPag
         return;
       }
 
-      // Check if 2FA is required for this user
+      // --- NEW 2FA ROUTING LOGIC ---
       if (data.requires2FA) {
-        setRequires2FA(true);
-        setLoading(false);
+        // Navigate to the new 2FA page and securely pass the email in the route state
+        navigate("/verify-2fa", { state: { email: email } });
       } else {
         completeLogin(data.token);
       }
@@ -70,24 +67,12 @@ export default function LoginPage({ onSwitchToSignUp, onLoginSuccess }: LoginPag
     }, 1000);
   };
 
-  // 2FA Intercept Screen
-  if (requires2FA) {
-    return (
-      <Verify2FA 
-        email={email} 
-        onVerificationSuccess={(token: string) => completeLogin(token)} 
-        onCancel={() => setRequires2FA(false)} 
-      />
-    );
-  }
-
   return (
     <div className="login-container">
       <div className="login-left">
         <div className="login-card">
           <h1 className="login-title">Log In</h1>
 
-          {/* Form wrapper allows the "Enter" key to submit the data */}
           <form onSubmit={handleLoginSubmit}>
             <input
               className="login-input"

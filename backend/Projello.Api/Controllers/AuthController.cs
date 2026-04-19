@@ -124,11 +124,29 @@ namespace Projello.Api.Controllers
             });
         }
 
+        // --- NEW: CHECK 2FA STATUS ENDPOINT ---
+        [HttpGet("2fa-status")]
+        public async Task<IActionResult> Get2FAStatus([FromQuery] string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return BadRequest(new { message = "Email is required." });
+            }
+
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found." });
+            }
+
+            return Ok(new { is2FAEnabled = user.IsTwoFactorEnabled });
+        }
+
         private string GenerateJwtToken(User user)
         {
             var claims = new[] {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Email!),
-                new Claim("FullName", user.FullName),
+                new Claim("FullName", user.FullName ?? ""),
                 new Claim("RoleID", user.RoleID.ToString())
             };
 
