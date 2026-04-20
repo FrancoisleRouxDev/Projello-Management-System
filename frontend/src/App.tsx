@@ -10,6 +10,7 @@ import SingleProjectViewPage from "./pages/single-view/single-project-view";
 import HistoryPage from "./pages/history/history";
 import SideNavBar from "./components/SideNavBar";
 import BodyBlock from "./components/BodyBlock";
+import SplashPage from "./pages/splash/SplashPage";
 
 function LoginWrapper() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   
   // Added "/verify-2fa" to the array so the sidebar is hidden on this page too
-  const hideNav = ["/login", "/signup", "/", "/verify-2fa"].includes(location.pathname);
+  const hideNav = ["/", "/login", "/signup", "/verify-2fa"].includes(location.pathname);
   
   return (
     <div style={{ display: "flex" }}>
@@ -60,7 +61,7 @@ export default function App() {
     <HashRouter>
       <AppLayout>
         <Routes>
-          <Route path="/" element={<LoginWrapper />} />
+          <Route path="/" element={<SplashPage />} />
           <Route path="/login" element={<LoginWrapper />} />
           <Route path="/signup" element={<SignUpWrapper />} />
           
