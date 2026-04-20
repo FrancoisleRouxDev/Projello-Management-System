@@ -52,6 +52,7 @@
   width: 100%;
   box-sizing: border-box;
   transition: background 0.3s ease-in-out;
+  margin-bottom: 16px;
 }
 .login-input:focus,
 .login-input:active {

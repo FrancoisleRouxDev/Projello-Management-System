@@ -2,53 +2,70 @@ import React, { useState } from "react";
 import Logo from "../../assets/Frame 106.svg";
 import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
-import Verify2FA from "./Verify2FA"; // Make sure this import is here
 
-const godzillaRoar = require("../../assets/zilla-1.mp3");
+const godzillaRoar = require("../../assets/zilla-1.mp3").default; // Importing the Godzilla roar sound
 
 interface LoginPageProps {
   onSwitchToSignUp: () => void;
   onLoginSuccess: () => void;
 }
 
-// Exported as a standard function to prevent TS2786 errors
 export default function LoginPage({ onSwitchToSignUp, onLoginSuccess }: LoginPageProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-  const [requires2FA, setRequires2FA] = useState(false);
 
-const handleLogin = async () => {
-  setLoading(true);// Shows loading spinner
-  setError("");// Clears previous errors
-  try {
-    const response = await fetch("http://localhost:5049/api/Auth/login", {// Calls backend API
-      method: "POST",
-      headers: { "Content-Type": "application/json" },// Sends JSON
-      body: JSON.stringify({ email, password }),// Serializes form data
-    });
+  const navigate = useNavigate();
 
-    if (!response.ok) {// Checks HTTP status
-      setError("Invalid email or password.");// User-friendly error
-      return;
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault(); 
+    setLoading(true);
+    setError("");
+    setSuccessMsg("");
+
+    try {
+      const response = await fetch("http://localhost:5049/api/Auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Invalid email or password.");
+        setLoading(false);
+        return;
+      }
+
+      // --- NEW 2FA ROUTING LOGIC ---
+      if (data.requires2FA) {
+        // Navigate to the new 2FA page and securely pass the email in the route state
+        navigate("/verify-2fa", { state: { email: email } });
+      } else {
+        completeLogin(data.token);
+      }
+    } catch {
+      setError("Could not connect to server.");
+      setLoading(false);
     }
   };
 
-    const data = await response.json();// Parses JSON response
-    localStorage.setItem("token", data.token);// Stores JWT for persistence
-
+  const completeLogin = (token: string) => {
+    localStorage.setItem("token", token);
+    
+    setSuccessMsg("Login successful! Redirecting...");
+    
     // 🦎 Godzilla approves
     const roar = new Audio(godzillaRoar);
     roar.play();
 
-    onLoginSuccess();// Navigates to app
-  } catch {
-    setError("Could not connect to server.");// Network error
-  } finally {
-    setLoading(false);// Hides spinner
-  }
+    setTimeout(() => {
+      onLoginSuccess();
+    }, 1000);
+  };
 
   return (
     <div className="login-container">
@@ -56,7 +73,6 @@ const handleLogin = async () => {
         <div className="login-card">
           <h1 className="login-title">Log In</h1>
 
-          {/* Form wrapper allows the "Enter" key to submit the data */}
           <form onSubmit={handleLoginSubmit}>
             <input
               className="login-input"

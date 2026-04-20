@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using OtpNet; // Required for 2FA
+using Microsoft.AspNetCore.Authorization;
 
 namespace Projello.Api.Controllers
 {
@@ -23,30 +24,30 @@ namespace Projello.Api.Controllers
             _config = config;
         }
 
+        // --- CREATE: REGISTER ---
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto model)
         {
-            var user = new User { 
-                UserName = model.Email, // Using Email as UserName is standard practice for Identity
-                Email = model.Email, 
+            var user = new User {
+                UserName = model.Email,
+                Email = model.Email,
                 FullName = model.FullName,
-                RoleID = model.RoleID 
+                RoleID = model.RoleID // Maps to your ERD Role system
             };
-            
+
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded) return Ok(new { Message = "User created successfully" });
             return BadRequest(result.Errors);
         }
 
+        // --- READ: LOGIN ---
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                // --- 2FA LOGIC ---
-                // If the user has 2FA enabled, stop here. Do NOT issue the JWT yet.
                 if (user.IsTwoFactorEnabled)
                 {
                     return Ok(new { 
@@ -56,7 +57,6 @@ namespace Projello.Api.Controllers
                     });
                 }
 
-                // If 2FA is not enabled, proceed to issue the JWT normally.
                 var token = GenerateJwtToken(user);
                 return Ok(new { 
                     Token = token, 
@@ -67,7 +67,59 @@ namespace Projello.Api.Controllers
             return Unauthorized(new { Message = "Invalid credentials" });
         }
 
-        // --- VERIFICATION ENDPOINT ---
+        // --- READ: GET CURRENT USER (ME) ---
+        // Useful for React to refresh user data on app load
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            var email = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByEmailAsync(email!);
+
+            if (user == null) return NotFound();
+
+            return Ok(new {
+                user.Id,
+                user.Email,
+                user.FullName,
+                user.RoleID,
+                user.IsTwoFactorEnabled
+            });
+        }
+
+        // --- UPDATE: CHANGE PASSWORD ---
+        [Authorize]
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
+        {
+            var email = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByEmailAsync(email!);
+
+            if (user == null) return NotFound();
+
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            if (result.Succeeded) return Ok(new { Message = "Password updated successfully." });
+
+            return BadRequest(result.Errors);
+        }
+
+        // --- DELETE: REMOVE ACCOUNT ---
+        [Authorize]
+        [HttpDelete("delete-account")]
+        public async Task<IActionResult> DeleteAccount()
+        {
+            var email = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByEmailAsync(email!);
+
+            if (user == null) return NotFound();
+
+            var result = await _userManager.DeleteAsync(user);
+            if (result.Succeeded) return Ok(new { Message = "Account deleted." });
+
+            return BadRequest(result.Errors);
+        }
+
+        // --- 2FA: VERIFICATION ---
         [HttpPost("verify-2fa")]
         public async Task<IActionResult> Verify2FA([FromBody] Verify2FaDto model)
         {
@@ -75,15 +127,13 @@ namespace Projello.Api.Controllers
             if (user == null) return BadRequest(new { Message = "User not found." });
 
             if (string.IsNullOrEmpty(user.TwoFactorSecret))
-                return BadRequest(new { Message = "2FA is not configured for this user." });
+                return BadRequest(new { Message = "2FA is not configured." });
 
-            // Validate the 6-digit code against the user's secret
             var totp = new Totp(Base32Encoding.ToBytes(user.TwoFactorSecret));
             bool isValid = totp.VerifyTotp(model.Code, out long timeStepMatched);
 
             if (isValid)
             {
-                // Code is correct! Issue the real JWT token now.
                 var token = GenerateJwtToken(user);
                 return Ok(new { Token = token, User = user.FullName });
             }
@@ -91,44 +141,60 @@ namespace Projello.Api.Controllers
             return BadRequest(new { Message = "Invalid verification code." });
         }
 
-        // --- NEW: SETUP 2FA ENDPOINT ---
+        // --- 2FA: SETUP ---
         [HttpPost("generate-2fa-secret")]
         public async Task<IActionResult> Generate2FASecret([FromBody] Setup2FaDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null) return NotFound(new { Message = "User not found." });
+            if (user == null) return NotFound();
 
-            // 1. Generate a secure Base32 secret key
             var secretKey = KeyGeneration.GenerateRandomKey(20);
             var base32Secret = Base32Encoding.ToString(secretKey);
 
-            // 2. Save the secret to the user's record
             user.TwoFactorSecret = base32Secret;
-            
-            // Note: We turn it on here. In a production app, you might wait to set this 
-            // to true until they successfully verify the first code, but this works perfectly for your MVP!
             user.IsTwoFactorEnabled = true; 
             
             await _userManager.UpdateAsync(user);
 
-            // 3. Create the URI that the React QR Code component needs
             var issuer = "Projello";
-            var accountName = user.Email;
-            var authenticatorUri = $"otpauth://totp/{issuer}:{accountName}?secret={base32Secret}&issuer={issuer}";
+            var authenticatorUri = $"otpauth://totp/{issuer}:{user.Email}?secret={base32Secret}&issuer={issuer}";
 
-            // 4. Send it back to the React frontend
-            return Ok(new 
-            { 
-                SecretKey = base32Secret, 
-                AuthenticatorUri = authenticatorUri 
-            });
+            return Ok(new { SecretKey = base32Secret, AuthenticatorUri = authenticatorUri });
         }
 
+        // --- 2FA: DISABLE ---
+        [Authorize]
+        [HttpPost("disable-2fa")]
+        public async Task<IActionResult> Disable2FA()
+        {
+            var email = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userManager.FindByEmailAsync(email!);
+
+            if (user == null) return NotFound();
+
+            user.IsTwoFactorEnabled = false;
+            user.TwoFactorSecret = null;
+            await _userManager.UpdateAsync(user);
+
+            return Ok(new { Message = "2FA has been disabled." });
+        }
+
+        // --- 2FA: STATUS ---
+        [HttpGet("2fa-status")]
+        public async Task<IActionResult> Get2FAStatus([FromQuery] string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null) return NotFound();
+
+            return Ok(new { is2FAEnabled = user.IsTwoFactorEnabled });
+        }
+
+        // --- HELPER: JWT GENERATION ---
         private string GenerateJwtToken(User user)
         {
             var claims = new[] {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email!),
-                new Claim("FullName", user.FullName),
+                new Claim(ClaimTypes.NameIdentifier, user.Email!), // Used for [Authorize] lookup
+                new Claim("FullName", user.FullName ?? ""),
                 new Claim("RoleID", user.RoleID.ToString())
             };
 
