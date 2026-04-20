@@ -1,20 +1,32 @@
-# Sensitive config
-appsettings.Development.json
-appsettings.json
+# --- OS & IDE ---
+.vs/
+.vscode/
+*.user
+*.suo
+.DS_Store
 
-# Build outputs
-*.dll
-*.cache
-*.props
+# --- Build Outputs ---
 bin/
 obj/
+publish/
+*.dll
+*.exe
+*.pdb
+*.cache
+*.props
 
-# Docker
+# --- Sensitive Config (The "Big Three") ---
+# We use **/ to catch them regardless of folder depth
+**/appsettings.json
+**/appsettings.Development.json
 .env
 
-# VS stuff
-.vs/
-*.user
-backend/Projello.Api/appsettings.json
-*.json
-/node_modules
+# --- Frontend / Node ---
+node_modules/
+dist/
+build/
+.eslintcache
+npm-debug.log*
+
+# --- DO NOT ignore all .json files! ---
+# (Removing *.json from here so package.json remains safe)
