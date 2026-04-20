@@ -1,0 +1,33 @@
+.splash-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #1a2420;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.splash-logo-wrap {
+  position: absolute;
+  top: 32%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+}
+
+.splash-brand-logo {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  /* Ring is at ~190px below canvas center. Logo is 240px tall approx,
+     so place top at ~100px below center to sit neatly above the ring */
+  top: calc(50% + 100px);
+  width: 240px;
+  max-width: 70vw;
+  z-index: 3;
+  pointer-events: none;
+}

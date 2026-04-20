@@ -5,14 +5,20 @@ import "./settings.css";
 const getUserEmailFromToken = () => {
   const token = localStorage.getItem("token"); // Make sure this matches where you save your JWT on login
   if (!token) return "";
-  
+
   try {
-    // JWTs have 3 parts separated by dots. The middle part is the payload.
-    const payloadBase64 = token.split('.')[1];
-    // Decode the base64 payload
+    const parts = token.split('.');
+    if (parts.length !== 3) return "";
+
+    let payloadBase64 = parts[1];
+    // Convert base64url to base64
+    payloadBase64 = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
+    while (payloadBase64.length % 4 !== 0) {
+      payloadBase64 += '=';
+    }
+
     const decodedPayload = JSON.parse(atob(payloadBase64));
-    // Return the 'sub' claim (which contains the email from our C# AuthController)
-    return decodedPayload.sub || "";
+    return decodedPayload.sub || decodedPayload.nameid || decodedPayload.email || decodedPayload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || "";
   } catch (e) {
     console.error("Error decoding token:", e);
     return "";
