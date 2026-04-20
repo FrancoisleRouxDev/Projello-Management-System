@@ -1,6 +1,5 @@
 // NOTE: This file will contain API endpoints for exposing sanitized WebRTC runtime configuration (for example ICE server settings) to authenticated clients.
 
-using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Projello.Api.Models;
@@ -20,6 +19,6 @@ public sealed class WebRtcController : ControllerBase
     }
 
     [HttpGet("config")]
-    public IActionResult GetConfig() => DayOfWeek(_options.Value);
+    public IActionResult GetConfig() => Ok(_options.Value);
     // This endpoint will return the WebRTC configuration (e.g. ICE servers) to authenticated clients.
 }
