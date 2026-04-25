@@ -68,7 +68,6 @@ namespace Projello.Api.Controllers
         }
 
         // --- READ: GET CURRENT USER (ME) ---
-        // Useful for React to refresh user data on app load
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()
@@ -134,6 +133,14 @@ namespace Projello.Api.Controllers
 
             if (isValid)
             {
+                // --- NEW PRODUCTION LOGIC ---
+                // If they are verifying for the first time during setup, officially enable it!
+                if (!user.IsTwoFactorEnabled)
+                {
+                    user.IsTwoFactorEnabled = true;
+                    await _userManager.UpdateAsync(user);
+                }
+
                 var token = GenerateJwtToken(user);
                 return Ok(new { Token = token, User = user.FullName });
             }
@@ -151,8 +158,8 @@ namespace Projello.Api.Controllers
             var secretKey = KeyGeneration.GenerateRandomKey(20);
             var base32Secret = Base32Encoding.ToString(secretKey);
 
+            // Save the secret, but DO NOT enable 2FA yet!
             user.TwoFactorSecret = base32Secret;
-            user.IsTwoFactorEnabled = true; 
             
             await _userManager.UpdateAsync(user);
 
