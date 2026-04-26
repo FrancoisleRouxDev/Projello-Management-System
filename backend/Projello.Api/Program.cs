@@ -63,4 +63,4 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.Run();
+app.Run(); // add the auth to program.cs so i can auth on swagger and test client end points for blacklisting feature.
