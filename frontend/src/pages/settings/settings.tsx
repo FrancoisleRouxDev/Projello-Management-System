@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./settings.css";
 import CustomModal from "../../components/CustomModal";
 import CustomSwitch from "../../components/CustomSwitch";
@@ -29,6 +30,7 @@ const getUserEmailFromToken = () => {
 };
 
 export default function SettingsPage() {
+  const navigate = useNavigate();
   // Pull the current user's email directly from the decoded JWT token
   const userEmail = getUserEmailFromToken();
 
@@ -220,6 +222,19 @@ export default function SettingsPage() {
             </button>
           </div>
         </CustomModal>
+      </div>
+      {/* Logout Button */}
+      <div className="settings-section">
+        <button
+          className="btn-primary"
+          style={{ marginTop: 32 }}
+          onClick={() => {
+            localStorage.removeItem("token");
+            navigate("/login");
+          }}
+        >
+          Logout
+        </button>
       </div>
     </div>
   );

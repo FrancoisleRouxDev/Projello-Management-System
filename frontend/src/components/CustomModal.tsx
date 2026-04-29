@@ -18,8 +18,8 @@ const CustomModal: React.FC<CustomModalProps> = ({ open, onCancel, title, childr
     footer={footer}
     width={width || 420}
     centered
-    destroyOnClose
-    maskClosable={!footer}
+    destroyOnHidden
+    mask={{ closable: !footer }}
   >
     {children}
   </Modal>
