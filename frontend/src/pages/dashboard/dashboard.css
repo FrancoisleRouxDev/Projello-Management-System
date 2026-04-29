@@ -37,6 +37,16 @@ body {
     0 2px 4px 0 rgba(40, 51, 43, 0.2),
     0 -3px 8px 0 rgba(40, 51, 43, 0.1) inset;
   border: 2px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
+  overflow-x: hidden;
+}
+
+.filterBar h5,
+.filterBar input,
+.filterBar .searchInput {
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .searchBar {
