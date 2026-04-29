@@ -1,4 +1,60 @@
-/* @import url("https://fonts.googleapis.com/css?family=Roboto:400,500,700,900&display=swap"); */
+/* Self-hosted Roboto font faces */
+@font-face {
+  font-family: "Roboto";
+  src: url("./assets/fonts/roboto/static/Roboto-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("./assets/fonts/roboto/static/Roboto-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("./assets/fonts/roboto/static/Roboto-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("./assets/fonts/roboto/static/Roboto-Black.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("./assets/fonts/roboto/static/Roboto-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("./assets/fonts/roboto/static/Roboto-Thin.ttf") format("truetype");
+  font-weight: 100;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("./assets/fonts/roboto/static/Roboto-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("./assets/fonts/roboto/static/Roboto-BoldItalic.ttf")
+    format("truetype");
+  font-weight: 700;
+  font-style: italic;
+}
+@font-face {
+  font-family: "Roboto";
+  src: url("./assets/fonts/roboto/static/Roboto-BlackItalic.ttf")
+    format("truetype");
+  font-weight: 900;
+  font-style: italic;
+}
 
 * {
   box-sizing: border-box;
