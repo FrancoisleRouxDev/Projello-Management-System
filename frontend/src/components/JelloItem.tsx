@@ -1,9 +1,17 @@
 import React from "react";
 import "./JelloItem.css";
+import { useNavigate } from "react-router-dom";
 
 export default function JelloItem() {
+    const navigate = useNavigate();
     return (
-        <div className="JelloItem">
+        <div
+            className="JelloItem clickable"
+            onClick={() => navigate("/single-view")}
+            tabIndex={0}
+            role="button"
+            onKeyDown={e => { if (e.key === "Enter" || e.key === " ") navigate("/single-view"); }}
+        >
             <div className="ItemNames">
                 <h5>Jello Name</h5>
                 <p className="Item_ClientName">Client Name</p>

@@ -19,6 +19,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  transition:
+    box-shadow 0.2s,
+    transform 0.2s,
+    background 0.2s;
+}
+
+.JelloItem.clickable {
+  cursor: pointer;
+}
+.JelloItem.clickable:hover,
+.JelloItem.clickable:focus {
+  /* box-shadow:
+    0 4px 12px 0 rgba(40, 51, 43, 0.25),
+    0 2px 8px 0 rgba(40, 51, 43, 0.12) inset; */
+  background-color: var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.07));
+  outline: none;
+  transform: translateY(-2px) scale(0.99);
 }
 
 .ItemNames {
