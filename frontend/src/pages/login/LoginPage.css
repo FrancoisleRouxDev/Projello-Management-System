@@ -159,3 +159,9 @@
   font-size: 13px;
 }
 /*Test123!  */
+
+#tfaHeading{
+  overflow: shown;
+  text-overflow: wrap;
+  white-space: normal;
+}
