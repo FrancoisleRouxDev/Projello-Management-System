@@ -22,13 +22,21 @@ namespace Projello.Api.Data
 
 
 //Section below is extra rule for the database, This one is so no client can be blacklisted by default, they have to be manually blacklisted by an admin.
-        protected override void OnModelCreating(ModelBuilder builder)
-        {
-            base.OnModelCreating(builder);
-            
-            builder.Entity<Client>()
-                .Property(c => c.IsBlacklisted)
-                .HasDefaultValue(false);
-        }
-    }
+     protected override void OnModelCreating(ModelBuilder builder)
+{
+    base.OnModelCreating(builder);
+
+    // No client is blacklisted by default
+    builder.Entity<Client>()
+        .Property(c => c.IsBlacklisted)
+        .HasDefaultValue(false);
+
+    // Correct relationship configuration
+    builder.Entity<Client>()
+        .HasOne(c => c.BlacklistedBy)           // Navigation property (User)
+        .WithMany()                             // Admin can blacklist many clients
+        .HasForeignKey(c => c.BlacklistedById)  // The FK property (string)
+        .OnDelete(DeleteBehavior.SetNull);      // If admin is deleted, keep the client record
+}
+}
 }
