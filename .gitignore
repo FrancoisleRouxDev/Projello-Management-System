@@ -30,3 +30,11 @@ npm-debug.log*
 
 # --- DO NOT ignore all .json files! ---
 # (Removing *.json from here so package.json remains safe)
+/node_modules
+/node_modules
+/node_modules/react-dom
+/node_modules
+node_modules/react-dom/cjs/react-dom-profiling.profiling.js
+/node_modules
+*.json
+*.json

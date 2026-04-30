@@ -222,6 +222,16 @@ namespace Projello.Api.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ClientID"));
 
+                    b.Property<string>("BlacklistReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("BlacklistedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("BlacklistedById")
+                        .HasColumnType("text");
+
                     b.Property<string>("ContactEmail")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -247,6 +257,8 @@ namespace Projello.Api.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("ClientID");
+
+                    b.HasIndex("BlacklistedById");
 
                     b.ToTable("Clients");
                 });
@@ -643,6 +655,16 @@ namespace Projello.Api.Migrations
                     b.Navigation("Task");
 
                     b.Navigation("UploadedBy");
+                });
+
+            modelBuilder.Entity("Projello.Api.Models.Client", b =>
+                {
+                    b.HasOne("Projello.Api.Models.User", "BlacklistedBy")
+                        .WithMany()
+                        .HasForeignKey("BlacklistedById")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("BlacklistedBy");
                 });
 
             modelBuilder.Entity("Projello.Api.Models.Milestone", b =>

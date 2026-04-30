@@ -197,26 +197,26 @@ namespace Projello.Api.Controllers
         }
 
         // --- HELPER: JWT GENERATION ---
-        private string GenerateJwtToken(User user)
-        {
-            var claims = new[] {
-                new Claim(ClaimTypes.NameIdentifier, user.Email!), // Used for [Authorize] lookup
-                new Claim("FullName", user.FullName ?? ""),
-                new Claim("RoleID", user.RoleID.ToString())
-            };
+   private string GenerateJwtToken(User user)
+{
+    var claims = new[] {
+        new Claim(ClaimTypes.NameIdentifier, user.Email!),
+        new Claim("FullName", user.FullName ?? ""),
+        new Claim("RoleID", user.RoleID.ToString())
+    };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddDays(1),
-                signingCredentials: creds
-            );
+    var token = new JwtSecurityToken(
+        issuer: _config["Jwt:Issuer"],
+        audience: _config["Jwt:Audience"],
+        claims: claims,
+        expires: DateTime.UtcNow.AddDays(1),  // change Now to UtcNow
+        signingCredentials: creds
+    );
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
-        }
+    return new JwtSecurityTokenHandler().WriteToken(token);
+}
     }
 }
