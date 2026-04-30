@@ -1,0 +1,162 @@
+.management-client-table {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.management-client-table__header,
+.management-client-table__row {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.8fr) repeat(3, minmax(120px, 1fr)) minmax(140px, 1fr) 56px;
+  align-items: center;
+}
+
+.management-client-table__header {
+  padding: 14px 20px;
+  background: #f9fafb;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.management-client-table__row {
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.management-client-table__cell {
+  min-width: 0;
+}
+
+.management-client-table__cell--client {
+  padding-right: 16px;
+}
+
+.management-client-table__cell--actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.management-client-table__identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.management-client-table__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #e5e7eb;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+
+.management-client-table__identity-copy {
+  min-width: 0;
+}
+
+.management-client-table__name {
+  color: #101828;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.management-client-table__company {
+  color: #6a7282;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.management-client-table__value {
+  color: #101828;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.management-client-table__value--warning {
+  color: #f54900;
+}
+
+.management-client-table__subvalue {
+  color: #6a7282;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.management-client-table__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.management-client-table__badge--success {
+  background: #dcfce7;
+  color: #016630;
+}
+
+.management-client-table__badge--warning {
+  background: #ffedd4;
+  color: #9f2d00;
+}
+
+.management-client-table__badge--danger {
+  background: #ffe2e2;
+  color: #9f0712;
+}
+
+.management-client-table__badge--neutral {
+  background: #e5e7eb;
+  color: #334155;
+}
+
+.management-client-table__action-button {
+  border: 0;
+  background: transparent;
+  color: #6b7280;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 6px;
+}
+
+.management-client-table__action-button:hover {
+  color: #111827;
+}
+
+@media (max-width: 1100px) {
+  .management-client-table__header,
+  .management-client-table__row {
+    grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(110px, 1fr)) minmax(120px, 1fr) 52px;
+  }
+}
+
+@media (max-width: 900px) {
+  .management-client-table__header {
+    display: none;
+  }
+
+  .management-client-table__row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .management-client-table__cell--actions {
+    justify-content: flex-start;
+  }
+}
