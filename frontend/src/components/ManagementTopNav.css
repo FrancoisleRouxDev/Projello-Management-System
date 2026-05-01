@@ -1,7 +1,13 @@
 .management-top-nav {
+  /* The nav background is controlled here. Change the CSS variable --management-top-nav-bg
+     or replace the fallback color below. */
   width: 100%;
   display: flex;
   align-items: flex-end;
+  box-sizing: border-box;
+  /* Default background; override by setting --management-top-nav-bg on a parent or this element */
+  background: var(--management-top-nav-bg, #A6AB8D);
+  padding: 12px 32px;
 }
 
 .management-top-nav__tabs {
@@ -40,3 +46,11 @@
 .management-top-nav__tab--active .management-top-nav__label {
   color: #f8fafc;
 }
+
+/*    uncomment and tweak the rule below to have an active tab with a filled background */
+/*
+.management-top-nav__tab--active {
+  background: rgba(0,0,0,0.06);
+  border-radius: 8px 8px 0 0;
+}
+*/
