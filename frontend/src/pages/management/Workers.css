@@ -1,1 +1,46 @@
+.workers-page {
+	display: flex;
+	flex-direction: column;
+	gap: 28px;
+}
+
+.workers-page__stats {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 20px;
+}
+
+.workers-page__empty-state {
+	padding: 32px;
+	border: 1px dashed #d1d5db;
+	border-radius: 12px;
+	background: #f9fafb;
+}
+
+.workers-page__title {
+	margin: 0 0 8px;
+	color: #0a0a0a;
+	font-size: 24px;
+	font-weight: 600;
+	line-height: 32px;
+}
+
+.workers-page__subtitle {
+	margin: 0;
+	color: #6b7280;
+	font-size: 14px;
+	line-height: 20px;
+}
+
+@media (max-width: 1200px) {
+	.workers-page__stats {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 768px) {
+	.workers-page__stats {
+		grid-template-columns: 1fr;
+	}
+}
 
