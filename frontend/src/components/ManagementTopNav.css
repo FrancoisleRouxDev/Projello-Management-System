@@ -10,6 +10,13 @@
   padding: 12px 32px;
 }
 
+/* Use this class when you want the nav to ignore the parent padding and stretch edge-to-edge. */
+.management-top-nav--full-bleed {
+  width: calc(100% + 242px);
+  margin: -60px -121px 0;
+  border-radius: 20px 0 0 0;
+}
+
 .management-top-nav__tabs {
   display: flex;
   gap: 24px;

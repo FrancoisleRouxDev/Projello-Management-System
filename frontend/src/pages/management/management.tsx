@@ -21,6 +21,7 @@ export default function ManagementPage() {
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={(tabId) => setActiveTab(tabId as ManagementTabId)}
+        fullBleed
       />
 
       {/* Render the selected management page */}

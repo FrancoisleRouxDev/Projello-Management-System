@@ -11,13 +11,17 @@ type ManagementTopNavProps = {
   activeTab: string;
   onTabChange: (tabId: string) => void;
   className?: string;
+  fullBleed?: boolean;
 };
 
 // Controlled tab switcher for the management pages.
 // The page owns the active tab state; this component only renders the tabs and emits changes.
-export default function ManagementTopNav({ tabs, activeTab, onTabChange, className = "" }: ManagementTopNavProps) {
+export default function ManagementTopNav({ tabs, activeTab, onTabChange, className = "", fullBleed = false }: ManagementTopNavProps) {
   return (
-    <nav className={`management-top-nav ${className}`.trim()} aria-label="Management sections">
+    <nav
+      className={`management-top-nav ${fullBleed ? "management-top-nav--full-bleed" : ""} ${className}`.trim()}
+      aria-label="Management sections"
+    >
       <div className="management-top-nav__tabs">
         {tabs.map((tab) => {
           const isActive = tab.id === activeTab;
