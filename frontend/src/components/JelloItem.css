@@ -1,3 +1,14 @@
+.Item_Date h5,
+.Item_ActiveWorkers h5 {
+  font-size: clamp(0.7rem, 4vw, 1.1rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  padding: 0 4px;
+  width: 100%;
+  min-width: 0;
+}
 .JelloItem {
   background-color: var(--secondary-background, #f7f7f3);
   width: 100%;
@@ -40,7 +51,7 @@
 }
 
 .JelloInfo > div {
-  flex: 1 0 0;
+  flex: 1 1 0;
   min-width: 0;
   text-align: center;
   justify-content: center;
@@ -49,6 +60,7 @@
   border-left: 1px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
   height: 100%;
   width: 100%;
+  max-width: 100%;
 }
 
 .filterBar .searchBar {
@@ -78,14 +90,14 @@
   width: 100%;
 }
 
-.Item_Progress{
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: flex-end;
-    padding: 10px;
-    padding-top: 20px;
-    padding-bottom: 0;
+.Item_Progress {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 10px;
+  padding-top: 20px;
+  padding-bottom: 0;
 }
 
 .ProgressBar {
@@ -98,17 +110,19 @@
 }
 .ProgressBar__fill {
   height: 100%;
-  background: #BDD04E;
-  box-shadow: 2px -1px 3px 0 rgba(0, 0, 0, 0.35) inset, -1px 2px 3px 0 rgba(247, 247, 243, 0.57) inset;
+  background: #bdd04e;
+  box-shadow:
+    2px -1px 3px 0 rgba(0, 0, 0, 0.35) inset,
+    -1px 2px 3px 0 rgba(247, 247, 243, 0.57) inset;
   border-radius: 10px 0 0 10px;
   transition: width 0.3s;
 }
 .ProgressBar__label {
-    font-size: 0.7rem;
-    color: var(--accent-240-opacity, rgba(40, 51, 43, 0.40));
-    font-family: Roboto, sans-serif;
-    font-style: italic;
-    text-align: center;
-    text-shadow: 0 0 1px rgba(0, 0, 0, 0.15);
-    font-weight: 500;
+  font-size: 0.7rem;
+  color: var(--accent-240-opacity, rgba(40, 51, 43, 0.4));
+  font-family: Roboto, sans-serif;
+  font-style: italic;
+  text-align: center;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.15);
+  font-weight: 500;
 }
