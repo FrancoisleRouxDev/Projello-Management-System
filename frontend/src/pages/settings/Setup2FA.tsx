@@ -19,7 +19,7 @@ export default function Setup2FA({ userEmail }: Setup2FAProps) {
       const response = await fetch('http://localhost:5049/api/Auth/generate-2fa-secret', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail }) // Pass the logged-in user's email
+        body: JSON.stringify({ email: userEmail })
       });
 
       const data = await response.json();
@@ -37,7 +37,6 @@ export default function Setup2FA({ userEmail }: Setup2FAProps) {
     }
   };
 
-  // Styling in between the component for testing purposes, will be moved to CSS file later
   return (
     <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '8px', maxWidth: '500px' }}>
       <h3>Secure Your Account</h3>
@@ -56,7 +55,7 @@ export default function Setup2FA({ userEmail }: Setup2FAProps) {
           <p style={{ fontWeight: 'bold' }}>1. Scan this QR Code with your Authenticator App</p>
           
           <div style={{ padding: '20px', backgroundColor: 'white', display: 'inline-block', borderRadius: '8px' }}>
-             <QRCodeSVG value={authenticatorUri} size={200} level="H" fgColor="#2c3e35" />
+            <QRCodeSVG value={authenticatorUri} size={200} level="H" fgColor="#2c3e35" />
           </div>
 
           <p style={{ marginTop: '20px', fontWeight: 'bold' }}>2. Or enter this setup key manually:</p>
