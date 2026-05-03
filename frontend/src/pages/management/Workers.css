@@ -10,6 +10,13 @@
 	gap: 20px;
 }
 
+.workers-page__controls {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
 .workers-page__empty-state {
 	padding: 32px;
 	border: 1px dashed #d1d5db;

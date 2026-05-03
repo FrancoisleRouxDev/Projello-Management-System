@@ -10,6 +10,13 @@
 	gap: 20px;
 }
 
+.clients-page__controls {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
 .clients-page__table-section {
 	display: flex;
 	flex-direction: column;

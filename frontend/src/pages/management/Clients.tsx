@@ -2,6 +2,9 @@ import React from "react";
 import "./Clients.css";
 import StatCard from "../../components/StatCard";
 import ManagementClientTable, { ManagementClientRow } from "../../components/ManagementClientTable";
+import { SearchInput } from "../../components/SearchInput";
+import { FilterButton } from "../../components/FilterButton";
+import { SortButton } from "../../components/SortButton";
 
 // Starter data for the clients screen.
 // Replace this array with API data once the backend endpoint is ready.
@@ -77,6 +80,13 @@ export default function ClientsPage() {
 				<StatCard value="R30k" label="Outstanding" tone="warning" />
 				<StatCard value="4" label="Active Clients" tone="success" />
 				<StatCard value="1" label="Blacklisted" tone="danger" />
+			</div>
+
+			{/* Search and filter controls placed above the client table */}
+			<div className="clients-page__controls">
+				<SearchInput placeholder="Search clients..." onSearch={(value) => console.log("Search clients:", value)} />
+				<FilterButton label="All Status" onFilter={() => console.log("Open client status filter")} />
+				<SortButton label="Sort" onSort={() => console.log("Open client sort options")} />
 			</div>
 
 			{/* Client table section */}
