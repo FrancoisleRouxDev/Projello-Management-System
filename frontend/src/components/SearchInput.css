@@ -1,0 +1,88 @@
+.StyledSearchclientsspan {
+  color: #717182;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  font-weight: 400;
+  word-wrap: break-word;
+}
+
+.StyledVector {
+  width: 10.67px;
+  height: 10.67px;
+  left: 2px;
+  top: 2px;
+  position: absolute;
+  outline: 1.33px solid #99a1af;
+  outline-offset: -0.67px;
+}
+
+.StyledVector01 {
+  width: 2.87px;
+  height: 2.87px;
+  left: 11.13px;
+  top: 11.13px;
+  position: absolute;
+  outline: 1.33px solid #99a1af;
+  outline-offset: -0.67px;
+}
+
+.StyledInput {
+  width: 448px;
+  height: 36px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 40px;
+  padding-right: 12px;
+  left: 0px;
+  top: 0px;
+  position: absolute;
+  background: white;
+  overflow: hidden;
+  border-radius: 8px;
+  outline: 1px solid rgba(0, 0, 0, 0);
+  outline-offset: -1px;
+  justify-content: flex-start;
+  align-items: center;
+  display: inline-flex;
+}
+
+.StyledSearchInput {
+  flex: 1 1 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #0a0a0a;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  min-width: 0;
+}
+
+.StyledSearchInput::placeholder {
+  color: #717182;
+  opacity: 1;
+}
+
+.StyledText {
+  flex: 1 1 0;
+  height: 20px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  display: flex;
+}
+
+.StyledIcon {
+  width: 16px;
+  height: 16px;
+  left: 12px;
+  top: 10px;
+  position: absolute;
+  overflow: hidden;
+}
+
+.StyledContainer {
+  width: 448px;
+  height: 36px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
