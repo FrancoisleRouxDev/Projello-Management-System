@@ -4,10 +4,70 @@ import StatCard from "../../components/StatCard";
 import { SearchInput } from "../../components/SearchInput";
 import { FilterButton } from "../../components/FilterButton";
 import { SortButton } from "../../components/SortButton";
+import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
+
+const SAMPLE_WORKERS: WorkerCardProps[] = [
+	{
+		initials: "AR",
+		name: "Alex Rivera",
+		email: "alex@projello.io",
+		role: "Lead Developer",
+		assignedTo: "Aurora",
+		status: "Active",
+		statusTone: "success",
+	},
+	{
+		initials: "MN",
+		name: "Michael Naidoo",
+		email: "michael@projello.io",
+		role: "Managing Director",
+		assignedTo: "Riverstone",
+		status: "Away",
+		statusTone: "warning",
+	},
+	{
+		initials: "PB",
+		name: "Pieter Botha",
+		email: "pieter@projello.io",
+		role: "Site Manager",
+		assignedTo: "Umhlanga Coastal",
+		status: "Offline",
+		statusTone: "neutral",
+	},
+	{
+		initials: "AG",
+		name: "Anneke Govender",
+		email: "anneke@projello.io",
+		role: "Civil Engineer",
+		assignedTo: "Stormwater Infrastructure",
+		status: "Away",
+		statusTone: "warning",
+	},
+	{
+		initials: "JS",
+		name: "Johan Steyn",
+		email: "johan@projello.io",
+		role: "Quantity Surveyor",
+		assignedTo: "Budget & BOQ",
+		status: "Active",
+		statusTone: "success",
+	},
+	{
+		initials: "BP",
+		name: "Brandon Petersen",
+		email: "brandon@projello.io",
+		role: "Land Foreman",
+		assignedTo: "Earthworks & Bulk Excavation",
+		status: "Active",
+		statusTone: "success",
+	},
+];
 
 export default function WorkersPage() {
-	// TODO: Replace this placeholder with a WorkersTable component.
-	// Keep the same pattern as the clients table: props in, rendering out, no hard-coded page data.
+	const handleWorkerClick = (worker: WorkerCardProps) => {
+		console.log("Open worker:", worker.name);
+	};
+
 	return (
 		<div className="workers-page">
 			{/* Summary cards for worker status */}
@@ -25,12 +85,24 @@ export default function WorkersPage() {
 				<SortButton label="Sort" onSort={() => console.log("Open worker sort options")} />
 			</div>
 
-			{/* Placeholder content while you build the workers table */}
-			<section className="workers-page__empty-state">
-				<h2 className="workers-page__title">Workers</h2>
-				<p className="workers-page__subtitle">
-					Build a reusable workers table here using the same pattern as the client table.
-				</p>
+			<section className="workers-page__section">
+				<div className="workers-page__section-header">
+					<h2 className="workers-page__title">Workers</h2>
+					<p className="workers-page__subtitle">Manage your team members</p>
+				</div>
+
+				<div className="workers-page__grid">
+					{SAMPLE_WORKERS.map((worker) => (
+						<button
+							type="button"
+							key={`${worker.name}-${worker.email}`}
+							className="workers-page__card-button"
+							onClick={() => handleWorkerClick(worker)}
+						>
+							<WorkerCard {...worker} />
+						</button>
+					))}
+				</div>
 			</section>
 		</div>
 	);

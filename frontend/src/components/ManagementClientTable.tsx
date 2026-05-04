@@ -2,6 +2,7 @@ import React from "react";
 import "./ManagementClientTable.css";
 
 export type ManagementClientRow = {
+  clientId: string;
   initials: string;
   name: string;
   company: string;
@@ -16,6 +17,7 @@ export type ManagementClientRow = {
 type ManagementClientTableProps = {
   rows: ManagementClientRow[];
   onRowAction?: (row: ManagementClientRow) => void;
+  onRowClick?: (row: ManagementClientRow) => void;
   className?: string;
 };
 
@@ -31,7 +33,8 @@ type ManagementClientTableProps = {
 // - `rows` controls the visible table data.
 // - `statusTone` changes the badge color.
 // - `onRowAction` is optional and can be used for a menu, details drawer, or edit screen.
-export default function ManagementClientTable({ rows, onRowAction, className = "" }: ManagementClientTableProps) {
+// - `onRowClick` can open a project details page when a row is selected.
+export default function ManagementClientTable({ rows, onRowAction, onRowClick, className = "" }: ManagementClientTableProps) {
   return (
     <section className={`management-client-table ${className}`.trim()} aria-label="Clients table">
       <div className="management-client-table__header" role="row">
@@ -45,7 +48,12 @@ export default function ManagementClientTable({ rows, onRowAction, className = "
 
       <div className="management-client-table__body">
         {rows.map((row) => (
-          <div key={`${row.name}-${row.company}`} className="management-client-table__row" role="row">
+          <div
+            key={row.clientId}
+            className={`management-client-table__row ${onRowClick ? "management-client-table__row--clickable" : ""}`.trim()}
+            role="row"
+            onClick={() => onRowClick?.(row)}
+          >
             <div className="management-client-table__cell management-client-table__cell--client">
               <div className="management-client-table__identity">
                 <div className="management-client-table__avatar" aria-hidden="true">
@@ -85,7 +93,10 @@ export default function ManagementClientTable({ rows, onRowAction, className = "
               <button
                 type="button"
                 className="management-client-table__action-button"
-                onClick={() => onRowAction?.(row)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onRowAction?.(row);
+                }}
                 aria-label={`Open actions for ${row.name}`}
               >
                 <span aria-hidden="true">•••</span>

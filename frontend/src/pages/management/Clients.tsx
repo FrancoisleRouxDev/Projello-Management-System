@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "./Clients.css";
 import StatCard from "../../components/StatCard";
 import ManagementClientTable, { ManagementClientRow } from "../../components/ManagementClientTable";
@@ -10,6 +11,7 @@ import { SortButton } from "../../components/SortButton";
 // Replace this array with API data once the backend endpoint is ready.
 const SAMPLE_CLIENT_ROWS: ManagementClientRow[] = [
 	{
+		clientId: "james-walker",
 		initials: "JW",
 		name: "James Walker",
 		company: "Walker & Co.",
@@ -21,6 +23,7 @@ const SAMPLE_CLIENT_ROWS: ManagementClientRow[] = [
 		statusTone: "success",
 	},
 	{
+		clientId: "sam-vice",
 		initials: "SV",
 		name: "Sam Vice",
 		company: "Zyntra Labs",
@@ -32,6 +35,7 @@ const SAMPLE_CLIENT_ROWS: ManagementClientRow[] = [
 		statusTone: "warning",
 	},
 	{
+		clientId: "christian-simpson",
 		initials: "CS",
 		name: "Christian Simpson",
 		company: "Veimore",
@@ -43,6 +47,7 @@ const SAMPLE_CLIENT_ROWS: ManagementClientRow[] = [
 		statusTone: "success",
 	},
 	{
+		clientId: "lily-louwe",
 		initials: "LL",
 		name: "Lily Louwe",
 		company: "Luma",
@@ -54,6 +59,7 @@ const SAMPLE_CLIENT_ROWS: ManagementClientRow[] = [
 		statusTone: "success",
 	},
 	{
+		clientId: "willow-du-plessis",
 		initials: "WDP",
 		name: "Willow du Plessis",
 		company: "Oryn Collective",
@@ -67,9 +73,15 @@ const SAMPLE_CLIENT_ROWS: ManagementClientRow[] = [
 ];
 
 export default function ClientsPage() {
+	const navigate = useNavigate();
+
 	const handleRowAction = (row: ManagementClientRow) => {
 		// TODO: Open a drawer, menu, or details page for this client.
 		console.log("Row action for:", row.name);
+	};
+
+	const handleRowClick = (row: ManagementClientRow) => {
+		navigate(`/single-view/${row.clientId}`);
 	};
 
 	return (
@@ -96,7 +108,7 @@ export default function ClientsPage() {
 					<p className="clients-page__subtitle">Manage customer accounts, balances, and project counts.</p>
 				</div>
 
-				<ManagementClientTable rows={SAMPLE_CLIENT_ROWS} onRowAction={handleRowAction} />
+				<ManagementClientTable rows={SAMPLE_CLIENT_ROWS} onRowAction={handleRowAction} onRowClick={handleRowClick} />
 			</section>
 		</div>
 	);

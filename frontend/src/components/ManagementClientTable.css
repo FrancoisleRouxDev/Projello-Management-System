@@ -28,6 +28,15 @@
   border-top: 1px solid #e5e7eb;
 }
 
+.management-client-table__row--clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.management-client-table__row--clickable:hover {
+  background: #f8fafc;
+}
+
 .management-client-table__cell {
   min-width: 0;
 }
