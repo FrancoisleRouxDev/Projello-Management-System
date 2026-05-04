@@ -1,0 +1,48 @@
+
+.StyledSortspan {
+  color: #0a0a0a;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  font-weight: 500;
+  line-height: 20px;
+  word-wrap: break-word;
+}
+
+.StyledSort {
+  text-align: center;
+  margin: 0;
+}
+
+.StyledText01 {
+  flex: 1 1 0;
+  height: 20px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  display: flex;
+}
+
+.StyledButton01 {
+  width: 60.64px;
+  height: 38px;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  background: white;
+  border-radius: 8px;
+  outline: 1px #d1d5dc solid;
+  outline-offset: -1px;
+  justify-content: flex-start;
+  align-items: center;
+  display: inline-flex;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.StyledButton01:hover {
+  outline: 1px #99a1af solid;
+}
+
+.StyledButton01:active {
+  background: #f3f4f6;
+}

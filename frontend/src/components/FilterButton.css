@@ -1,0 +1,65 @@
+.StyledAllstatusspan {
+  color: #0a0a0a;
+  font-size: 14px;
+  font-family: Inter, sans-serif;
+  font-weight: 500;
+  line-height: 20px;
+  word-wrap: break-word;
+}
+
+.StyledAllStatus {
+  text-align: center;
+  margin: 0;
+}
+
+.StyledVector02 {
+  width: 8px;
+  height: 4px;
+  left: 4px;
+  top: 6px;
+  position: absolute;
+  outline: 1.33px #0a0a0a solid;
+  outline-offset: -0.67px;
+}
+
+.StyledText {
+  flex: 1 1 0;
+  height: 20px;
+  justify-content: flex-start;
+  align-items: flex-start;
+  display: flex;
+}
+
+.StyledIcon01 {
+  width: 16px;
+  height: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.StyledButton {
+  width: 117.42px;
+  height: 38px;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  background: white;
+  border-radius: 8px;
+  outline: 1px #d1d5dc solid;
+  outline-offset: -1px;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  display: inline-flex;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.StyledButton:hover {
+  outline: 1px #99a1af solid;
+}
+
+.StyledButton:active {
+  background: #f3f4f6;
+}

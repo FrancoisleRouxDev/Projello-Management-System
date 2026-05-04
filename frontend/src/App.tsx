@@ -72,7 +72,7 @@ export default function App() {
           <Route path="/management" element={<ManagementPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/single-view" element={<SingleProjectViewPage />} />
+          <Route path="/single-view/:clientId" element={<SingleProjectViewPage />} />
         </Routes>
       </AppLayout>
     </HashRouter>

@@ -1,0 +1,161 @@
+.worker-card {
+  background: #f7f7f3;
+  border-radius: 10px;
+  outline: 1px solid rgba(40, 51, 43, 0.1);
+  outline-offset: -1px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.worker-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.worker-card__identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.worker-card__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 9999px;
+  background: #e5e7eb;
+  color: #101828;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.worker-card__identity-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.worker-card__name {
+  color: #101828;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.worker-card__email {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6a7282;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  min-width: 0;
+}
+
+.worker-card__email span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worker-card__email-icon {
+  font-size: 11px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.worker-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 9999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.worker-card__status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.worker-card--success .worker-card__status {
+  background: #dcfce7;
+  color: #016630;
+}
+
+.worker-card--success .worker-card__status-dot {
+  background: #00c950;
+}
+
+.worker-card--warning .worker-card__status {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.worker-card--warning .worker-card__status-dot {
+  background: #fb923c;
+}
+
+.worker-card--neutral .worker-card__status {
+  background: #f3f4f6;
+  color: #364153;
+}
+
+.worker-card--neutral .worker-card__status-dot {
+  background: #98a2b3;
+}
+
+.worker-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.worker-card__role-pill {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: #f3f4f6;
+  color: #364153;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.worker-card__assignment {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.worker-card__assignment-label {
+  color: #6a7282;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+}
+
+.worker-card__assignment-value {
+  color: #101828;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}

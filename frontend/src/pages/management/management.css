@@ -1,7 +1,9 @@
-body{
-    margin: 0;
-    padding: 0;
-    left: 0;
-    top: 0;
-    width: 100vw;
+.management-page {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.management-page__content {
+    padding: 32px 0 0;
 }

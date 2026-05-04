@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Projello.Api.Data;
 using Projello.Api.Models;
+using Projello.Api.Hubs;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,18 +25,18 @@ builder.Services.AddIdentityCore<User>(options => {
 
 // JWT
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "Your_Super_Secret_Key_At_Least_32_Chars";
-builder.Services.AddAuthentication(options => {
+builder.Services.AddAuthentication(options => {// Sets JWT as default auth scheme
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options => {
     options.UseSecurityTokenValidators = true; // Critical fix for IdentityModel 8.x
     options.TokenValidationParameters = new TokenValidationParameters {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidateIssuer = true,// Checks token issuer
+        ValidateAudience = true,// Checks intended recipient
+        ValidateLifetime = true,// Ensures not expired
+        ValidateIssuerSigningKey = true, // Verifies signature
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],// From appsettings for flexibility
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ClockSkew = TimeSpan.Zero
@@ -84,6 +85,11 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
+// NOTE: The line below registers the custom authorization service that will be used to check if users can join or interact with project call rooms.
+builder.Services.AddSignalR();
+builder.Services.Configure<WebRtcOptions>(
+    builder.Configuration.GetSection(WebRtcOptions.SectionName));
 
 var app = builder.Build();
 
