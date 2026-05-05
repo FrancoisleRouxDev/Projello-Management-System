@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./single-project-view.css";
 import SingleProjectNotFound from "../../components/SingleProjectNotFound";
@@ -7,158 +7,217 @@ import { ProgressItem, ProjectViewData } from "../../components/SingleProjectVie
 
 /*
  * SingleProjectViewPage
- * - Reads `clientId` from route: /single-view/:clientId
- * - Looks up project details from a temporary local dataset
- * - Renders a reusable template component when data exists
- * - Renders a not-found fallback when id is missing/unknown
  *
- * Replace `CLIENT_PROJECT_DATA` with backend calls once project endpoints are wired.
+ * What it does:
+ * - Loads one project view from backend data based on route param `clientId`.
+ * - Calls GET /api/projects, finds the project that belongs to the client.
+ * - Calls GET /api/projects/{projectId}/milestones for progress details.
+ * - Maps backend DTOs to the UI model (`ProjectViewData`) used by the template component.
+ *
+ * How it works:
+ * - Reads JWT token from localStorage and sends it as a Bearer token.
+ * - Normalizes response casing (camelCase/PascalCase) in parser helpers.
+ * - Computes an overall completion percentage from milestone/project status.
+ * - Renders loading, error, not-found, or the final project template.
  */
 
-const DEFAULT_PROGRESS: ProgressItem[] = [
-  { label: "Overall Completion", value: 68 },
-  { label: "Planning", value: 100 },
-  { label: "Design", value: 100 },
-  { label: "Foundation", value: 100 },
-  { label: "Structure", value: 85 },
-  { label: "Electrical", value: 80 },
-  { label: "Plumbing", value: 55 },
-  { label: "Finishing", value: 20 },
-];
+type ProjectReadDto = {
+  projectID: number;
+  name: string;
+  description?: string | null;
+  status: string;
+  dueDate?: string | null;
+  createdAt: string;
+  clientID: number;
+  clientName: string;
+  isClientBlacklisted: boolean;
+};
 
-// Temporary placeholder dataset keyed by client id until backend project endpoints are connected.
-// Keep keys aligned with the id used in the clients page navigation.
-const CLIENT_PROJECT_DATA: Record<string, ProjectViewData> = {
-  "james-walker": {
-    projectName: "RiverStone",
-    clientName: "Walker & Co.",
-    completion: 68,
+type MilestoneReadDto = {
+  milestoneID: number;
+  title: string;
+  status: string;
+};
+
+const API_BASE_URL = "http://localhost:5049/api";
+
+// Normalize project DTO casing differences from backend responses.
+const parseProjectDto = (raw: any): ProjectReadDto => ({
+  projectID: raw.projectID ?? raw.ProjectID,
+  name: raw.name ?? raw.Name,
+  description: raw.description ?? raw.Description,
+  status: raw.status ?? raw.Status,
+  dueDate: raw.dueDate ?? raw.DueDate,
+  createdAt: raw.createdAt ?? raw.CreatedAt,
+  clientID: raw.clientID ?? raw.ClientID,
+  clientName: raw.clientName ?? raw.ClientName,
+  isClientBlacklisted: raw.isClientBlacklisted ?? raw.IsClientBlacklisted,
+});
+
+// Normalize milestone DTO casing differences from backend responses.
+const parseMilestoneDto = (raw: any): MilestoneReadDto => ({
+  milestoneID: raw.milestoneID ?? raw.MilestoneID,
+  title: raw.title ?? raw.Title,
+  status: raw.status ?? raw.Status,
+});
+
+const formatDateValue = (dateValue?: string | null) => {
+  if (!dateValue) return "N/A";
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return dateValue;
+  return date.toLocaleDateString();
+};
+
+// Convert backend workflow status strings into approximate completion percentages.
+const statusToPercent = (status: string): number => {
+  switch ((status || "").toLowerCase()) {
+    case "completed":
+      return 100;
+    case "inprogress":
+    case "in_progress":
+    case "in progress":
+      return 50;
+    case "blocked":
+      return 15;
+    case "planning":
+      return 20;
+    default:
+      return 0;
+  }
+};
+
+// Build progress rows for the UI; if no milestones exist, fallback to project status.
+const buildProgressBreakdown = (projectStatus: string, milestones: MilestoneReadDto[]): ProgressItem[] => {
+  if (milestones.length === 0) {
+    const overall = statusToPercent(projectStatus);
+    return [{ label: "Overall Completion", value: overall }];
+  }
+
+  const milestoneItems = milestones.map((m) => ({
+    label: m.title,
+    value: statusToPercent(m.status),
+  }));
+
+  const total = milestoneItems.reduce((sum, item) => sum + item.value, 0);
+  const overall = Math.round(total / milestoneItems.length);
+
+  return [{ label: "Overall Completion", value: overall }, ...milestoneItems];
+};
+
+// Map raw API data to the view model expected by `SingleProjectViewTemplate`.
+const mapToProjectViewData = (project: ProjectReadDto, milestones: MilestoneReadDto[]): ProjectViewData => {
+  const progressBreakdown = buildProgressBreakdown(project.status, milestones);
+  const overall = progressBreakdown.find((item) => item.label === "Overall Completion")?.value ?? 0;
+
+  return {
+    projectName: project.name,
+    clientName: project.clientName,
+    completion: overall,
     stats: [
-      { label: "Workers", value: "140" },
-      { label: "Under Budget", value: "R3M" },
-      { label: "Injuries", value: "0" },
-      { label: "Timeline", value: "Jun 2025 - Nov 2026" },
-      { label: "Location", value: "Gauteng, SA" },
+      { label: "Project ID", value: String(project.projectID) },
+      { label: "Status", value: project.status },
+      { label: "Created", value: formatDateValue(project.createdAt) },
+      { label: "Due Date", value: formatDateValue(project.dueDate) },
+      { label: "Milestones", value: String(milestones.length) },
+      { label: "Client", value: project.isClientBlacklisted ? "Blacklisted" : "Active" },
     ],
     projectDescription:
-      "Riverstone Apartments Phase 2 is a R348 million residential development in Gauteng for Walker & Co. It started in June 2025, with planned completion by November 2026. The site currently has about 140 workers daily, zero lost-time injuries reported, and the project is running roughly R3 million under budget so far.",
-    progressBreakdown: DEFAULT_PROGRESS,
-    photoTiles: ["site-1", "site-2", "site-3", "site-4"],
-  },
-  "sam-vice": {
-    projectName: "Harbor Point",
-    clientName: "Zyntra Labs",
-    completion: 54,
-    stats: [
-      { label: "Workers", value: "86" },
-      { label: "Under Budget", value: "R800k" },
-      { label: "Injuries", value: "1" },
-      { label: "Timeline", value: "Mar 2025 - Feb 2026" },
-      { label: "Location", value: "Durban, SA" },
-    ],
-    projectDescription:
-      "Harbor Point is a mixed-use build for Zyntra Labs focused on phased delivery. Structural and electrical packages are progressing steadily while finishing work begins next quarter.",
-    progressBreakdown: [
-      { label: "Overall Completion", value: 54 },
-      { label: "Planning", value: 100 },
-      { label: "Design", value: 92 },
-      { label: "Foundation", value: 100 },
-      { label: "Structure", value: 70 },
-      { label: "Electrical", value: 52 },
-      { label: "Plumbing", value: 41 },
-      { label: "Finishing", value: 12 },
-    ],
-    photoTiles: ["site-1", "site-2", "site-3", "site-4"],
-  },
-  "christian-simpson": {
-    projectName: "Westline Towers",
-    clientName: "Veimore",
-    completion: 73,
-    stats: [
-      { label: "Workers", value: "103" },
-      { label: "Under Budget", value: "R1.2M" },
-      { label: "Injuries", value: "0" },
-      { label: "Timeline", value: "Jan 2025 - Oct 2026" },
-      { label: "Location", value: "Cape Town, SA" },
-    ],
-    projectDescription:
-      "Westline Towers is advancing through major envelope and services milestones, with high schedule confidence and strong cost control performance.",
-    progressBreakdown: [
-      { label: "Overall Completion", value: 73 },
-      { label: "Planning", value: 100 },
-      { label: "Design", value: 100 },
-      { label: "Foundation", value: 100 },
-      { label: "Structure", value: 90 },
-      { label: "Electrical", value: 82 },
-      { label: "Plumbing", value: 68 },
-      { label: "Finishing", value: 35 },
-    ],
-    photoTiles: ["site-1", "site-2", "site-3", "site-4"],
-  },
-  "lily-louwe": {
-    projectName: "Luma Square",
-    clientName: "Luma",
-    completion: 61,
-    stats: [
-      { label: "Workers", value: "92" },
-      { label: "Under Budget", value: "R650k" },
-      { label: "Injuries", value: "0" },
-      { label: "Timeline", value: "Apr 2025 - Dec 2026" },
-      { label: "Location", value: "Pretoria, SA" },
-    ],
-    projectDescription:
-      "Luma Square is a residential-and-retail project currently transitioning from core structure completion into interior trades and fit-out sequencing.",
-    progressBreakdown: [
-      { label: "Overall Completion", value: 61 },
-      { label: "Planning", value: 100 },
-      { label: "Design", value: 100 },
-      { label: "Foundation", value: 100 },
-      { label: "Structure", value: 84 },
-      { label: "Electrical", value: 63 },
-      { label: "Plumbing", value: 48 },
-      { label: "Finishing", value: 20 },
-    ],
-    photoTiles: ["site-1", "site-2", "site-3", "site-4"],
-  },
-  "willow-du-plessis": {
-    projectName: "Oryn Heights",
-    clientName: "Oryn Collective",
-    completion: 39,
-    stats: [
-      { label: "Workers", value: "74" },
-      { label: "Under Budget", value: "R220k" },
-      { label: "Injuries", value: "2" },
-      { label: "Timeline", value: "Aug 2025 - Mar 2027" },
-      { label: "Location", value: "Johannesburg, SA" },
-    ],
-    projectDescription:
-      "Oryn Heights is in early-to-mid delivery with civil and structural work active on multiple zones. Current focus is on productivity stabilization and subcontractor ramp-up.",
-    progressBreakdown: [
-      { label: "Overall Completion", value: 39 },
-      { label: "Planning", value: 100 },
-      { label: "Design", value: 80 },
-      { label: "Foundation", value: 62 },
-      { label: "Structure", value: 40 },
-      { label: "Electrical", value: 25 },
-      { label: "Plumbing", value: 18 },
-      { label: "Finishing", value: 4 },
-    ],
-    photoTiles: ["site-1", "site-2", "site-3", "site-4"],
-  },
+      project.description?.trim() ||
+      `No description was provided for ${project.name}. Update this project in the backend to add a full summary.`,
+    progressBreakdown,
+    photoTiles: [],
+  };
 };
 
 export default function SingleProjectViewPage() {
   const navigate = useNavigate();
-  // `clientId` is supplied by React Router from the URL.
   const { clientId } = useParams<{ clientId: string }>();
-  // Local lookup for now; this will become API-driven (fetch by id or filter projects by client).
-  const project = clientId ? CLIENT_PROJECT_DATA[clientId] : undefined;
 
-  // Guard path: unknown ids route users back with a clear not-found state.
+  const [project, setProject] = useState<ProjectViewData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Fetch project + milestones whenever the route client id changes.
+    const fetchProjectForClient = async () => {
+      if (!clientId) {
+        setProject(null);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // JWT added when available; API endpoints are authenticated.
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+        // Step 1: fetch all visible projects and find one for this client.
+        const projectResponse = await fetch(`${API_BASE_URL}/projects`, { headers });
+        if (!projectResponse.ok) {
+          const text = await projectResponse.text();
+          throw new Error(text || projectResponse.statusText || "Failed to fetch projects");
+        }
+
+        const rawProjects = await projectResponse.json();
+        const projects: ProjectReadDto[] = (rawProjects ?? []).map(parseProjectDto);
+        const matchedProject = projects.find((p) => String(p.clientID) === clientId);
+
+        if (!matchedProject) {
+          setProject(null);
+          return;
+        }
+
+        // Step 2: fetch milestones for this project (used to build progress bars).
+        let milestones: MilestoneReadDto[] = [];
+        const milestoneResponse = await fetch(`${API_BASE_URL}/projects/${matchedProject.projectID}/milestones`, { headers });
+        if (milestoneResponse.ok) {
+          const rawMilestones = await milestoneResponse.json();
+          milestones = (rawMilestones ?? []).map(parseMilestoneDto);
+        }
+
+        setProject(mapToProjectViewData(matchedProject, milestones));
+      } catch (err: any) {
+        setError(err.message || "Failed to load project details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjectForClient();
+  }, [clientId]);
+
+  // Render state: initial loading while fetching.
+  if (loading) {
+    return (
+      <div className="single-project-view">
+        <section className="single-project-view__panel" aria-label="Loading project">
+          <h2 className="single-project-view__panel-title">Loading Project</h2>
+          <p className="single-project-view__project-description">Fetching project data from the database...</p>
+        </section>
+      </div>
+    );
+  }
+
+  // Render state: request failed or backend is unavailable/unauthorized.
+  if (error) {
+    return (
+      <div className="single-project-view">
+        <section className="single-project-view__panel" aria-label="Project loading error">
+          <h2 className="single-project-view__panel-title">Unable To Load Project</h2>
+          <p className="single-project-view__project-description">{error}</p>
+          <button type="button" className="single-project-view__view-all-button" onClick={() => navigate("/management")}>Back To Clients</button>
+        </section>
+      </div>
+    );
+  }
+
+  // Render state: route is valid but no project exists for the provided client id.
   if (!project) {
     return <SingleProjectNotFound onBackToClients={() => navigate("/management")} />;
   }
 
-  // Happy path: delegate rendering to the reusable single-project template component.
   return <SingleProjectViewTemplate project={project} onBackToClients={() => navigate("/management")} />;
 }
