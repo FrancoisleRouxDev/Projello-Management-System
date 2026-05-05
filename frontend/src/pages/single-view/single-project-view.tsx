@@ -4,62 +4,9 @@ import "./single-project-view.css";
 import SingleProjectNotFound from "../../components/SingleProjectNotFound";
 import SingleProjectViewTemplate from "../../components/SingleProjectViewTemplate";
 import { ProgressItem, ProjectViewData } from "../../components/SingleProjectViewTypes";
-
-/*
- * SingleProjectViewPage
- *
- * What it does:
- * - Loads one project view from backend data based on route param `clientId`.
- * - Calls GET /api/projects, finds the project that belongs to the client.
- * - Calls GET /api/projects/{projectId}/milestones for progress details.
- * - Maps backend DTOs to the UI model (`ProjectViewData`) used by the template component.
- *
- * How it works:
- * - Reads JWT token from localStorage and sends it as a Bearer token.
- * - Normalizes response casing (camelCase/PascalCase) in parser helpers.
- * - Computes an overall completion percentage from milestone/project status.
- * - Renders loading, error, not-found, or the final project template.
- */
-
-type ProjectReadDto = {
-  projectID: number;
-  name: string;
-  description?: string | null;
-  status: string;
-  dueDate?: string | null;
-  createdAt: string;
-  clientID: number;
-  clientName: string;
-  isClientBlacklisted: boolean;
-};
-
-type MilestoneReadDto = {
-  milestoneID: number;
-  title: string;
-  status: string;
-};
+import { ProjectReadDto, MilestoneReadDto } from "../../../../backend/Projello.Api/DTOs";
 
 const API_BASE_URL = "http://localhost:5049/api";
-
-// Normalize project DTO casing differences from backend responses.
-const parseProjectDto = (raw: any): ProjectReadDto => ({
-  projectID: raw.projectID ?? raw.ProjectID,
-  name: raw.name ?? raw.Name,
-  description: raw.description ?? raw.Description,
-  status: raw.status ?? raw.Status,
-  dueDate: raw.dueDate ?? raw.DueDate,
-  createdAt: raw.createdAt ?? raw.CreatedAt,
-  clientID: raw.clientID ?? raw.ClientID,
-  clientName: raw.clientName ?? raw.ClientName,
-  isClientBlacklisted: raw.isClientBlacklisted ?? raw.IsClientBlacklisted,
-});
-
-// Normalize milestone DTO casing differences from backend responses.
-const parseMilestoneDto = (raw: any): MilestoneReadDto => ({
-  milestoneID: raw.milestoneID ?? raw.MilestoneID,
-  title: raw.title ?? raw.Title,
-  status: raw.status ?? raw.Status,
-});
 
 const formatDateValue = (dateValue?: string | null) => {
   if (!dateValue) return "N/A";
@@ -68,29 +15,21 @@ const formatDateValue = (dateValue?: string | null) => {
   return date.toLocaleDateString();
 };
 
-// Convert backend workflow status strings into approximate completion percentages.
 const statusToPercent = (status: string): number => {
   switch ((status || "").toLowerCase()) {
-    case "completed":
-      return 100;
+    case "completed":       return 100;
     case "inprogress":
     case "in_progress":
-    case "in progress":
-      return 50;
-    case "blocked":
-      return 15;
-    case "planning":
-      return 20;
-    default:
-      return 0;
+    case "in progress":     return 50;
+    case "blocked":         return 15;
+    case "planning":        return 20;
+    default:                return 0;
   }
 };
 
-// Build progress rows for the UI; if no milestones exist, fallback to project status.
 const buildProgressBreakdown = (projectStatus: string, milestones: MilestoneReadDto[]): ProgressItem[] => {
   if (milestones.length === 0) {
-    const overall = statusToPercent(projectStatus);
-    return [{ label: "Overall Completion", value: overall }];
+    return [{ label: "Overall Completion", value: statusToPercent(projectStatus) }];
   }
 
   const milestoneItems = milestones.map((m) => ({
@@ -98,13 +37,11 @@ const buildProgressBreakdown = (projectStatus: string, milestones: MilestoneRead
     value: statusToPercent(m.status),
   }));
 
-  const total = milestoneItems.reduce((sum, item) => sum + item.value, 0);
-  const overall = Math.round(total / milestoneItems.length);
+  const overall = Math.round(milestoneItems.reduce((sum, item) => sum + item.value, 0) / milestoneItems.length);
 
   return [{ label: "Overall Completion", value: overall }, ...milestoneItems];
 };
 
-// Map raw API data to the view model expected by `SingleProjectViewTemplate`.
 const mapToProjectViewData = (project: ProjectReadDto, milestones: MilestoneReadDto[]): ProjectViewData => {
   const progressBreakdown = buildProgressBreakdown(project.status, milestones);
   const overall = progressBreakdown.find((item) => item.label === "Overall Completion")?.value ?? 0;
@@ -138,7 +75,6 @@ export default function SingleProjectViewPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch project + milestones whenever the route client id changes.
     const fetchProjectForClient = async () => {
       if (!clientId) {
         setProject(null);
@@ -150,19 +86,16 @@ export default function SingleProjectViewPage() {
       setError(null);
 
       try {
-        // JWT added when available; API endpoints are authenticated.
         const token = localStorage.getItem("token");
         const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-        // Step 1: fetch all visible projects and find one for this client.
         const projectResponse = await fetch(`${API_BASE_URL}/projects`, { headers });
         if (!projectResponse.ok) {
           const text = await projectResponse.text();
           throw new Error(text || projectResponse.statusText || "Failed to fetch projects");
         }
 
-        const rawProjects = await projectResponse.json();
-        const projects: ProjectReadDto[] = (rawProjects ?? []).map(parseProjectDto);
+        const projects: ProjectReadDto[] = await projectResponse.json();
         const matchedProject = projects.find((p) => String(p.clientID) === clientId);
 
         if (!matchedProject) {
@@ -170,12 +103,10 @@ export default function SingleProjectViewPage() {
           return;
         }
 
-        // Step 2: fetch milestones for this project (used to build progress bars).
         let milestones: MilestoneReadDto[] = [];
         const milestoneResponse = await fetch(`${API_BASE_URL}/projects/${matchedProject.projectID}/milestones`, { headers });
         if (milestoneResponse.ok) {
-          const rawMilestones = await milestoneResponse.json();
-          milestones = (rawMilestones ?? []).map(parseMilestoneDto);
+          milestones = await milestoneResponse.json();
         }
 
         setProject(mapToProjectViewData(matchedProject, milestones));
@@ -189,7 +120,6 @@ export default function SingleProjectViewPage() {
     fetchProjectForClient();
   }, [clientId]);
 
-  // Render state: initial loading while fetching.
   if (loading) {
     return (
       <div className="single-project-view">
@@ -201,7 +131,6 @@ export default function SingleProjectViewPage() {
     );
   }
 
-  // Render state: request failed or backend is unavailable/unauthorized.
   if (error) {
     return (
       <div className="single-project-view">
@@ -214,7 +143,6 @@ export default function SingleProjectViewPage() {
     );
   }
 
-  // Render state: route is valid but no project exists for the provided client id.
   if (!project) {
     return <SingleProjectNotFound onBackToClients={() => navigate("/management")} />;
   }
