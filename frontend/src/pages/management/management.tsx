@@ -51,42 +51,44 @@ export default function ManagementPage() {
     fetchProjects();
   }, []);
 
-  if (loading) return <div className="management"><div className="loading">Loading projects...</div></div>;
-  if (error) return <div className="management"><div className="error">Error: {error}</div></div>;
+  if (loading) return <div className="management-page"><div className="loading">Loading projects...</div></div>;
+  if (error) return <div className="management-page"><div className="error">Error: {error}</div></div>;
 
   return (
-    <div className="management">
-      <h2>Project Management</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Project Name</th>
-            <th>Client</th>
-            <th>Status</th>
-            <th>Due Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {projects.length === 0 ? (
+    <div className="management-page">
+      <div className="management-page__content">
+        <h2>Project Management</h2>
+        <table>
+          <thead>
             <tr>
-              <td colSpan={5}>No projects found.</td>
+              <th>Project Name</th>
+              <th>Client</th>
+              <th>Status</th>
+              <th>Due Date</th>
+              <th>Actions</th>
             </tr>
-          ) : (
-            projects.map((project) => (
-              <tr key={project.projectID}>
-                <td>{project.name}</td>
-                <td>{project.clientName}</td>
-                <td>{project.status}</td>
-                <td>{new Date(project.dueDate || "").toLocaleDateString()}</td>
-                <td>
-                  <Link to={`/single-view/${project.projectID}`}>View</Link>
-                </td>
+          </thead>
+          <tbody>
+            {projects.length === 0 ? (
+              <tr>
+                <td colSpan={5}>No projects found.</td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              projects.map((project) => (
+                <tr key={project.projectID}>
+                  <td>{project.name}</td>
+                  <td>{project.clientName}</td>
+                  <td>{project.status}</td>
+                  <td>{new Date(project.dueDate || "").toLocaleDateString()}</td>
+                  <td>
+                    <Link to={`/single-view/${project.projectID}`}>View</Link>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
