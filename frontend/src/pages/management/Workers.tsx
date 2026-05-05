@@ -6,6 +6,16 @@ import { FilterButton } from "../../components/FilterButton";
 import { SortButton } from "../../components/SortButton";
 import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
 
+/*
+ * WorkersPage
+ * - Fetches users from backend: GET /api/users
+ * - Uses JWT from localStorage (`token`) in Authorization header
+ * - Converts `UserDisplayDto` into `WorkerCardProps` for card rendering
+ * - Derives summary stats from fetched worker list
+ *
+ * Note: /api/users is currently admin-only in backend auth rules.
+ */
+
 type UserDisplayDto = {
 	id: string;
 	fullName: string;
@@ -14,6 +24,7 @@ type UserDisplayDto = {
 	isTwoFactorEnabled: boolean;
 };
 
+// Creates compact initials for each worker card avatar.
 const getInitials = (fullName?: string) => {
 	if (!fullName) return "--";
 	const parts = fullName.split(" ").filter(Boolean);
@@ -22,6 +33,7 @@ const getInitials = (fullName?: string) => {
 	return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
 };
 
+// Maps numeric RoleID from backend to readable labels used in the UI.
 const getRoleLabel = (roleID: number) => {
 	switch (roleID) {
 		case 1:
@@ -35,6 +47,7 @@ const getRoleLabel = (roleID: number) => {
 	}
 };
 
+// Centralized DTO -> UI mapping so future API changes only require edits in one place.
 const mapUserToWorkerCard = (user: UserDisplayDto): WorkerCardProps => ({
 	initials: getInitials(user.fullName),
 	name: user.fullName,
@@ -51,6 +64,7 @@ export default function WorkersPage() {
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
+		// Initial page load: fetch workers once and hydrate worker cards.
 		const fetchWorkers = async () => {
 			setLoading(true);
 			setError(null);
@@ -67,6 +81,7 @@ export default function WorkersPage() {
 				}
 
 				const data: UserDisplayDto[] = await response.json();
+				// Hide admins from worker cards for now; this view focuses on field team users.
 				const visibleWorkers = (data ?? [])
 					.filter((user) => user.roleID !== 1)
 					.map(mapUserToWorkerCard);
@@ -86,6 +101,7 @@ export default function WorkersPage() {
 		console.log("Open worker:", worker.name);
 	};
 
+	// Dashboard counters are derived from current fetched data.
 	const totalWorkers = workers.length;
 	const foremen = workers.filter((worker) => worker.role === "Foreman").length;
 	const visibleWorkers = workers.filter((worker) => worker.role === "Worker").length;

@@ -7,7 +7,15 @@ import { SearchInput } from "../../components/SearchInput";
 import { FilterButton } from "../../components/FilterButton";
 import { SortButton } from "../../components/SortButton";
 
-// State for clients fetched from API
+/*
+ * ClientsPage
+ * - Fetches clients from backend: GET /api/clients
+ * - Uses JWT from localStorage (`token`) in Authorization header
+ * - Maps API DTOs into `ManagementClientRow` for `ManagementClientTable`
+ * - Handles loading and error states before rendering table rows
+ */
+
+// Build avatar initials from a full name for the table's identity cell.
 const getInitials = (fullName?: string) => {
     if (!fullName) return "--";
     const parts = fullName.split(" ").filter(Boolean);
@@ -26,6 +34,7 @@ export default function ClientsPage() {
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
+		// Initial page load: fetch client list once when component mounts.
 		const fetchClients = async () => {
 			setLoading(true);
 			setError(null);
@@ -39,7 +48,7 @@ export default function ClientsPage() {
 					throw new Error(txt || res.statusText || "Failed to load clients");
 				}
 				const data = await res.json();
-				// Map server DTOs to ManagementClientRow
+				// Normalize casing differences from API responses and map to table row shape.
 				const mapped: ManagementClientRow[] = (data ?? []).map((c: any) => ({
 					clientId: String(c.clientID ?? c.ClientID ?? c.ClientId ?? ""),
 					initials: getInitials(c.name ?? c.Name),
@@ -69,6 +78,7 @@ export default function ClientsPage() {
 	};
 
 	const handleRowClick = (row: ManagementClientRow) => {
+		// Navigates into the single-client project view route using client id.
 		navigate(`/single-view/${row.clientId}`);
 	};
 

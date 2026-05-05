@@ -5,8 +5,15 @@ import SingleProjectNotFound from "../../components/SingleProjectNotFound";
 import SingleProjectViewTemplate from "../../components/SingleProjectViewTemplate";
 import { ProgressItem, ProjectViewData } from "../../components/SingleProjectViewTypes";
 
-// Temporary placeholder page wrapper.
-// This route currently uses local mock data and should be replaced with API-backed data loading.
+/*
+ * SingleProjectViewPage
+ * - Reads `clientId` from route: /single-view/:clientId
+ * - Looks up project details from a temporary local dataset
+ * - Renders a reusable template component when data exists
+ * - Renders a not-found fallback when id is missing/unknown
+ *
+ * Replace `CLIENT_PROJECT_DATA` with backend calls once project endpoints are wired.
+ */
 
 const DEFAULT_PROGRESS: ProgressItem[] = [
   { label: "Overall Completion", value: 68 },
@@ -20,6 +27,7 @@ const DEFAULT_PROGRESS: ProgressItem[] = [
 ];
 
 // Temporary placeholder dataset keyed by client id until backend project endpoints are connected.
+// Keep keys aligned with the id used in the clients page navigation.
 const CLIENT_PROJECT_DATA: Record<string, ProjectViewData> = {
   "james-walker": {
     projectName: "RiverStone",
@@ -141,12 +149,16 @@ const CLIENT_PROJECT_DATA: Record<string, ProjectViewData> = {
 
 export default function SingleProjectViewPage() {
   const navigate = useNavigate();
+  // `clientId` is supplied by React Router from the URL.
   const { clientId } = useParams<{ clientId: string }>();
+  // Local lookup for now; this will become API-driven (fetch by id or filter projects by client).
   const project = clientId ? CLIENT_PROJECT_DATA[clientId] : undefined;
 
+  // Guard path: unknown ids route users back with a clear not-found state.
   if (!project) {
     return <SingleProjectNotFound onBackToClients={() => navigate("/management")} />;
   }
 
+  // Happy path: delegate rendering to the reusable single-project template component.
   return <SingleProjectViewTemplate project={project} onBackToClients={() => navigate("/management")} />;
 }
