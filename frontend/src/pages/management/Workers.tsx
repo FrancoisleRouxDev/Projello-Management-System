@@ -5,6 +5,7 @@ import { SearchInput } from "../../components/SearchInput";
 import { FilterButton } from "../../components/FilterButton";
 import { SortButton } from "../../components/SortButton";
 import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
+import { UserDisplayDto } from "../../types/UserDisplayDto";
 
 /*
  * WorkersPage
@@ -15,14 +16,6 @@ import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
  *
  * Note: /api/users is currently admin-only in backend auth rules.
  */
-
-type UserDisplayDto = {
-	id: string;
-	fullName: string;
-	email: string;
-	roleID: number;
-	isTwoFactorEnabled: boolean;
-};
 
 // Creates compact initials for each worker card avatar.
 const getInitials = (fullName?: string) => {
