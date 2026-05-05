@@ -1,0 +1,36 @@
+.management-top-nav {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #ffffff;
+}
+
+.management-top-nav__tabs {
+  display: flex;
+  gap: 0;
+}
+
+.management-top-nav__tab {
+  flex: 1;
+  min-width: 120px;
+  padding: 16px 24px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.management-top-nav__tab:hover {
+  color: #333333;
+  background-color: #f5f5f5;
+}
+
+.management-top-nav__tab--active {
+  color: #1976d2;
+  border-bottom-color: #1976d2;
+}
