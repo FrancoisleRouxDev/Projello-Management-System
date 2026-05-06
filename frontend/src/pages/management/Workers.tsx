@@ -46,7 +46,6 @@ const mapUserToWorkerCard = (user: UserDisplayDto): WorkerCardProps => ({
 	name: user.fullName,
 	email: user.email,
 	role: getRoleLabel(user.roleID),
-	assignedTo: `User ID: ${user.id}`,
 	status: user.isTwoFactorEnabled ? "2FA On" : "2FA Off",
 	statusTone: user.isTwoFactorEnabled ? "success" : "neutral",
 });
