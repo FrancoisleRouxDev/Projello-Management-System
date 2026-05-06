@@ -22,8 +22,7 @@ export type WorkerCardProps = {
 //   name="Alex Rivera"
 //   email="alex@projello.io"
 //   role="Lead Developer"
-//   assignedTo="Aurora"
-//   status="Active"
+//   status="Online"
 //   statusTone="success"
 // />
 export default function WorkerCard({

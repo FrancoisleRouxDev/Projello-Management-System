@@ -46,8 +46,8 @@ const mapUserToWorkerCard = (user: UserDisplayDto): WorkerCardProps => ({
 	name: user.fullName,
 	email: user.email,
 	role: getRoleLabel(user.roleID),
-	status: user.isTwoFactorEnabled ? "2FA On" : "2FA Off",
-	statusTone: user.isTwoFactorEnabled ? "success" : "neutral",
+	status: user.isOnline ? "Online" : "Offline",
+	statusTone: user.isOnline ? "success" : "neutral",
 });
 
 export default function WorkersPage() {

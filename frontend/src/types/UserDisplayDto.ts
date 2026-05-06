@@ -32,4 +32,5 @@ export interface UserDisplayDto {
 	email: string;
 	roleID: number;
 	isTwoFactorEnabled: boolean;
+	isOnline?: boolean; // TODO: Add to backend UserDisplayDto when online status tracking is implemented
 }
