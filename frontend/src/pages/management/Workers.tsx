@@ -6,23 +6,15 @@ import { FilterButton } from "../../components/FilterButton";
 import { SortButton } from "../../components/SortButton";
 import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
 
-/*
- * WorkersPage
- * - Fetches users from backend: GET /api/users
- * - Uses JWT from localStorage (`token`) in Authorization header
- * - Converts `UserDisplayDto` into `WorkerCardProps` for card rendering
- * - Derives summary stats from fetched worker list
- *
- * Note: /api/users is currently admin-only in backend auth rules.
- */
+interface UserDisplayDto {
+id: string;
+fullName: string;
+email: string;
+roleID: number;
+isTwoFactorEnabled: boolean;
+isOnline?: boolean;
+}
 
-type UserDisplayDto = {
-	id: string;
-	fullName: string;
-	email: string;
-	roleID: number;
-	isTwoFactorEnabled: boolean;
-};
 
 // Creates compact initials for each worker card avatar.
 const getInitials = (fullName?: string) => {
@@ -53,9 +45,8 @@ const mapUserToWorkerCard = (user: UserDisplayDto): WorkerCardProps => ({
 	name: user.fullName,
 	email: user.email,
 	role: getRoleLabel(user.roleID),
-	assignedTo: `User ID: ${user.id}`,
-	status: user.isTwoFactorEnabled ? "2FA On" : "2FA Off",
-	statusTone: user.isTwoFactorEnabled ? "success" : "neutral",
+	status: user.isOnline ? "Online" : "Offline",
+	statusTone: user.isOnline ? "success" : "neutral",
 });
 
 export default function WorkersPage() {

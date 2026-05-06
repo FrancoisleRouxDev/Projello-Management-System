@@ -30,6 +30,7 @@
     "@electron/fuses": "^1.8.0",
     "@svgr/webpack": "^8.1.0",
     "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "@vercel/webpack-asset-relocator-loader": "^1.7.3",

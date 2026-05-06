@@ -8,7 +8,7 @@ export type WorkerCardProps = {
   name: string;
   email: string;
   role: string;
-  assignedTo: string;
+  assignedTo?: string;
   status: string;
   statusTone?: WorkerCardTone;
   className?: string;
@@ -22,8 +22,7 @@ export type WorkerCardProps = {
 //   name="Alex Rivera"
 //   email="alex@projello.io"
 //   role="Lead Developer"
-//   assignedTo="Aurora"
-//   status="Active"
+//   status="Online"
 //   statusTone="success"
 // />
 export default function WorkerCard({
@@ -61,10 +60,12 @@ export default function WorkerCard({
       <div className="worker-card__body">
         <div className="worker-card__role-pill">{role}</div>
 
-        <div className="worker-card__assignment">
-          <div className="worker-card__assignment-label">Assigned to</div>
-          <div className="worker-card__assignment-value">{assignedTo}</div>
-        </div>
+        {assignedTo ? (
+          <div className="worker-card__assignment">
+            <div className="worker-card__assignment-label">Assigned to</div>
+            <div className="worker-card__assignment-value">{assignedTo}</div>
+          </div>
+        ) : null}
       </div>
     </article>
   );
