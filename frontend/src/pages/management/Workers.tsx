@@ -5,17 +5,16 @@ import { SearchInput } from "../../components/SearchInput";
 import { FilterButton } from "../../components/FilterButton";
 import { SortButton } from "../../components/SortButton";
 import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
-import { UserDisplayDto } from "../../types/UserDisplayDto";
 
-/*
- * WorkersPage
- * - Fetches users from backend: GET /api/users
- * - Uses JWT from localStorage (`token`) in Authorization header
- * - Converts `UserDisplayDto` into `WorkerCardProps` for card rendering
- * - Derives summary stats from fetched worker list
- *
- * Note: /api/users is currently admin-only in backend auth rules.
- */
+interface UserDisplayDto {
+id: string;
+fullName: string;
+email: string;
+roleID: number;
+isTwoFactorEnabled: boolean;
+isOnline?: boolean;
+}
+
 
 // Creates compact initials for each worker card avatar.
 const getInitials = (fullName?: string) => {
