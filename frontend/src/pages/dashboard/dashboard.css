@@ -29,7 +29,7 @@ body {
   justify-content: space-between;
   width: 100%;
   margin-bottom: 10px;
-  background: var(--Accent-1, #a6ab8d);
+  background: var(--accent-1, #5e745f);
   border-radius: 20px;
   height: 50px;
   padding: 0 0 0 15px;
@@ -90,6 +90,10 @@ body {
   padding: 0 20px 0 5px;
   margin-left: 13px;
   border-right: 1px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
+}
+
+.sorter h5{
+  color: #f7f7f3
 }
 
 .sorter:last-child {
