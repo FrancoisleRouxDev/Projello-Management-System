@@ -4,33 +4,8 @@ import { useNavigate } from "react-router-dom";
 import "./management.css";
 import ManagementClientTable, { ManagementClientRow } from "../../components/ManagementClientTable";
 import ManagementTopNav from "./ManagementTopNav";
-// import ClientsPage from "./Clients";
+import ClientsPage from "./Clients";
 import WorkersPage from "./Workers";
-
-/*
- * MANAGEMENT PAGE STRUCTURE
- * ========================
- * 
- * WHAT'S BEEN ADDED:
- * - ManagementTopNav component: A tabbed navigation bar that allows admins to switch between:
- *   • Projects: Displays project data in a ManagementClientTable
- *   • Clients: CURRENTLY DISABLED (see note below)
- *   • Workers: Displays worker data using WorkersPage
- * 
- * HOW IT WORKS:
- * - The page maintains state for activeView ("projects" | "clients" | "workers")
- * - When activeView changes, the corresponding content is rendered below the nav
- * - Projects view: Fetches project data from /api/projects and displays in a table
- * - Clients view: Commented out - see question below
- * - Workers view: Renders the WorkersPage component which fetches its own data
- * 
- * NOTE ON CLIENTS:
- * TODO: Should we keep the entire Clients.tsx page as a full subpage component,
- * or should we refactor it to display its table content directly in the management page
- * similar to how Projects works? Currently Clients.tsx is disabled.
- * If keeping it: uncomment the import and render line.
- * If removing it: delete Clients.tsx and the Clients tab from ManagementTopNav.
- */
 
 const API_BASE_URL = "http://localhost:5049/api";
 
@@ -133,7 +108,7 @@ export default function ManagementPage() {
             )}
           </>
         )}
-        {/* {activeView === "clients" && <ClientsPage />} */}
+        {activeView === "clients" && <ClientsPage />}
         {activeView === "workers" && <WorkersPage />}
       </div>
     </div>
