@@ -2,8 +2,12 @@
   display: flex;
   align-items: center;
   padding: 0 16px;
-  border-bottom: 1px solid #e0e0e0;
-  background: #ffffff;
+  background: #A6AB8D;
+  /* Stretch to viewport edges */
+  width: 100vw;
+  margin-left: calc(-45vw + 50%);
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .management-top-nav__tabs {
