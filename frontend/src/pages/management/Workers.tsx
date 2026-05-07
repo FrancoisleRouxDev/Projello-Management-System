@@ -96,13 +96,13 @@ export default function WorkersPage() {
 	const totalWorkers = workers.length;
 	const foremen = workers.filter((worker) => worker.role === "Foreman").length;
 	const visibleWorkers = workers.filter((worker) => worker.role === "Worker").length;
-	const twoFactorOn = workers.filter((worker) => worker.status === "2FA On").length;
+	const onlineWorkers = workers.filter((worker) => worker.status === "Online").length;
 
 	return (
 		<div className="workers-page">
 			{/* Summary cards for worker status */}
 			<div className="workers-page__stats">
-				<StatCard value={String(twoFactorOn)} label="2FA Enabled" tone="success" />
+				<StatCard value={String(onlineWorkers)} label="Online Workers" tone="success" />
 				<StatCard value={String(foremen)} label="Foremen" tone="warning" />
 				<StatCard value={String(visibleWorkers)} label="Workers" tone="neutral" />
 				<StatCard value={String(totalWorkers)} label="Total Team" tone="neutral" />

@@ -2,8 +2,27 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    height: 100vh;
+    margin: 0;
 }
 
 .management-page__content {
-    padding: 32px 0 0;
+    padding: 40px 0 0 0;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.management-page__content h2 {
+    margin: 0 0 24px 0;
+    font-size: 32px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: #101828;
+}
+
+.management-page__content p,
+.management-page__content .loading,
+.management-page__content .error {
+    font-size: 16px;
+    line-height: 24px;
 }
