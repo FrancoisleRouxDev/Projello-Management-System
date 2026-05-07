@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Projello.Api.Models;
-
+using Projello.Api.Data; 
 namespace Projello.Api.Data
 {
     // They cannot be found until code is added in the Models folder for it.
