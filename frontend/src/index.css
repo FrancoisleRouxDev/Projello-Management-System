@@ -71,6 +71,7 @@
   --accent-2: #28332b;
   --accent-3: #d6ae34;
   --accent-2-10_Opacity: rgba(40, 51, 43, 0.1);
+  --accent-2-5_Opacity: rgba(40, 51, 43, 0.05);
   --accent-2-40_Opacity: rgba(40, 51, 43, 0.4);
   --success-green: #bdd04e;
   --error-red: #c34949;
@@ -91,6 +92,7 @@
   --accent-3: #e0c05d;
   --accent-2-10_Opacity: rgba(247, 247, 243, 0.1);
   --accent-2-40_Opacity: rgba(247, 247, 243, 0.4);
+  --accent-2-5_Opacity: rgba(247, 247, 243, 0.05);
   --success-green: #bdd04e;
   --error-red: #c34949;
   --warning-yellow: #deab3d;
