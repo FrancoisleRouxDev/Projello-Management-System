@@ -94,7 +94,9 @@ export default function ManagementPage() {
       <div className="management-page__content">
         {activeView === "projects" && (
           <>
-            <h2>Project Management</h2>
+            <div className="management-page__heading-box">
+              <h2>Project Management</h2>
+            </div>
             {loading && <div className="loading">Loading projects...</div>}
             {error && <div className="error">Error: {error}</div>}
             {!loading && !error && projects.length === 0 && (
