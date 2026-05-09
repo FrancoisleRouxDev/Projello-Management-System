@@ -6,6 +6,8 @@ import ManagementClientTable, { ManagementClientRow } from "../../components/Man
 import ManagementTopNav from "./ManagementTopNav";
 import ClientsPage from "./Clients";
 import WorkersPage from "./Workers";
+import { AddButton } from "../../components/AddButton";
+import { ProjectAddModal } from "../../components/ProjectAddModal";
 
 const API_BASE_URL = "http://localhost:5049/api";
 
@@ -29,6 +31,7 @@ export default function ManagementPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -88,6 +91,12 @@ export default function ManagementPage() {
     navigate(`/single-view/${row.clientId}`);
   };
 
+  const handleProjectSubmit = (data: any) => {
+    console.log("New project data:", data);
+    // TODO: Submit to API endpoint
+    // TODO: Refresh projects list
+  };
+
   return (
     <div className="management-page">
       <ManagementTopNav activeView={activeView} onViewChange={setActiveView} />
@@ -96,6 +105,7 @@ export default function ManagementPage() {
           <>
             <div className="management-page__heading-box">
               <h2>Project Management</h2>
+              <AddButton label="Project" onClick={() => setProjectModalOpen(true)} />
             </div>
             {loading && <div className="loading">Loading projects...</div>}
             {error && <div className="error">Error: {error}</div>}
@@ -113,6 +123,11 @@ export default function ManagementPage() {
         {activeView === "clients" && <ClientsPage />}
         {activeView === "workers" && <WorkersPage />}
       </div>
+      <ProjectAddModal 
+        open={projectModalOpen}
+        onClose={() => setProjectModalOpen(false)}
+        onSubmit={handleProjectSubmit}
+      />
     </div>
   );
 }

@@ -34,6 +34,13 @@
 	box-sizing: border-box;
 }
 
+.clients-page__section-header-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+}
+
 .clients-page__title {
 	margin: 0;
 	color: #0a0a0a;

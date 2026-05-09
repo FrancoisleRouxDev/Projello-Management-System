@@ -14,7 +14,7 @@
 }
 
 .management-page__content h2 {
-    margin: 0 0 24px 0;
+    margin: 0;
     font-size: 32px;
     line-height: 1.15;
     font-weight: 700;
@@ -36,6 +36,10 @@
     padding: 16px 24px;
     box-sizing: border-box;
     margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
 }
 
 .management-page__heading-box h2 {
