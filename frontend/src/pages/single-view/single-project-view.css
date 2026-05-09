@@ -1,0 +1,231 @@
+.single-project-view {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #1f2937;
+}
+
+.single-project-view__header {
+  background: #a4aa86;
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.single-project-view__breadcrumb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.single-project-view__back-button {
+  border: 0;
+  background: transparent;
+  color: #334155;
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.single-project-view__project-name {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #1f2937;
+}
+
+.single-project-view__separator,
+.single-project-view__client-name {
+  font-size: 14px;
+  color: #475569;
+}
+
+.single-project-view__completion-pill {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.single-project-view__tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.single-project-view__tab {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #344054;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.single-project-view__tab--active {
+  background: rgba(255, 255, 255, 0.22);
+  color: #111827;
+}
+
+.single-project-view__stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.single-project-view__stat-card {
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid rgba(31, 41, 55, 0.08);
+  padding: 14px 16px;
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.single-project-view__stat-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.single-project-view__stat-value {
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 700;
+  color: #111827;
+}
+
+.single-project-view__main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.single-project-view__panel {
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid rgba(31, 41, 55, 0.08);
+  padding: 16px;
+}
+
+.single-project-view__panel-title {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.single-project-view__project-description {
+  margin: 0;
+  color: #475569;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.single-project-view__progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.single-project-view__progress-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.single-project-view__progress-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.single-project-view__progress-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.single-project-view__progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #95a66d;
+}
+
+.single-project-view__panel-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.single-project-view__view-all-button {
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.single-project-view__photo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.single-project-view__photo-tile {
+  min-height: 124px;
+  border-radius: 10px;
+  background-image: linear-gradient(135deg, #9fbf80 0%, #5e81ac 100%);
+  border: 1px solid rgba(31, 41, 55, 0.08);
+}
+
+@media (max-width: 1200px) {
+  .single-project-view__stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .single-project-view__photo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .single-project-view__main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .single-project-view__project-name {
+    font-size: 24px;
+  }
+
+  .single-project-view__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .single-project-view__photo-grid {
+    grid-template-columns: 1fr;
+  }
+}
