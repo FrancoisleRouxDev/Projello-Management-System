@@ -1,86 +1,152 @@
-import React from "react";
-import { ProjectViewData } from "./SingleProjectViewTypes";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import "./single-project-view.css";
 
-// Temporary placeholder presentation component.
-// Keep this as a UI shell and replace static sections/tabs with real feature components as they are built.
+const API_BASE_URL = "http://localhost:5049/api";
 
-type SingleProjectViewTemplateProps = {
-  project: ProjectViewData;
-  onBackToClients: () => void;
-};
+interface Project {
+  projectID: number;
+  name: string;
+  description: string;
+  clientID: number;
+  clientName: string;
+  status: string;
+  startDate: string | null;
+  dueDate: string | null;
+  createdAt: string;
+  // Suggested backend addition: include photo URLs here so the gallery section can render real images.
+  photoTiles?: string[];
+}
 
-export default function SingleProjectViewTemplate({ project, onBackToClients }: SingleProjectViewTemplateProps) {
+export default function SingleProjectViewPage() {
+
+
+  const navigate = useNavigate();
+  const { projectId } = useParams<{ projectId: string }>();
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProject = async () => {
+      if (!projectId) {
+        setError("Project ID is missing");
+        setLoading(false);
+        return;
+      }
+
+      const id = parseInt(projectId, 10);
+      if (isNaN(id)) {
+        setError("Invalid Project ID");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("token");
+        const headers: HeadersInit = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
+
+        const res = await fetch(`${API_BASE_URL}/projects/${id}`, {
+          method: "GET",
+          headers,
+        });
+
+        if (!res.ok) {
+          throw new Error(`Status ${res.status}: ${res.statusText}`);
+        }
+
+        // This expects the API to return the same DTO shape as `Project` above.
+        // Add `photoTiles` on the backend when the gallery endpoint is ready.
+
+
+
+
+
+
+        const data = await res.json();
+        console.log("Fetched Project:", data);
+        setProject(data);
+      } catch (err) {
+        console.error("Fetch Error:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProject();
+  }, [projectId]);
+
+  if (loading) return <div className="loading">Loading project...</div>;
+  if (error) return <div className="error">Error: {error}</div>;
+  if (!project) return <div className="error">Project not found.</div>;
+
   return (
     <div className="single-project-view">
-      <header className="single-project-view__header">
+      <div className="single-project-view__header">
         <div className="single-project-view__breadcrumb-row">
-          <button type="button" className="single-project-view__back-button" aria-label="Go back" onClick={onBackToClients}>
+          <button 
+            onClick={() => navigate("/management")} 
+            className="single-project-view__back-button"
+          >
             ←
           </button>
-
-          <h1 className="single-project-view__project-name">{project.projectName}</h1>
+          <h1 className="single-project-view__project-name">{project.name}</h1>
           <span className="single-project-view__separator">/</span>
           <span className="single-project-view__client-name">{project.clientName}</span>
-          <span className="single-project-view__completion-pill">{project.completion}% Complete</span>
+          <span className="single-project-view__completion-pill">{project.status}</span>
         </div>
-
+        
         <div className="single-project-view__tabs">
-          <button type="button" className="single-project-view__tab single-project-view__tab--active">
-            Overview
-          </button>
-          <button type="button" className="single-project-view__tab">Discussion 4</button>
-          <button type="button" className="single-project-view__tab">Gallery 0</button>
+          <button className="single-project-view__tab single-project-view__tab--active">Overview</button>
+          <button className="single-project-view__tab">Details</button>
         </div>
-      </header>
+      </div>
 
-      <section className="single-project-view__stats" aria-label="Project statistics">
-        {project.stats.map((stat) => (
-          <article key={stat.label} className="single-project-view__stat-card">
-            <div className="single-project-view__stat-label">{stat.label}</div>
-            <div className="single-project-view__stat-value">{stat.value}</div>
-          </article>
-        ))}
-      </section>
+      {/* Stats Section */}
+      <div className="single-project-view__stats">
+        <div className="single-project-view__stat-card">
+          <span className="single-project-view__stat-label">Project ID</span>
+          <span className="single-project-view__stat-value">{project.projectID}</span>
+        </div>
+        <div className="single-project-view__stat-card">
+          <span className="single-project-view__stat-label">Client</span>
+          <span className="single-project-view__stat-value">{project.clientName}</span>
+        </div>
+        <div className="single-project-view__stat-card">
+          <span className="single-project-view__stat-label">Status</span>
+          <span className="single-project-view__stat-value">{project.status}</span>
+        </div>
+        <div className="single-project-view__stat-card">
+          <span className="single-project-view__stat-label">Start Date</span>
+          <span className="single-project-view__stat-value">
+            {new Date(project.startDate || "").toLocaleDateString()}
+          </span>
+        </div>
+        <div className="single-project-view__stat-card">
+          <span className="single-project-view__stat-label">Due Date</span>
+          <span className="single-project-view__stat-value">
+            {new Date(project.dueDate || "").toLocaleDateString()}
+          </span>
+        </div>
+      </div>
 
-      <section className="single-project-view__main-grid" aria-label="Project overview content">
-        <article className="single-project-view__panel">
-          <h2 className="single-project-view__panel-title">Project Information</h2>
-          <p className="single-project-view__project-description">{project.projectDescription}</p>
-        </article>
-
-        <article className="single-project-view__panel">
-          <h2 className="single-project-view__panel-title">Progress Breakdown</h2>
-
-          <div className="single-project-view__progress-list">
-            {project.progressBreakdown.map((item) => (
-              <div key={item.label} className="single-project-view__progress-item">
-                <div className="single-project-view__progress-meta">
-                  <span>{item.label}</span>
-                  <span>{item.value}%</span>
-                </div>
-                <div className="single-project-view__progress-track" aria-hidden="true">
-                  <div className="single-project-view__progress-fill" style={{ width: `${item.value}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </article>
-      </section>
-
-      <section className="single-project-view__panel" aria-label="Recent site photos">
-        <div className="single-project-view__panel-header-row">
-          <h2 className="single-project-view__panel-title">Recent Site Photos</h2>
-          <button type="button" className="single-project-view__view-all-button">
-            View All
-          </button>
+      <div className="single-project-view__main-grid">
+        <div className="single-project-view__panel">
+          <h3 className="single-project-view__panel-title">Description</h3>
+          <p className="single-project-view__project-description">
+            {project.description || "No description provided."}
+          </p>
         </div>
 
-        <div className="single-project-view__photo-grid">
-          {project.photoTiles.map((tile) => (
-            <div key={tile} className="single-project-view__photo-tile" aria-label="Project site photo placeholder" />
-          ))}
+        <div className="single-project-view__panel">
+          <h3 className="single-project-view__panel-title">Milestones</h3>
+          <p className="single-project-view__project-description">
+            Milestone data loading...
+          </p>
         </div>
-      </section>
+      </div>
     </div>
   );
 }
