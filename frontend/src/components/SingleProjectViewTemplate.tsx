@@ -14,9 +14,13 @@ interface Project {
   startDate: string | null;
   dueDate: string | null;
   createdAt: string;
+  // Suggested backend addition: include photo URLs here so the gallery section can render real images.
+  photoTiles?: string[];
 }
 
 export default function SingleProjectViewPage() {
+
+
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
   const [project, setProject] = useState<Project | null>(null);
@@ -51,6 +55,14 @@ export default function SingleProjectViewPage() {
         if (!res.ok) {
           throw new Error(`Status ${res.status}: ${res.statusText}`);
         }
+
+        // This expects the API to return the same DTO shape as `Project` above.
+        // Add `photoTiles` on the backend when the gallery endpoint is ready.
+
+
+
+
+
 
         const data = await res.json();
         console.log("Fetched Project:", data);
