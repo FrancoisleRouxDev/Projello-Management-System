@@ -27,6 +27,11 @@
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
+	width: 100%;
+	background: #ffffff;
+	border-radius: 14px;
+	padding: 16px 24px;
+	box-sizing: border-box;
 }
 
 .clients-page__title {
