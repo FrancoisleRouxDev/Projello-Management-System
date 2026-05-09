@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import CustomModal from "./CustomModal";
 import { Button } from "antd";
+import "./ClientAddModal.css";
 
 interface ClientAddModalProps {
   open: boolean;
@@ -56,83 +57,59 @@ export const ClientAddModal: React.FC<ClientAddModalProps> = ({
         </Button>,
       ]}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <div>
-          <label style={{ display: "block", marginBottom: "6px", fontWeight: 500 }}>
-            Name *
+      <div className="client-add-modal__form">
+        <div className="client-add-modal__form-group">
+          <label className="client-add-modal__label client-add-modal__label--required">
+            Name
           </label>
           <input
             type="text"
+            className="client-add-modal__input"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             placeholder="Enter client name"
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #d9d9d9",
-              borderRadius: "6px",
-              fontSize: "14px",
-            }}
           />
         </div>
-        <div>
-          <label style={{ display: "block", marginBottom: "6px", fontWeight: 500 }}>
-            Company *
+        <div className="client-add-modal__form-group">
+          <label className="client-add-modal__label client-add-modal__label--required">
+            Company
           </label>
           <input
             type="text"
+            className="client-add-modal__input"
             value={formData.company}
             onChange={(e) =>
               setFormData({ ...formData, company: e.target.value })
             }
             placeholder="Enter company name"
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #d9d9d9",
-              borderRadius: "6px",
-              fontSize: "14px",
-            }}
           />
         </div>
-        <div>
-          <label style={{ display: "block", marginBottom: "6px", fontWeight: 500 }}>
-            Email *
+        <div className="client-add-modal__form-group">
+          <label className="client-add-modal__label client-add-modal__label--required">
+            Email
           </label>
           <input
             type="email"
+            className="client-add-modal__input"
             value={formData.email}
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
             placeholder="Enter email address"
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #d9d9d9",
-              borderRadius: "6px",
-              fontSize: "14px",
-            }}
           />
         </div>
-        <div>
-          <label style={{ display: "block", marginBottom: "6px", fontWeight: 500 }}>
+        <div className="client-add-modal__form-group">
+          <label className="client-add-modal__label">
             Phone
           </label>
           <input
             type="tel"
+            className="client-add-modal__input"
             value={formData.phone}
             onChange={(e) =>
               setFormData({ ...formData, phone: e.target.value })
             }
             placeholder="Enter phone number"
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #d9d9d9",
-              borderRadius: "6px",
-              fontSize: "14px",
-            }}
           />
         </div>
       </div>

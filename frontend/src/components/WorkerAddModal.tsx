@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import CustomModal from "./CustomModal";
 import { Button, Select } from "antd";
+import "./WorkerAddModal.css";
 
 interface WorkerAddModalProps {
   open: boolean;
@@ -56,79 +57,61 @@ export const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
         </Button>,
       ]}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <div>
-          <label style={{ display: "block", marginBottom: "6px", fontWeight: 500 }}>
-            Full Name *
+      <div className="worker-add-modal__form">
+        <div className="worker-add-modal__form-group">
+          <label className="worker-add-modal__label worker-add-modal__label--required">
+            Full Name
           </label>
           <input
             type="text"
+            className="worker-add-modal__input"
             value={formData.fullName}
             onChange={(e) =>
               setFormData({ ...formData, fullName: e.target.value })
             }
             placeholder="Enter full name"
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #d9d9d9",
-              borderRadius: "6px",
-              fontSize: "14px",
-            }}
           />
         </div>
-        <div>
-          <label style={{ display: "block", marginBottom: "6px", fontWeight: 500 }}>
-            Email *
+        <div className="worker-add-modal__form-group">
+          <label className="worker-add-modal__label worker-add-modal__label--required">
+            Email
           </label>
           <input
             type="email"
+            className="worker-add-modal__input"
             value={formData.email}
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
             placeholder="Enter email address"
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #d9d9d9",
-              borderRadius: "6px",
-              fontSize: "14px",
-            }}
           />
         </div>
-        <div>
-          <label style={{ display: "block", marginBottom: "6px", fontWeight: 500 }}>
+        <div className="worker-add-modal__form-group">
+          <label className="worker-add-modal__label">
             Role
           </label>
           <Select
+            className="worker-add-modal__select"
             value={formData.roleID}
             onChange={(value) => setFormData({ ...formData, roleID: value })}
-            style={{ width: "100%" }}
             options={[
               { label: "Worker", value: 3 },
               { label: "Foreman", value: 2 },
             ]}
           />
         </div>
-        <div>
-          <label style={{ display: "block", marginBottom: "6px", fontWeight: 500 }}>
+        <div className="worker-add-modal__form-group">
+          <label className="worker-add-modal__label">
             Phone
           </label>
           <input
             type="tel"
+            className="worker-add-modal__input"
             value={formData.phone}
             onChange={(e) =>
               setFormData({ ...formData, phone: e.target.value })
             }
             placeholder="Enter phone number"
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #d9d9d9",
-              borderRadius: "6px",
-              fontSize: "14px",
-            }}
           />
         </div>
       </div>

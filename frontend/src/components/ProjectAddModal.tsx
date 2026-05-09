@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import CustomModal from "./CustomModal";
 import { Button } from "antd";
+import "./ProjectAddModal.css";
 
 interface ProjectAddModalProps {
   open: boolean;
@@ -56,83 +57,58 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
         </Button>,
       ]}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-        <div>
-          <label style={{ display: "block", marginBottom: "6px", fontWeight: 500 }}>
-            Project Name *
+      <div className="project-add-modal__form">
+        <div className="project-add-modal__form-group">
+          <label className="project-add-modal__label project-add-modal__label--required">
+            Project Name
           </label>
           <input
             type="text"
+            className="project-add-modal__input"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             placeholder="Enter project name"
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #d9d9d9",
-              borderRadius: "6px",
-              fontSize: "14px",
-            }}
           />
         </div>
-        <div>
-          <label style={{ display: "block", marginBottom: "6px", fontWeight: 500 }}>
-            Client Name *
+        <div className="project-add-modal__form-group">
+          <label className="project-add-modal__label project-add-modal__label--required">
+            Client Name
           </label>
           <input
             type="text"
+            className="project-add-modal__input"
             value={formData.clientName}
             onChange={(e) =>
               setFormData({ ...formData, clientName: e.target.value })
             }
             placeholder="Enter client name"
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #d9d9d9",
-              borderRadius: "6px",
-              fontSize: "14px",
-            }}
           />
         </div>
-        <div>
-          <label style={{ display: "block", marginBottom: "6px", fontWeight: 500 }}>
+        <div className="project-add-modal__form-group">
+          <label className="project-add-modal__label">
             Description
           </label>
           <textarea
+            className="project-add-modal__textarea"
             value={formData.description}
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
             }
             placeholder="Enter project description"
             rows={4}
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #d9d9d9",
-              borderRadius: "6px",
-              fontSize: "14px",
-              fontFamily: "Roboto, sans-serif",
-            }}
           />
         </div>
-        <div>
-          <label style={{ display: "block", marginBottom: "6px", fontWeight: 500 }}>
+        <div className="project-add-modal__form-group">
+          <label className="project-add-modal__label">
             Due Date
           </label>
           <input
             type="date"
+            className="project-add-modal__input"
             value={formData.dueDate}
             onChange={(e) =>
               setFormData({ ...formData, dueDate: e.target.value })
             }
-            style={{
-              width: "100%",
-              padding: "8px 12px",
-              border: "1px solid #d9d9d9",
-              borderRadius: "6px",
-              fontSize: "14px",
-            }}
           />
         </div>
       </div>

@@ -1,0 +1,50 @@
+
+.worker-add-modal {
+}
+
+.worker-add-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+
+.worker-add-modal__form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.worker-add-modal__label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #101828;
+  font-family: "Roboto", sans-serif;
+}
+
+.worker-add-modal__label--required::after {
+  content: " *";
+  color: #c34949;
+}
+
+.worker-add-modal__input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: "Roboto", sans-serif;
+  transition: border-color 0.2s ease;
+}
+
+.worker-add-modal__input:focus {
+  outline: none;
+  border-color: #a9ad89;
+  box-shadow: 0 0 0 2px rgba(169, 173, 137, 0.1);
+}
+
+.worker-add-modal__select {
+  width: 100%;
+}
