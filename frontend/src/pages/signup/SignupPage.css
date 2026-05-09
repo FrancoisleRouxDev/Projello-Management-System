@@ -1,6 +1,5 @@
 /* SignupPage styles moved from inline */
 
-
 .signup-container {
   display: flex;
   height: 100vh;
@@ -113,7 +112,7 @@
   padding: 14px;
   border-radius: 1000px;
   border: none;
-  background: #a6ab8d;
+  background: #5e745f;
   box-shadow: 0 4px 0 0 rgba(40, 51, 43, 0.5);
   color: #fff;
   font-weight: 700;

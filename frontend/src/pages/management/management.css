@@ -26,3 +26,21 @@
     font-size: 16px;
     line-height: 24px;
 }
+
+/* Heading box used on the projects view. Matches table width and styling */
+.management-page__heading-box {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px 24px;
+    box-sizing: border-box;
+    margin-bottom: 16px;
+}
+
+.management-page__heading-box h2 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: #101828;
+}
