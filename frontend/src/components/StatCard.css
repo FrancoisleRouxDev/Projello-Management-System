@@ -35,7 +35,7 @@
 .stat-card__value {
   color: #0a0a0a;
   font-size: 24px;
-  font-family: Inter, sans-serif;
+  font-family: "Roboto", sans-serif;
   font-weight: 600;
   line-height: 32px;
 }
@@ -43,7 +43,7 @@
 .stat-card__label {
   color: #4a5565;
   font-size: 14px;
-  font-family: Inter, sans-serif;
+  font-family: "Roboto", sans-serif;
   font-weight: 400;
   line-height: 20px;
 }
