@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-// import {Link} from "react-router-dom";
+import {Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import "./management.css";
 import ManagementClientTable, { ManagementClientRow } from "../../components/ManagementClientTable";
@@ -88,7 +88,7 @@ export default function ManagementPage() {
 
   const handleRowClick = (row: ManagementClientRow) => {
     // Navigate to single project view using the project ID
-    navigate(`/single-view/${row.clientId}`);
+    navigate(`/single-view/${row.clientId}`, { state: { from: "/management" } });
   };
 
   const handleProjectSubmit = (data: any) => {
@@ -99,7 +99,15 @@ export default function ManagementPage() {
 
   return (
     <div className="management-page">
-      <ManagementTopNav activeView={activeView} onViewChange={setActiveView} />
+      <ManagementTopNav
+        tabs={[
+          { id: "projects", label: "Projects" },
+          { id: "clients", label: "Clients" },
+          { id: "workers", label: "Workers" },
+        ]}
+        activeTab={activeView}
+        onTabChange={(tabId) => setActiveView(tabId as ManagementView)}
+      />
       <div className="management-page__content">
         {activeView === "projects" && (
           <>

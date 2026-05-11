@@ -1,13 +1,22 @@
 .management-top-nav {
-  /* The nav background is controlled here. Change the CSS variable --management-top-nav-bg
-     or replace the fallback color below. */
-  width: 100%;
-  display: flex;
+  align-self: stretch;
+  height: 96px;
+  padding-left: 150px;
+  padding-bottom: 16px;
+  padding-right: 32px;
+  background: #A6AB8D;
+  border-bottom: 3px #364153 solid;
+  justify-content: flex-start;
   align-items: flex-end;
-  box-sizing: border-box;
-  /* Default background; override by setting --management-top-nav-bg on a parent or this element */
-  background: var(--management-top-nav-bg, #A6AB8D);
-  padding: 12px 32px;
+  display: flex;
+  width: 100%;                
+  margin-left: 0;           
+  margin-top: 0;            
+  margin-bottom: 0;
+  margin-right: 0;          
+  box-sizing: border-box;   
+  flex-shrink: 0;
+  border-radius: 16px 16px 0 0;
 }
 
 /* Use this class when you want the nav to ignore the parent padding and stretch edge-to-edge. */

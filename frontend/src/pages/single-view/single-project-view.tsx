@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./single-project-view.css";
 
 const API_BASE_URL = "http://localhost:5049/api";
@@ -64,6 +64,7 @@ function RecentSitePhotosSection({ project }: PhotoSectionProps) {
 
 export default function SingleProjectViewPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { projectId, id } = useParams<{ projectId?: string; id?: string }>();
   const resolvedProjectId = projectId ?? id;
   const [project, setProject] = useState<ProjectReadDto | null>(null);
@@ -123,10 +124,13 @@ export default function SingleProjectViewPage() {
       <div className="single-project-view__header">
         <div className="single-project-view__header-top-row">
           <div className="single-project-view__breadcrumb-row">
-            <button 
-              onClick={() => navigate("/management")} 
+            <button
+              onClick={() => {
+                const from = (location.state as { from?: string } | null)?.from;
+                navigate(from || "/dashboard");
+              }}
               className="single-project-view__back-button"
-              aria-label="Back to management"
+              aria-label="Back"
             >
               ←
             </button>
