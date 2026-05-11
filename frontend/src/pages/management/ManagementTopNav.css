@@ -1,11 +1,10 @@
 .management-top-nav {
   align-self: stretch;
-  height: 96px;
-  padding-left: 32px;
-  padding-bottom: 16px;
-  padding-right: 32px;
+  align-items: center;
+  height: 55px;
+  padding: 0 0 0 50px;
   background: #5e745f;
-  border-bottom: 3px #364153 solid;
+  border-radius: 16px;
   justify-content: flex-start;
   align-items: flex-end;
   display: flex;
@@ -16,15 +15,14 @@
   margin-right: 0;          
   box-sizing: border-box;   
   flex-shrink: 0;
-  border-radius: 16px 16px 0 0;
 }
 
 .management-top-nav__tab {
-  appearance: none;
-  border: none;
+  appearance: 0;
+  border: 0;
   background: transparent;
   border-bottom: 3px solid transparent;
-  padding: 0;
+  padding: 0 14px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -35,7 +33,7 @@
 }
 
 .management-top-nav__tab:hover .management-top-nav__label {
-  color: #0f172a;
+  color: #ffffff;
 }
 
 .management-top-nav__tab--active {
@@ -43,13 +41,13 @@
 }
 
 .management-top-nav__label {
-  color: #101828;
-  font-size: 24px;
+  color: #f3f3f3;
+  font-size: 22px;
   font-family: "Roboto", sans-serif;
   font-weight: 500;
   line-height: 24px;
 }
 
 .management-top-nav__tab--active .management-top-nav__label {
-  color: #b22b2b;
+  color: #ffffff;
 } 
