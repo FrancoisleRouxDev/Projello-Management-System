@@ -109,7 +109,7 @@ const [flipped, setFlipped] = useState({
                 progressPercent={project.milestones ? Math.round((project.milestones.filter((m:any) => m.status === "Completed").length / project.milestones.length) * 100) : 0}
                 milestonesLabel={project.milestones ? `${project.milestones.filter((m:any) => m.status === "Completed").length} / ${project.milestones.length} Milestones Reached` : "0 / 0 Milestones Reached"}
                 workers={project.members ? project.members.length : 0}
-                onClick={() => navigate(`/single-view/${project.projectID || project.ProjectID}`)}
+                onClick={() => navigate(`/single-view/${project.projectID || project.ProjectID}`, { state: { from: "/dashboard" } })}
               />
             ))
           )}

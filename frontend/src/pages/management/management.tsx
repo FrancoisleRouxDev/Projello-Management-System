@@ -85,7 +85,7 @@ export default function ManagementPage() {
 
   const handleRowClick = (row: ManagementClientRow) => {
     // Navigate to single project view using the project ID
-    navigate(`/single-view/${row.clientId}`);
+    navigate(`/single-view/${row.clientId}`, { state: { from: "/management" } });
   };
 
   return (
