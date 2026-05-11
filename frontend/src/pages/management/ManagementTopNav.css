@@ -1,3 +1,24 @@
+.management-top-nav {
+  align-self: stretch;
+  height: 96px;
+  padding-left: 32px;
+  padding-bottom: 16px;
+  padding-right: 32px;
+  background: #5e745f;
+  border-bottom: 3px #364153 solid;
+  justify-content: flex-start;
+  align-items: flex-end;
+  display: flex;
+  width: 100%;                
+  margin-left: 0;           
+  margin-top: 0;            
+  margin-bottom: 0;
+  margin-right: 0;          
+  box-sizing: border-box;   
+  flex-shrink: 0;
+  border-radius: 16px 16px 0 0;
+}
+
 .management-top-nav__tab {
   appearance: none;
   border: none;
