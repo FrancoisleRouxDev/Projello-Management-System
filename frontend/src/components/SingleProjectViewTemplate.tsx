@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./single-project-view.css";
-
-const API_BASE_URL = "http://localhost:5049/api";
+import { API_BASE_URL } from "../config";
 
 interface Project {
   projectID: number;
@@ -47,7 +46,7 @@ export default function SingleProjectViewPage() {
         const headers: HeadersInit = { "Content-Type": "application/json" };
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
-        const res = await fetch(`${API_BASE_URL}/projects/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/projects/${id}`, {
           method: "GET",
           headers,
         });

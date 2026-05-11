@@ -44,12 +44,14 @@ builder.Services.AddAuthentication(options => {
 });
 
 // CORS
+// CORS
 builder.Services.AddCors(options => {
-    options.AddPolicy("AllowElectron", policy => {
-        policy.WithOrigins("http://localhost:3000")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
+options.AddPolicy("AllowElectron", policy => {
+    policy.AllowAnyOrigin()
+          .AllowAnyHeader()
+          .AllowAnyMethod()
+          .AllowCredentials();
+});
 });
 
 builder.Services.AddControllers();
@@ -104,4 +106,5 @@ app.UseCors("AllowElectron");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<ProjectCallHub>("/callhub"); 
 app.Run();

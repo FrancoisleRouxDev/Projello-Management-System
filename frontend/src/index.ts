@@ -24,11 +24,11 @@ const createWindow = (): void => {
   // Apply a stricter, environment-aware CSP (allows local API + dev tooling when not packaged)
   const isDev = !app.isPackaged;
 
-  const connectSrc = [
-    "'self'",
-    'http://localhost:5049', // backend API
-    ...(isDev ? ['http://localhost:*', 'ws://localhost:*', 'ws://127.0.0.1:*'] : []), // dev server/HMR
-  ];
+const connectSrc = [
+  "'self'",
+  'https://projello-management-system.onrender.com',
+  ...(isDev ? ['http://localhost:*', 'ws://localhost:*', 'ws://127.0.0.1:*'] : []),
+];
 
   const cspDirectives = [
     "default-src 'self'",

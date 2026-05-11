@@ -11,7 +11,7 @@
 
 .splash-logo-wrap {
   position: absolute;
-  top: 32%; /* Kept as is */
+  top: 32%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
@@ -23,13 +23,10 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  
-  /* CHANGED: Moved down from +100px to +130px */
-  top: calc(50% + 240px);
-  
-  /* CHANGED: Increased width from 240px to 340px */
-  width: 340px;
-  
+  /* Ring is at ~190px below canvas center. Logo is 240px tall approx,
+     so place top at ~100px below center to sit neatly above the ring */
+  top: calc(50% + 100px);
+  width: 240px;
   max-width: 70vw;
   z-index: 3;
   pointer-events: none;

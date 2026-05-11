@@ -45,7 +45,7 @@ export interface SignalRClient<TEvents extends EventMap = EventMap> {
 const DEFAULT_RECONNECT_DELAYS_MS = [0, 2_000, 5_000, 10_000, 30_000];
 
 // Resolves hub URL from explicit option first, then env variable, then local fallback.
-// IMPORTANT: Backend is mapped to /hubs/project-call.
+
 const resolveHubUrl = (explicitUrl?: string): string => {
 	if (explicitUrl) return explicitUrl;
 
@@ -55,7 +55,7 @@ const resolveHubUrl = (explicitUrl?: string): string => {
 
 	if (envUrl) return envUrl;
 
-	return "/hubs/project-call";
+	return "/callhub";
 };
 
 // Creates a ready-to-use SignalR client with typed event subscriptions.

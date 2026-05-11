@@ -2,6 +2,7 @@ import React, { useState } from "react";
 // Import useNavigate for redirection and useLocation to read data passed from the previous page
 import { useNavigate, useLocation } from "react-router-dom";
 import Logo from "../../assets/Frame 106.svg";
+import { API_BASE_URL } from '../../config';
 import "./LoginPage.css"; // Reusing your login styling to keep it consistent
 
 const godzillaRoar = require("../../assets/zilla-1.mp3").default;
@@ -38,7 +39,7 @@ export default function Verify2FAPage({ onLoginSuccess }: Verify2FAPageProps) {
 
     try {
       // Send POST request to the backend to verify the 2FA code
-      const response = await fetch("http://localhost:5049/api/Auth/verify-2fa", {
+      const response = await fetch(`${API_BASE_URL}/api/Auth/verify-2fa`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code }),

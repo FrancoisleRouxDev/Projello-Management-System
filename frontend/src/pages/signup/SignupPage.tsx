@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Logo from "../../assets/Frame 106.svg";
+import { API_BASE_URL } from '../../config';
 import "./SignupPage.css";
 
 // Define the prop interface: expects a function to switch back to the login view
@@ -44,7 +45,7 @@ export default function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
 
     try {
       // Send POST request to the backend registration API
-      const response = await fetch("http://localhost:5049/api/Auth/register", {
+      const response = await fetch(`${API_BASE_URL}/api/Auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fullName, email, password, roleID }),

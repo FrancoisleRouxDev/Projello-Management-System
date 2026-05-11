@@ -64,6 +64,7 @@ namespace Projello.Api.Controllers
             var project = await _context.Projects
                 .Include(p => p.Client)
                 .Include(p => p.Members)
+                .ThenInclude(pm => pm.User)           // Important: This loads the User data
                 .FirstOrDefaultAsync(p => p.ProjectID == id);
 
             if (project == null) return NotFound();
@@ -73,6 +74,14 @@ namespace Projello.Api.Controllers
             {
                 return Forbid();
             }
+
+            // Map members to DTOs
+            var memberDtos = project.Members.Select(m => new ProjectMemberDto
+            {
+                UserID = m.UserID,
+                FullName = m.User.FullName,
+                AssignedAs = m.AssignedAs
+            }).ToList();
 
             return Ok(new ProjectReadDto
             {
@@ -84,7 +93,8 @@ namespace Projello.Api.Controllers
                 CreatedAt = project.CreatedAt,
                 ClientID = project.ClientID,
                 ClientName = project.Client.Name,
-                IsClientBlacklisted = project.Client.IsBlacklisted
+                IsClientBlacklisted = project.Client.IsBlacklisted,
+                Members = memberDtos          //  new part
             });
         }
 

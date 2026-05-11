@@ -5,6 +5,7 @@ import SearchIcon from "../../assets/Logo/SearchIcon.svg";
 import SortArrow from "../../assets/Logo/SortArrow.svg";
 import JelloItem from "../../components/JelloItem";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../config";
 
 export default function DashboardPage() {
 const [flipped, setFlipped] = useState({
@@ -19,7 +20,7 @@ const [flipped, setFlipped] = useState({
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://localhost:5049/api/Projects", {
+    fetch(`${API_BASE_URL}/api/Projects`, {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
       },

@@ -4,6 +4,7 @@ import "./settings.css";
 import CustomModal from "../../components/CustomModal";
 import CustomSwitch from "../../components/CustomSwitch";
 import { message as antdMessage } from "antd";
+import { API_BASE_URL } from '../../config';
 
 // Helper function to decode the JWT token and extract the email (sub claim)
 const getUserEmailFromToken = () => {
@@ -51,7 +52,7 @@ export default function SettingsPage() {
       if (!userEmail) return;
 
       try {
-        const response = await fetch(`http://localhost:5049/api/auth/2fa-status?email=${encodeURIComponent(userEmail)}`);
+        const response = await fetch(`${API_BASE_URL}/api/auth/2fa-status?email=${encodeURIComponent(userEmail)}`);
         
         if (response.ok) {
           const data = await response.json();
@@ -88,7 +89,7 @@ export default function SettingsPage() {
       // Flow for enabling 2FA - REAL API CALL
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:5049/api/auth/generate-2fa-secret', { 
+        const response = await fetch(`${API_BASE_URL}/api/auth/generate-2fa-secret`, { 
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: userEmail })
@@ -117,7 +118,7 @@ export default function SettingsPage() {
     setLoading(true);
     setMessage("");
     try {
-      const response = await fetch('http://localhost:5049/api/auth/verify-2fa', { 
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify-2fa`, { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: userEmail, code: verificationCode }) 

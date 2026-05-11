@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Logo from "../../assets/Frame 106.svg";
 import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from '../../config';
 
 // Import the Godzilla roar audio file for the success sound effect
 const godzillaRoar = require("../../assets/zilla-1.mp3").default; 
@@ -36,7 +37,7 @@ export default function LoginPage({ onSwitchToSignUp, onLoginSuccess }: LoginPag
 
     try {
       // Send POST request to the backend login API with email and password
-      const response = await fetch("http://localhost:5049/api/Auth/login", {
+   const response = await fetch(`${API_BASE_URL}/api/Auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

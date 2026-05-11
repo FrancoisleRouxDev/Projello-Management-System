@@ -1,0 +1,47 @@
+.management-page {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    font-family: "Roboto", sans-serif;
+}
+
+.management-page__content {
+    padding: 40px 0 0 0;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.management-page__content h2 {
+    margin: 0 0 24px 0;
+    font-size: 32px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: #101828;
+}
+
+.management-page__content p,
+.management-page__content .loading,
+.management-page__content .error {
+    font-size: 16px;
+    line-height: 24px;
+}
+
+/* Heading box used on the projects view. Matches table width and styling */
+.management-page__heading-box {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 16px 24px;
+    box-sizing: border-box;
+    margin-bottom: 16px;
+}
+
+.management-page__heading-box h2 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: #101828;
+}

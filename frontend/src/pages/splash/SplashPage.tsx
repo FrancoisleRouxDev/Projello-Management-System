@@ -8,10 +8,10 @@ import Logo from "../../assets/Frame 106.svg";
 // CX and CY are the center point of the canvas — we shift CY up by 40px so the bear sits a little higher
 // BEAR_SIZE controls how big the bear shape is overall
 const W = 680;
-const H = 1000;
+const H = 680;
 const CX = W / 2;
 const CY = H / 2 - 40;
-const BEAR_SIZE = 640;
+const BEAR_SIZE = 340;
 
 // GRID is the size of each "cell" in the dot grid — think of the canvas as a 10x10px tile map
 // CHARS is just a big string of random characters that flash inside the cells during the animation (matrix-ish vibes)
@@ -159,10 +159,11 @@ export default function SplashPage() {
       const elapsed = Math.min(ts - t0, TOTAL_MS); // clamp so we don't go past 10s
       const loadProg = elapsed / TOTAL_MS;          // 0 to 1, drives the progress ring %
       const expandT = Math.min(1, elapsed / EXPAND_MS); // 0 to 1, drives the bear reveal
-    const settleStart = TOTAL_MS - SETTLE_MS;
-// FORCE settleT to 0 to skip the "locking in" animation. 
-// The cells will continue their dot/square/char cycle until the screen navigates away.
-const settleT = 0; 
+      const settleStart = TOTAL_MS - SETTLE_MS;
+
+      // settleT goes from 0 to 1 only in the final 1 second — this is when everything "locks in"
+      const settleT =
+        elapsed >= settleStart ? easeInOut(Math.min(1, (elapsed - settleStart) / SETTLE_MS)) : 0;
 
       // once we hit 10 seconds, go to /login
       // NOTE: this is hardcoded — ideally this would fire when actual app data is loaded, not just after 10s
@@ -324,12 +325,12 @@ const settleT = 0;
       const labelY = CY + BEAR_SIZE * 0.44 + 38;
       const labelAlpha = Math.min(1, Math.max(0, (expandT - 0.5) / 0.5));
 
-      const ringY = labelY + 150;
-      const ringR = 50;
+      const ringY = labelY + 50;
+      const ringR = 26;
       const ringRot = (elapsed / 1000) * 1.6; // ring slowly rotates the whole time
 
       // faint full circle in the background (the "track" of the progress ring)
-      ctx.lineWidth = 8;
+      ctx.lineWidth = 4;
       ctx.lineCap = "round";
       ctx.globalAlpha = labelAlpha * 0.2;
       ctx.strokeStyle = `rgb(${BRAND_GOLD.r},${BRAND_GOLD.g},${BRAND_GOLD.b})`;
@@ -350,7 +351,7 @@ const settleT = 0;
       // the percentage text in the center of the ring (e.g. "42%")
       ctx.globalAlpha = labelAlpha;
       ctx.fillStyle = `rgb(${BRAND_GOLD.r},${BRAND_GOLD.g},${BRAND_GOLD.b})`;
-      ctx.font = "bold 16px monospace";
+      ctx.font = "bold 11px monospace";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(`${Math.floor(loadProg * 100)}%`, CX, ringY);
