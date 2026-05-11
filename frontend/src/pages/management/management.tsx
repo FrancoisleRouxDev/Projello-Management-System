@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-// import {Link} from "react-router-dom";
+import {Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import "./management.css";
 import ManagementClientTable, { ManagementClientRow } from "../../components/ManagementClientTable";
@@ -90,7 +90,15 @@ export default function ManagementPage() {
 
   return (
     <div className="management-page">
-      <ManagementTopNav activeView={activeView} onViewChange={setActiveView} />
+      <ManagementTopNav
+        tabs={[
+          { id: "projects", label: "Projects" },
+          { id: "clients", label: "Clients" },
+          { id: "workers", label: "Workers" },
+        ]}
+        activeTab={activeView}
+        onTabChange={(tabId) => setActiveView(tabId as ManagementView)}
+      />
       <div className="management-page__content">
         {activeView === "projects" && (
           <>
