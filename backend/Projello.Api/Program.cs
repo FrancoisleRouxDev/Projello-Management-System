@@ -47,10 +47,10 @@ builder.Services.AddAuthentication(options => {
 // CORS
 builder.Services.AddCors(options => {
 options.AddPolicy("AllowElectron", policy => {
-    policy.AllowAnyOrigin()
-          .AllowAnyHeader()
-          .AllowAnyMethod()
-          .AllowCredentials();
+policy.WithOrigins("http://localhost:3000")  // 
+      .AllowAnyHeader()
+      .AllowAnyMethod()
+      .AllowCredentials();
 });
 });
 
