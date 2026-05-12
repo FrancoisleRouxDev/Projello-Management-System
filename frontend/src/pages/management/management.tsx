@@ -3,7 +3,7 @@ import {Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import "./management.css";
 import ManagementClientTable, { ManagementClientRow } from "../../components/ManagementClientTable";
-import ManagementTopNav from "./ManagementTopNav";
+import ManagementTopNav from "../../components/ManagementTopNav";
 import ClientsPage from "./Clients";
 import WorkersPage from "./Workers";
 import { AddButton } from "../../components/AddButton";
