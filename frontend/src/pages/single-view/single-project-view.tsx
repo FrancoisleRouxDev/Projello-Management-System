@@ -4,7 +4,7 @@ import "./single-project-view.css";
 
 const API_BASE_URL = "http://localhost:5049/api";
 
-type ProjectReadDto = {
+type Project = {
   projectID: number;
   name: string;
   description: string;
@@ -19,7 +19,7 @@ type ProjectReadDto = {
 };
 
 type PhotoSectionProps = {
-  project: ProjectReadDto;
+  project: Project;
 };
 
 function RecentSitePhotosSection({ project }: PhotoSectionProps) {
@@ -67,7 +67,7 @@ export default function SingleProjectViewPage() {
   const location = useLocation();
   const { projectId, id } = useParams<{ projectId?: string; id?: string }>();
   const resolvedProjectId = projectId ?? id;
-  const [project, setProject] = useState<ProjectReadDto | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,7 +101,7 @@ export default function SingleProjectViewPage() {
         }
 
         // This assumes the backend returns the DTO shape used below, including any future photoTiles data.
-        const data: ProjectReadDto = await res.json();
+        const data: Project = await res.json();
         console.log("Fetched Project:", data);
         setProject(data);
       } catch (err) {
