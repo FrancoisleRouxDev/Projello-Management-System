@@ -8,7 +8,7 @@ import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
 import { AddButton } from "../../components/AddButton";
 import { WorkerAddModal } from "../../components/WorkerAddModal";
 
-interface UserDisplayDto {
+interface UserDisplay {
 id: string;
 fullName: string;
 email: string;
@@ -42,7 +42,7 @@ const getRoleLabel = (roleID: number) => {
 };
 
 // Centralized DTO -> UI mapping so future API changes only require edits in one place.
-const mapUserToWorkerCard = (user: UserDisplayDto): WorkerCardProps => ({
+const mapUserToWorkerCard = (user: UserDisplay): WorkerCardProps => ({
 	initials: getInitials(user.fullName),
 	name: user.fullName,
 	email: user.email,
@@ -74,7 +74,7 @@ export default function WorkersPage() {
 					throw new Error(text || response.statusText || "Failed to load workers");
 				}
 
-				const data: UserDisplayDto[] = await response.json();
+				const data: UserDisplay[] = await response.json();
 				// Hide admins from worker cards for now; this view focuses on field team users.
 				const visibleWorkers = (data ?? [])
 					.filter((user) => user.roleID !== 1)

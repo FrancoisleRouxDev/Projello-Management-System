@@ -63,21 +63,21 @@ function RecentSitePhotosSection({ project }: PhotoSectionProps) {
 }
 
 export default function SingleProjectViewPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { projectId, id } = useParams<{ projectId?: string; id?: string }>();
+  const navigate = useNavigate(); 
+  const location = useLocation(); 
+  const { projectId, id } = useParams<{ projectId?: string; id?: string }>(); //
   const resolvedProjectId = projectId ?? id;
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  useEffect(() => { 
     const fetchProject = async () => {
       if (!resolvedProjectId) {
         setError("Project ID is missing");
         setLoading(false);
         return;
-      }
+      } 
 
       const id = parseInt(resolvedProjectId, 10);
       if (isNaN(id)) {
