@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import "./dashboard.css";
-import BearLogo from "../../assets/Logo/SVG_Logo.svg";
+// BearLogo import removed; now in SideNavBar
 import SearchIcon from "../../assets/Logo/SearchIcon.svg";
 import JelloItem from "../../components/JelloItem";
 import { useNavigate } from "react-router-dom";
@@ -46,7 +46,6 @@ export default function DashboardPage() {
   return (
     <div className="dashboard-page">
       <div className="pageHeader">
-        <img src={BearLogo} alt="Projello Logo" />
         <h3>Active Jellos</h3>
       </div>
 

@@ -1,6 +1,8 @@
+
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./SideNavBar.css";
+import BearLogo from "../assets/Logo/Navbar_Logo.svg";
 
 
 function getUserInfoFromToken() {
@@ -33,25 +35,34 @@ export default function SideNavBar() {
 
     return (
         <div className="side-nav-wrapper">
-            <div className="pageNavContainer">
-                <a
-                    className={`pageNavLink${location.pathname === "/dashboard" ? " active" : ""}`}
-                    onClick={() => navigate("/dashboard")}
-                >
-                    <h5>Jello Jobs</h5>
-                </a>
-                <a
-                    className={`pageNavLink${location.pathname === "/history" ? " active" : ""}`}
-                    onClick={() => navigate("/history")}
-                >
-                    <h5>History</h5>
-                </a>
-                <a
-                    className={`pageNavLink${location.pathname === "/management" ? " active" : ""}`}
-                    onClick={() => navigate("/management")}
-                >
-                    <h5>Management</h5>
-                </a>
+            <div className="side-nav-main">
+                {/* <div className="side-nav-logo-container">
+                    <img src={BearLogo} alt="Projello Logo" className="side-nav-logo" />
+                </div> */}
+                <div style={{ height: "100px" }} />
+                <div className="pageNavContainer">
+                    <div className="side-nav-logo-container">
+                    <img src={BearLogo} alt="Projello Logo" className="side-nav-logo" />
+                </div>
+                    <a
+                        className={`pageNavLink${location.pathname === "/dashboard" ? " active" : ""}`}
+                        onClick={() => navigate("/dashboard")}
+                    >
+                        <h5>Jello Jobs</h5>
+                    </a>
+                    <a
+                        className={`pageNavLink${location.pathname === "/history" ? " active" : ""}`}
+                        onClick={() => navigate("/history")}
+                    >
+                        <h5>History</h5>
+                    </a>
+                    <a
+                        className={`pageNavLink${location.pathname === "/management" ? " active" : ""}`}
+                        onClick={() => navigate("/management")}
+                    >
+                        <h5>Management</h5>
+                    </a>
+                </div>
             </div>
             <div className="side-nav-footer">
                 <div
