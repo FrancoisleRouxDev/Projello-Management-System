@@ -132,10 +132,10 @@ if (app.Environment.IsDevelopment())
     app.UseHttpsRedirection(); // <-- move it in here
 }
 
+app.UseRouting();
 app.UseCors("AllowElectron");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseRouting();
 app.MapControllers();
 app.MapHub<ProjectCallHub>("/callhub");
 
