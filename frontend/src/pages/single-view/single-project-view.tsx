@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./single-project-view.css";
 
 const API_BASE_URL = "http://localhost:5049/api";
 
-type ProjectReadDto = {
+type Project = {
   projectID: number;
   name: string;
   description: string;
@@ -19,7 +19,7 @@ type ProjectReadDto = {
 };
 
 type PhotoSectionProps = {
-  project: ProjectReadDto;
+  project: Project;
 };
 
 function RecentSitePhotosSection({ project }: PhotoSectionProps) {
@@ -63,20 +63,21 @@ function RecentSitePhotosSection({ project }: PhotoSectionProps) {
 }
 
 export default function SingleProjectViewPage() {
-  const navigate = useNavigate();
-  const { projectId, id } = useParams<{ projectId?: string; id?: string }>();
+  const navigate = useNavigate(); 
+  const location = useLocation(); 
+  const { projectId, id } = useParams<{ projectId?: string; id?: string }>(); //
   const resolvedProjectId = projectId ?? id;
-  const [project, setProject] = useState<ProjectReadDto | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  useEffect(() => { 
     const fetchProject = async () => {
       if (!resolvedProjectId) {
         setError("Project ID is missing");
         setLoading(false);
         return;
-      }
+      } 
 
       const id = parseInt(resolvedProjectId, 10);
       if (isNaN(id)) {
@@ -100,7 +101,7 @@ export default function SingleProjectViewPage() {
         }
 
         // This assumes the backend returns the DTO shape used below, including any future photoTiles data.
-        const data: ProjectReadDto = await res.json();
+        const data: Project = await res.json();
         console.log("Fetched Project:", data);
         setProject(data);
       } catch (err) {
@@ -123,10 +124,13 @@ export default function SingleProjectViewPage() {
       <div className="single-project-view__header">
         <div className="single-project-view__header-top-row">
           <div className="single-project-view__breadcrumb-row">
-            <button 
-              onClick={() => navigate("/management")} 
+            <button
+              onClick={() => {
+                const from = (location.state as { from?: string } | null)?.from;
+                navigate(from || "/dashboard");
+              }}
               className="single-project-view__back-button"
-              aria-label="Back to management"
+              aria-label="Back"
             >
               ←
             </button>

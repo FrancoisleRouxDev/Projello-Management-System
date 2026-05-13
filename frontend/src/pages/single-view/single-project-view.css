@@ -28,22 +28,23 @@
 }
 
 .single-project-view__header {
-  background: #a9ad89;
+  background: var(--accent-1, #5e745f);
   border-bottom: 1px solid rgba(17, 24, 39, 0.08);
-  padding: 16px 20px 0;
+  padding: 10px 16px 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   width: 100%;
   box-sizing: border-box;
-  border-radius: 16px 16px 0 0;
+  border-radius: 16px;
+  box-shadow: 0 2px 4px rgba(40, 51, 43, 0.2), 0 -3px 8px rgba(40, 51, 43, 0.1) inset;
 }
 
 .single-project-view__header-top-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
@@ -57,25 +58,26 @@
 .single-project-view__back-button {
   border: 0;
   background: transparent;
-  color: #334155;
-  font-size: 22px;
+  color: #f7f7f3;
+  font-size: 20px;
   cursor: pointer;
   line-height: 1;
-  padding: 0 2px;
+  padding: 6px 8px;
+  border-radius: 8px;
 }
 
 .single-project-view__project-name {
   margin: 0;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
   line-height: 1.2;
-  color: #24313f;
+  color: #f7f7f3;
 }
 
 .single-project-view__separator,
 .single-project-view__client-name {
   font-size: 14px;
-  color: #415064;
+  color: rgba(247, 247, 243, 0.9);
 }
 
 .single-project-view__completion-pill {
@@ -96,7 +98,7 @@
   border-radius: 10px;
   padding: 10px 14px;
   background: #b5c28a;
-  color: #ffffff;
+  color: #fff;
   font-size: 14px;
   font-weight: 600;
   line-height: 1;
@@ -111,9 +113,9 @@
 .single-project-view__tabs {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
   flex-wrap: wrap;
-  padding-bottom: 2px;
+  padding-bottom: 6px;
 }
 
 .single-project-view__tab {
@@ -121,15 +123,16 @@
   border-radius: 0;
   background: transparent;
   color: #314054;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 8px 2px 10px;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 8px 12px 10px;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
 }
 
 .single-project-view__tab--active {
-  color: #111827;
+  color: #ffffff;
   border-bottom-color: #111827;
 }
 
