@@ -1,20 +1,16 @@
+
 import React, { useState, useEffect } from "react";
 import "./dashboard.css";
 import BearLogo from "../../assets/Logo/SVG_Logo.svg";
 import SearchIcon from "../../assets/Logo/SearchIcon.svg";
-import SortArrow from "../../assets/Logo/SortArrow.svg";
 import JelloItem from "../../components/JelloItem";
 import { useNavigate } from "react-router-dom";
 
 export default function DashboardPage() {
-const [flipped, setFlipped] = useState({
-    az: false,
-    priority: false,
-    date: false,
-    progress: false,
-    workers: false,
-  });
+  // Only one filter can be active at a time
+  const [activeFilter, setActiveFilter] = useState<"az"|"priority"|"date"|"progress"|"workers"|null>(null);
   const [projects, setProjects] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,9 +28,20 @@ const [flipped, setFlipped] = useState({
       .catch(() => setProjects([]));
   }, []);
 
-  const handleFlip = (key: keyof typeof flipped) => {
-    setFlipped((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  const handleFilterChange = (key: "az"|"priority"|"date"|"progress"|"workers") => {
+    setActiveFilter(key);
+    // Add sorting logic here if needed
   };
+
+  // Filter projects by search input (case-insensitive), only if search has at least 1 character
+  const filteredProjects = search.trim().length > 0
+    ? projects.filter((project) => {
+        const name = (project.name || project.Name || "").trim().toLowerCase();
+        const searchTerm = search.trim().toLowerCase();
+        return name.includes(searchTerm);
+      })
+    : projects;
 
   return (
     <div className="dashboard-page">
@@ -46,61 +53,87 @@ const [flipped, setFlipped] = useState({
       <div className="filterBar">
         <div className="searchBar">
           <img src={SearchIcon} alt="Search Icon" />
-          <input type="text" placeholder="Search projects..." className="searchInput"/>
+          <input
+            type="text"
+            placeholder="Search projects..."
+            className="searchInput"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
         </div>
         <div className="sorter" id="AZsorter">
-          <h5>Sort (A-Z)</h5>
-          <img
-            src={SortArrow}
-            alt="Sort Arrow"
-            className={flipped.az ? "sort-arrow flipped" : "sort-arrow"}
-            onClick={() => handleFlip("az")}
-          />
+          <label className="radio-label">
+            <input
+              type="radio"
+              name="filter"
+              value="az"
+              checked={activeFilter === "az"}
+              onChange={() => handleFilterChange("az")}
+            />
+            <span className="custom-radio" />
+            <span className="radio-text">Sort (A-Z)</span>
+          </label>
         </div>
         <div className="sorter" id="prioritySorter">
-          <h5>Priority</h5>
-          <img
-            src={SortArrow}
-            alt="Sort Arrow"
-            className={flipped.priority ? "sort-arrow flipped" : "sort-arrow"}
-            onClick={() => handleFlip("priority")}
-          />
+          <label className="radio-label">
+            <input
+              type="radio"
+              name="filter"
+              value="priority"
+              checked={activeFilter === "priority"}
+              onChange={() => handleFilterChange("priority")}
+            />
+            <span className="custom-radio" />
+            <span className="radio-text">Priority</span>
+          </label>
         </div>
         <div className="sorter" id="dateSorter">
-          <h5>Date</h5>
-          <img
-            src={SortArrow}
-            alt="Sort Arrow"
-            className={flipped.date ? "sort-arrow flipped" : "sort-arrow"}
-            onClick={() => handleFlip("date")}
-          />
+          <label className="radio-label">
+            <input
+              type="radio"
+              name="filter"
+              value="date"
+              checked={activeFilter === "date"}
+              onChange={() => handleFilterChange("date")}
+            />
+            <span className="custom-radio" />
+            <span className="radio-text">Date</span>
+          </label>
         </div>
         <div className="sorter" id="progressSorter">
-          <h5>Progress</h5>
-          <img
-            src={SortArrow}
-            alt="Sort Arrow"
-            className={flipped.progress ? "sort-arrow flipped" : "sort-arrow"}
-            onClick={() => handleFlip("progress")}
-          />
+          <label className="radio-label">
+            <input
+              type="radio"
+              name="filter"
+              value="progress"
+              checked={activeFilter === "progress"}
+              onChange={() => handleFilterChange("progress")}
+            />
+            <span className="custom-radio" />
+            <span className="radio-text">Progress</span>
+          </label>
         </div>
         <div className="sorter" id="activeWorkersSorter">
-          <h5>Workers</h5>
-          <img
-            src={SortArrow}
-            alt="Sort Arrow"
-            className={flipped.workers ? "sort-arrow flipped" : "sort-arrow"}
-            onClick={() => handleFlip("workers")}
-          />
+          <label className="radio-label">
+            <input
+              type="radio"
+              name="filter"
+              value="workers"
+              checked={activeFilter === "workers"}
+              onChange={() => handleFilterChange("workers")}
+            />
+            <span className="custom-radio" />
+            <span className="radio-text">Workers</span>
+          </label>
         </div>
       </div>
 
       <div className="jelloGallery-outer">
         <div className="jelloGallery">
-          {projects.length === 0 ? (
+          {filteredProjects.length === 0 ? (
             <p>No projects found.</p>
           ) : (
-            projects.map((project) => (
+            filteredProjects.map((project) => (
               <JelloItem
                 key={project.projectID || project.ProjectID}
                 name={project.name || project.Name}
@@ -109,7 +142,7 @@ const [flipped, setFlipped] = useState({
                 progressPercent={project.milestones ? Math.round((project.milestones.filter((m:any) => m.status === "Completed").length / project.milestones.length) * 100) : 0}
                 milestonesLabel={project.milestones ? `${project.milestones.filter((m:any) => m.status === "Completed").length} / ${project.milestones.length} Milestones Reached` : "0 / 0 Milestones Reached"}
                 workers={project.members ? project.members.length : 0}
-                onClick={() => navigate(`/single-view/${project.projectID || project.ProjectID}`, { state: { from: "/dashboard" } })}
+                onClick={() => navigate(`/single-view/${project.projectID || project.ProjectID}`)}
               />
             ))
           )}

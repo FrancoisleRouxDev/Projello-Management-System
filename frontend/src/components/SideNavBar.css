@@ -111,16 +111,14 @@
   justify-content: flex-start;
 }
 
-.side-nav-footer a:hover {
+.side-nav-footer .userInfo:hover {
   background-color: #ffffff15;
-  /* border: 2px solid var(--Text-light, #f7f7f39c); */
 }
-
-.side-nav-footer a.active {
+.side-nav-footer .userInfo.active {
   background: #ffffff15;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
 }
-.side-nav-footer a.active h5 {
+.side-nav-footer .userInfo.active h5 {
   color: var(--white);
   font-weight: 700;
 }
@@ -133,7 +131,7 @@
   min-height: 44px;
   box-sizing: border-box;
   margin-top: 10px;
-  padding: 0 12px;
+  padding: 0 12px 0 4px;
 }
 
 .ProfilePic {

@@ -54,13 +54,14 @@ export default function SideNavBar() {
                 </a>
             </div>
             <div className="side-nav-footer">
-                <a
-                    className={`pageNavLink${location.pathname === "/settings" ? " active" : ""}`}
+                <div
+                    className={`userInfo${location.pathname === "/settings" ? " active" : ""}`}
                     onClick={() => navigate("/settings")}
+                    tabIndex={0}
+                    role="button"
+                    style={{ cursor: "pointer" }}
+                    onKeyDown={e => { if (e.key === "Enter" || e.key === " ") navigate("/settings"); }}
                 >
-                    <h5>Settings</h5>
-                </a>
-                <div className="userInfo">
                     <div className="ProfilePic"></div>
                     <div className="UserDetails">
                         <h5>{name}</h5>
