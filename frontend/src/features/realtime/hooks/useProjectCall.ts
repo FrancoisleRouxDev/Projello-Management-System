@@ -1,6 +1,6 @@
 // src/features/realtime/hooks/useProjectCall.ts
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { HubConnectionBuilder, HubConnection } from '@microsoft/signalr';
+import { HubConnectionBuilder, HubConnection, HttpTransportType } from '@microsoft/signalr';
 import { WebRTCPeerManager } from '../services/webrtcPeerManager';
 import { API_BASE_URL } from '../../../config';
 
@@ -92,7 +92,9 @@ export function useProjectCall(projectId: number) {
 
     if (!connectionRef.current) {
       connectionRef.current = new HubConnectionBuilder()
-        .withUrl(hubUrl, { accessTokenFactory: () => token })
+        .withUrl(hubUrl, {
+          accessTokenFactory: () => token
+        })
         .withAutomaticReconnect()
         .build();
     }
@@ -125,13 +127,13 @@ export function useProjectCall(projectId: number) {
       });
 
       connection.on('ReceiveIceCandidate', async (
-        pid: string, fromConnectionId: string, fromParticipantId: string, 
+        pid: string, fromConnectionId: string, fromParticipantId: string,
         candidate: string, sdpMid: string | null, sdpMLineIndex: number | null
       ) => {
-        await peerManager.handleRemoteIceCandidate(fromConnectionId, { 
-          candidate, 
-          sdpMid, 
-          sdpMLineIndex: sdpMLineIndex ?? undefined 
+        await peerManager.handleRemoteIceCandidate(fromConnectionId, {
+          candidate,
+          sdpMid,
+          sdpMLineIndex: sdpMLineIndex ?? undefined
         });
       });
 
