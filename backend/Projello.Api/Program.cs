@@ -10,12 +10,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Kestrel to listen on the port provided by Render.com
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-    serverOptions.ListenAnyIP(int.Parse(port));
-});
+// Configure the web host to listen on the port provided by Render.com
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
