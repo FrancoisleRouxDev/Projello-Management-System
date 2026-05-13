@@ -1,11 +1,23 @@
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
 /* SignupPage styles moved from inline */
 
 .signup-container {
   display: flex;
-  height: 100vh;
-  width: 100vw;
-  background-color: #283332;
-  font-family: "Segoe UI", sans-serif;
+  min-height: 100vh;
+  min-width: 100vw;
+  height: 100dvh;
+  width: 100dvw;
+  background: #283332 url("../../assets/Backgrounds/ProjelloLoginBlurred.png")
+    no-repeat center center fixed;
+  background-size: cover;
+  background-attachment: fixed;
+  font-family: "Roboto", sans-serif;
   overflow: hidden;
   position: fixed;
   top: 0;
@@ -16,10 +28,11 @@
   flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 40px;
   min-width: 50%;
   box-sizing: border-box;
+  margin-left: clamp(100px, 30%, 300px);
 }
 .signup-card {
   background-color: #f0f0ec;
@@ -127,15 +140,8 @@
   box-shadow: 0 4px 0 0 rgba(40, 51, 43, 0.5) inset;
   transform: translateY(4px);
 }
-.signup-right {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  min-width: 50%;
-  background-image: url("https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800");
-  background-size: cover;
-  background-position: center;
-}
+/* .signup-right removed: background now handled by .signup-container */
+/*
 .signup-overlay {
   position: absolute;
   top: 0;
@@ -144,6 +150,7 @@
   height: 100%;
   background-color: rgba(0, 0, 0, 0.35);
 }
+*/
 .signup-logo {
   position: absolute;
   top: 32px;
@@ -156,6 +163,7 @@
 .signup-logo-img {
   height: 60px;
 }
+/*
 .signup-circle {
   position: absolute;
   bottom: -80px;
@@ -166,6 +174,7 @@
   background-color: rgba(255, 255, 255, 0.05);
   z-index: 2;
 }
+*/
 .signup-error-text {
   color: red;
   text-align: center;

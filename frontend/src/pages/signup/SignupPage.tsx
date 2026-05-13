@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Logo from "../../assets/Frame 106.svg";
+import Logo from "../../assets/Frame 160.svg";
 import "./SignupPage.css";
 
 // Define the prop interface: expects a function to switch back to the login view

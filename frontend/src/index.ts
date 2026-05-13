@@ -21,16 +21,32 @@ const createWindow = (): void => {
     },
   });
 
-  // Set CSP to allow API calls and external images
+  // Apply a stricter, environment-aware CSP (allows local API + dev tooling when not packaged)
+  const isDev = !app.isPackaged;
+
+  const connectSrc = [
+    "'self'",
+    'http://localhost:5049', // backend API
+    ...(isDev ? ['http://localhost:*', 'ws://localhost:*', 'ws://127.0.0.1:*'] : []), // dev server/HMR
+  ];
+
+  const cspDirectives = [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // keep for Electron/Webpack dev compatibility
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https:",
+    "font-src 'self' data:",
+    `connect-src ${connectSrc.join(' ')}`,
+  ];
+
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [
-          "default-src 'self' 'unsafe-inline' 'unsafe-eval' data:; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:5049; img-src 'self' data: https:;"
-        ]
-      }
-    });
+    const responseHeaders = { ...details.responseHeaders };
+    responseHeaders['Content-Security-Policy'] = [cspDirectives.join('; ')];
+
+    callback({ responseHeaders });
   });
 
   // and load the index.html of the app.
