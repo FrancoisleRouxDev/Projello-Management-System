@@ -4,13 +4,11 @@
     width: 100%;
     margin: 0;
     font-family: "Roboto", sans-serif;
-    overflow-x: hidden;
 }
 
 .management-page__content {
     padding: 40px 0 0 0;
     flex: 1;
-    overflow-y: auto;
 }
 
 .management-page__content h2 {
@@ -48,4 +46,10 @@
     line-height: 1.15;
     font-weight: 700;
     color: #101828;
+}
+
+.management-client-table_body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 }

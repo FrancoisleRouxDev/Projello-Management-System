@@ -33,6 +33,8 @@ export default function ManagementPage() {
   const [error, setError] = useState<string | null>(null);
   const [projectModalOpen, setProjectModalOpen] = useState(false);
 
+  let isMounted = true; // To prevent state updates on unmounted component
+
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -53,14 +55,19 @@ export default function ManagementPage() {
         console.log("All Projects Fetched:", data); // <--- CHECK THIS IN CONSOLE
         setProjects(data);
       } catch (err) {
-        console.error("Fetch Error:", err);
+      console.error("Fetch Error:", err);
+      if (isMounted) {
         setError(err instanceof Error ? err.message : "Unknown error");
-      } finally {
+      }
+    } finally {
+      if (isMounted) {
         setLoading(false);
       }
-    };
+    }
+  };
 
-    fetchProjects();
+  fetchProjects();
+  return () => { isMounted = false; }; 
   }, []);
 
   // Map Project data to ManagementClientRow for table display
