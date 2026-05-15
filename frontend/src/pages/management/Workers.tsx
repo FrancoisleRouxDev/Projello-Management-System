@@ -6,7 +6,7 @@ import { FilterButton } from "../../components/FilterButton";
 import { SortButton } from "../../components/SortButton";
 import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
 import { AddButton } from "../../components/AddButton";
-import { WorkerAddModal } from "../../components/WorkerAddModal";
+import { ReusableEntryModal } from "../../components/ReuseableEntityModal";
 
 interface UserDisplay {
 id: string;
@@ -135,19 +135,19 @@ export default function WorkersPage() {
 					</div>
 
 					{loading ? (
-						<p style={{ padding: 20 }}>Loading workers...</p>
+						<p className="workers-page__state">Loading workers...</p>
 					) : error ? (
-						<p style={{ padding: 20, color: "red" }}>Error: {error}</p>
+						<p className="workers-page__state workers-page__state--error">Error: {error}</p>
 					) : workers.length === 0 ? (
-						<p style={{ padding: 20 }}>No workers found yet.</p>
+						<p className="workers-page_state">No workers found yet.</p>
 					) : (
 						<div className="workers-page__grid">
 							{workers.map((worker) => (
 								<button
 									type="button"
-									key={`${worker.name}-${worker.email}`}
 									className="workers-page__card-button"
 									onClick={() => handleWorkerClick(worker)}
+									  aria-label={`View details for ${worker.name}`}
 								>
 									<WorkerCard {...worker} />
 								</button>
@@ -156,11 +156,80 @@ export default function WorkersPage() {
 					)}
 				</section>
 			</div>
-			<WorkerAddModal 
+			<ReusableEntryModal<{ fullName: string; email: string; roleID: number; phone: string }>
 				open={workerModalOpen}
+				title="Add New Worker"
+				submitLabel="Add Worker"
 				onClose={() => setWorkerModalOpen(false)}
-				onSubmit={handleWorkerSubmit}
-			/>
+				onSubmit={(data) => {
+					console.log("New worker data:", data);
+				}}
+				initialValues={{ fullName: "", email: "", roleID: 3, phone: "" }}
+				validate={(values) => {
+					if (!values.fullName.trim()) return "Full name is required";
+					if (!values.email.trim()) return "Email is required";
+					return null;
+				}}
+				renderFields={(values, setValue, error) => (
+					<div className="reusable-entity-modal__content">
+						{error && <div className="reusable-entity-modal__error">{error}</div>}
+
+						<div className="reusable-entity-modal__form-group">
+							<label className="reusable-entity-modal__label reusable-entity-modal__label--required">
+								Full Name
+							</label>
+							<input
+								className="reusable-entity-modal__input"
+								type="text"
+								value={values.fullName}
+								onChange={(e) => setValue("fullName", e.target.value)}
+								placeholder="Enter full name"
+							/>
+						</div>
+
+						<div className="reusable-entity-modal__form-group">
+							<label className="reusable-entity-modal__label reusable-entity-modal__label--required">
+								Email
+							</label>
+							<input
+								className="reusable-entity-modal__input"
+								type="email"
+								value={values.email}
+								onChange={(e) => setValue("email", e.target.value)}
+								placeholder="Enter email address"
+							/>
+						</div>
+
+						<div className="reusable-entity-modal__form-group">
+							<label className="reusable-entity-modal__label" htmlFor="worker-role">
+								Role
+							</label>
+							<select
+								id="worker-role"
+								className="reusable-entity-modal__select"
+								value={values.roleID}
+								onChange={(e) => setValue("roleID", Number(e.target.value))}
+							>
+								<option value={3}>Worker</option>
+								<option value={2}>Foreman</option>
+							</select>
+						</div>
+
+						{/* <div className="reusable-entity-modal__form-group">
+							<label className="reusable-entity-modal__label">
+								Phone
+							</label>
+							<input
+								className="reusable-entity-modal__input"
+								type="tel"
+								value={values.phone}
+								onChange={(e) => setValue("phone", e.target.value)}
+								placeholder="Enter phone number"
+							/>
+						</div> */}
+					</div>
+				)}
+				/>
 		</>
 	);
 }

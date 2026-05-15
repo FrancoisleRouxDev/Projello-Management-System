@@ -47,7 +47,7 @@ function RecentSitePhotosSection({ project }: PhotoSectionProps) {
               key={`${tile}-${index}`}
               className="single-project-view__photo-tile single-project-view__photo-tile--placeholder"
               aria-hidden="true"
-              style={{ backgroundImage: `url(${tile})`, backgroundSize: "cover", backgroundPosition: "center" }}
+              style={{ backgroundImage: `url(${tile})` }}
             />
           ))
         ) : (

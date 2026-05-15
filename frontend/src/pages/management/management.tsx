@@ -7,8 +7,7 @@ import ManagementTopNav from "../../components/ManagementTopNav";
 import ClientsPage from "./Clients";
 import WorkersPage from "./Workers";
 import { AddButton } from "../../components/AddButton";
-import { ProjectAddModal } from "../../components/ProjectAddModal";
-
+import { ReusableEntryModal } from "../../components/ReuseableEntityModal";
 const API_BASE_URL = "http://localhost:5049/api";
 
 interface Project {
@@ -138,11 +137,73 @@ export default function ManagementPage() {
         {activeView === "clients" && <ClientsPage />}
         {activeView === "workers" && <WorkersPage />}
       </div>
-      <ProjectAddModal 
-        open={projectModalOpen}
-        onClose={() => setProjectModalOpen(false)}
-        onSubmit={handleProjectSubmit}
-      />
+     
+<ReusableEntryModal<{ name: string; clientName: string; description: string; dueDate: string }>
+  open={projectModalOpen}
+  title="Add New Project"
+  submitLabel="Create Project"
+  onClose={() => setProjectModalOpen(false)}
+  onSubmit={handleProjectSubmit}
+  initialValues={{ name: "", clientName: "", description: "", dueDate: "" }}
+  validate={(values) => {
+    if (!values.name.trim()) return "Project name is required";
+    if (!values.clientName.trim()) return "Client name is required";
+    if (values.name.length > 200) return "Project name cannot exceed 200 characters";
+    return null;
+  }}
+  renderFields={(values, setValue, error) => (
+    <div>
+      {error && <div className="reusable-entity-modal__error">{error}</div>}
+      <div className="reusable-entity-modal__form-group">
+        <label className="reusable-entity-modal__label reusable-entity-modal__label--required">
+          Project Name
+        </label>
+        <input
+          className="reusable-entity-modal__input"
+          type="text"
+          value={values.name}
+          onChange={(e) => setValue("name", e.target.value)}
+          placeholder="Enter project name"
+        />
+      </div>
+      <div className="reusable-entity-modal__form-group">
+        <label className="reusable-entity-modal__label reusable-entity-modal__label--required">
+          Client Name
+        </label>
+        <input
+          className="reusable-entity-modal__input"
+          type="text"
+          value={values.clientName}
+          onChange={(e) => setValue("clientName", e.target.value)}
+          placeholder="Enter client name"
+        />
+      </div>
+      <div className="reusable-entity-modal__form-group">
+        <label className="reusable-entity-modal__label">Description</label>
+        <textarea
+          className="reusable-entity-modal__textarea"
+          value={values.description}
+          onChange={(e) => setValue("description", e.target.value)}
+          placeholder="Enter project description"
+          rows={4}
+        />
+      </div>
+      <div className="reusable-entity-modal__form-group">
+        <label className="reusable-entity-modal__label" htmlFor="project-due-date">
+          Due Date
+        </label>
+        <input
+          id="project-due-date"
+          type="date"
+          className="reusable-entity-modal__input"
+          value={values.dueDate}
+          onChange={(e) => setValue("dueDate", e.target.value)}
+        />
+      </div>
+    </div>
+  )}
+/>
+
     </div>
   );
 }

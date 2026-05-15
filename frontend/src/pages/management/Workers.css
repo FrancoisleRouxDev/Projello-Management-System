@@ -72,6 +72,14 @@
 	min-width: 0;
 }
 
+.workers-page__state {
+	padding: 20px;
+}
+
+.workers-page__state--error {
+	color: red;
+}
+
 @media (max-width: 1200px) {
 	.workers-page__stats {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
