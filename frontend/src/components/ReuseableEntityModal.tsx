@@ -84,7 +84,7 @@ export function ReusableEntryModal<TValues extends FormValues>({
         </Button>,
       ]}
     >
-      <div className="reusable-entity-modal__content">
+      <div className="reusable-entity-modal__container">
         {renderFields(values, setValue, error)}
       </div>
     </CustomModal>
