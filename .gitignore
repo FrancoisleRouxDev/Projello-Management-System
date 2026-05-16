@@ -39,3 +39,4 @@ node_modules/react-dom/cjs/react-dom-profiling.profiling.js
 *.json
 *.json
 *.exe
+*.lscache
