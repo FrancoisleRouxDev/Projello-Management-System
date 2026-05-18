@@ -71,22 +71,30 @@ namespace Projello.Api.Controllers
         }
 
         // --- READ: GET CURRENT USER (ME) ---
+        // --- READ: GET CURRENT USER (ME) ---
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()
         {
-            var email = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var user = await _userManager.FindByEmailAsync(email!);
+            // FIXED: Use Id instead of email
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
 
-            if (user == null) return NotFound();
+            var user = await _userManager.FindByIdAsync(userId);   // ← Changed from FindByEmailAsync
+
+            if (user == null)
+                return NotFound();
 
             return Ok(new
             {
-                user.Id,
-                user.Email,
-                user.FullName,
-                user.RoleID,
-                user.IsTwoFactorEnabled
+                id = user.Id,
+                email = user.Email,
+                fullName = user.FullName,
+                roleId = user.RoleID,
+                isTwoFactorEnabled = user.IsTwoFactorEnabled,
+                avatarSeed = user.AvatarSeed,           // ← Add these two lines
+                avatarBackground = user.AvatarBackground
             });
         }
 
