@@ -99,6 +99,10 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddSignalR();
 builder.Services.Configure<WebRtcOptions>(
     builder.Configuration.GetSection(WebRtcOptions.SectionName));
+builder.Services.AddSignalR().AddHubOptions<ProjectCallHub>(options =>
+{
+options.EnableDetailedErrors = true;
+});
 
 var app = builder.Build();
 

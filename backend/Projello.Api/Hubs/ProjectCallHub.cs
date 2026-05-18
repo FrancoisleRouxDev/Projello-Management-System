@@ -1,18 +1,21 @@
-// ProjectCallHub.cs  (Path B - Stable Participant ID)
+// ProjectCallHub.cs
 using Microsoft.AspNetCore.SignalR;
+using Projello.Api.Data;
 using System.Collections.Concurrent;
 
 namespace Projello.Api.Hubs;
 
 public sealed class ProjectCallHub : Hub
 {
-    // participantId -> current ConnectionId
-    private static readonly ConcurrentDictionary<string, string> _participantConnections = new();
+    private readonly AppDbContext _dbContext;
 
-    // projectId -> set of participantIds in the call
-    private static readonly ConcurrentDictionary<string, HashSet<string>> _callParticipants = new();
+    // Active calls: projectId -> set of participantIds
+    private static readonly ConcurrentDictionary<string, HashSet<string>> _activeProjectCalls = new();
 
-    private static string GetGroupName(string projectId) => $"project-call:{projectId}";
+    public ProjectCallHub(AppDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
 
     private string GetParticipantId() => Context.UserIdentifier ?? Context.ConnectionId;
 
@@ -21,46 +24,53 @@ public sealed class ProjectCallHub : Hub
         if (string.IsNullOrWhiteSpace(projectId))
             throw new HubException("Project id is required.");
 
-        var groupName = GetGroupName(projectId);
+        var userId = Context.UserIdentifier;
+        if (string.IsNullOrEmpty(userId))
+            throw new HubException("User not authenticated.");
+
+        // === Authorization: Only project members can join ===
+        bool isMember = _dbContext.ProjectMembers
+            .Any(m => m.ProjectID == int.Parse(projectId) && m.UserID == userId);
+
+        if (!isMember)
+            throw new HubException("You are not a member of this project.");
+
+        var groupName = $"project-call:{projectId}";
         var participantId = GetParticipantId();
-        var connectionId = Context.ConnectionId;
 
-        await Groups.AddToGroupAsync(connectionId, groupName);
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
 
-        // Update mapping
-        _participantConnections[participantId] = connectionId;
-
-        var participants = _callParticipants.GetOrAdd(projectId, _ => new HashSet<string>());
+        // Track active call
+        var participants = _activeProjectCalls.GetOrAdd(projectId, _ => new HashSet<string>());
         lock (participants)
         {
             participants.Add(participantId);
         }
 
-        // Notify others
-        await Clients.GroupExcept(groupName, connectionId)
+        // Notify others in the project that someone joined
+        await Clients.GroupExcept(groupName, Context.ConnectionId)
             .SendAsync("ParticipantJoined", projectId, participantId);
 
-        // Send current participants to the new joiner
-        await Clients.Caller.SendAsync("JoinedProjectCall", 
-            projectId, participantId, participants.ToList());
+        // Send current state to the person who just joined
+        await Clients.Caller.SendAsync("JoinedProjectCall", projectId, participantId, participants.ToList());
+
+        Console.WriteLine($"[CallHub] {participantId} joined project call {projectId}");
     }
 
     public async Task LeaveProjectCall(string projectId)
     {
-        var groupName = GetGroupName(projectId);
+        var groupName = $"project-call:{projectId}";
         var participantId = GetParticipantId();
 
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
 
-        _participantConnections.TryRemove(participantId, out _);
-
-        if (_callParticipants.TryGetValue(projectId, out var participants))
+        if (_activeProjectCalls.TryGetValue(projectId, out var participants))
         {
             lock (participants)
             {
                 participants.Remove(participantId);
                 if (participants.Count == 0)
-                    _callParticipants.TryRemove(projectId, out _);
+                    _activeProjectCalls.TryRemove(projectId, out _);
             }
         }
 
@@ -68,55 +78,40 @@ public sealed class ProjectCallHub : Hub
             .SendAsync("ParticipantLeft", projectId, participantId);
     }
 
-    // ==================== SIGNALING USING participantId ====================
-
+    // Simple direct signaling (more reliable)
     public async Task SendOffer(string projectId, string targetParticipantId, string offerSdp)
     {
-        if (_participantConnections.TryGetValue(targetParticipantId, out var targetConnectionId))
-        {
-            await Clients.Client(targetConnectionId)
-                .SendAsync("ReceiveOffer", projectId, Context.ConnectionId, GetParticipantId(), offerSdp);
-        }
+        await Clients.Group($"project-call:{projectId}")
+            .SendAsync("ReceiveOffer", projectId, Context.ConnectionId, GetParticipantId(), offerSdp);
     }
 
     public async Task SendAnswer(string projectId, string targetParticipantId, string answerSdp)
     {
-        if (_participantConnections.TryGetValue(targetParticipantId, out var targetConnectionId))
-        {
-            await Clients.Client(targetConnectionId)
-                .SendAsync("ReceiveAnswer", projectId, Context.ConnectionId, GetParticipantId(), answerSdp);
-        }
+        await Clients.Group($"project-call:{projectId}")
+            .SendAsync("ReceiveAnswer", projectId, Context.ConnectionId, GetParticipantId(), answerSdp);
     }
 
-    public async Task SendIceCandidate(
-        string projectId, 
-        string targetParticipantId, 
-        string candidate, 
-        string? sdpMid, 
-        int? sdpMLineIndex)
+    public async Task SendIceCandidate(string projectId, string targetParticipantId,
+        string candidate, string? sdpMid, int? sdpMLineIndex)
     {
-        if (_participantConnections.TryGetValue(targetParticipantId, out var targetConnectionId))
-        {
-            await Clients.Client(targetConnectionId)
-                .SendAsync("ReceiveIceCandidate", projectId, Context.ConnectionId, 
-                    GetParticipantId(), candidate, sdpMid, sdpMLineIndex);
-        }
+        await Clients.Group($"project-call:{projectId}")
+            .SendAsync("ReceiveIceCandidate", projectId, Context.ConnectionId,
+                GetParticipantId(), candidate, sdpMid, sdpMLineIndex);
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var participantId = GetParticipantId();
-        _participantConnections.TryRemove(participantId, out _);
 
-        foreach (var projectId in _callParticipants.Keys.ToList())
+        foreach (var projectId in _activeProjectCalls.Keys.ToList())
         {
-            if (_callParticipants.TryGetValue(projectId, out var participants))
+            if (_activeProjectCalls.TryGetValue(projectId, out var participants))
             {
                 lock (participants)
                 {
                     if (participants.Remove(participantId) && participants.Count == 0)
                     {
-                        _callParticipants.TryRemove(projectId, out _);
+                        _activeProjectCalls.TryRemove(projectId, out _);
                     }
                 }
             }

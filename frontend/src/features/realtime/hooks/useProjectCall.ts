@@ -19,7 +19,7 @@ export function useProjectCall(projectId: number | string) {
     return token.startsWith('"') && token.endsWith('"') ? token.slice(1, -1) : token;
   }, []);
 
-  // Create service only once (outside effect when possible)
+  // Create service once
   if (!callServiceRef.current) {
     callServiceRef.current = new ProjectCallService(getAccessToken);
   }
@@ -28,15 +28,13 @@ export function useProjectCall(projectId: number | string) {
     const service = callServiceRef.current!;
     const peerManager = service.getPeerManager();
 
-    // Create listener only once
     if (!listenerRef.current) {
       listenerRef.current = (event: any) => {
         if (event.type === 'track') {
-          console.log('📹 REMOTE STREAM RECEIVED!');
+          console.log('📹 REMOTE STREAM RECEIVED');
           setRemoteStream(event.stream);
         }
         if (event.type === 'connection-state-change') {
-          console.log('🔄 UI STATE UPDATED →', event.state);
           setConnectionState(event.state);
         }
       };
@@ -45,10 +43,9 @@ export function useProjectCall(projectId: number | string) {
     peerManager.on(listenerRef.current);
 
     return () => {
-      // We don't remove listener for now (no off() implemented)
-      // But we do disconnect the service when component unmounts
+      // Cleanup can be improved later
     };
-  }, []); // Empty dependency array = run once
+  }, []);
 
   const joinCall = useCallback(async () => {
     if (!callServiceRef.current) return;
@@ -61,11 +58,14 @@ export function useProjectCall(projectId: number | string) {
       await callServiceRef.current.joinCall(projectId.toString());
       setIsJoined(true);
 
+      // Get local stream (now requested early in the service)
       const stream = callServiceRef.current.getPeerManager().getLocalStreamSync();
-      if (stream) setLocalStream(stream);
+      if (stream) {
+        setLocalStream(stream);
+      }
     } catch (err: any) {
       console.error("Failed to join call:", err);
-      setError(err.message || "Failed to connect");
+      setError(err.message || "Failed to connect to call");
       setConnectionState('failed');
     } finally {
       setIsFetching(false);
@@ -83,7 +83,7 @@ export function useProjectCall(projectId: number | string) {
     setError(null);
   }, []);
 
-  // Cleanup on full unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       callServiceRef.current?.disconnect();

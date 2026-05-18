@@ -34,7 +34,7 @@ export class ProjectCallService {
 
   private setupPeerManagerListeners() {
     this.peerManager.on((event: any) => {
-      if (!this.currentProjectId || !this.myParticipantId) return;
+      if (!this.currentProjectId) return;
 
       if (event.type === 'offer') this.sendOffer(event.peerId, event.sdp);
       if (event.type === 'answer') this.sendAnswer(event.peerId, event.sdp);
@@ -44,47 +44,53 @@ export class ProjectCallService {
 
   private registerSignalRHandlers() {
     this.signalR.on("ParticipantJoined", (_, participantId) => {
-      console.log(`🟢 NEW PARTICIPANT JOINED: ${participantId}`);
+      console.log(`🟢 NEW PARTICIPANT: ${participantId}`);
       this.connectToNewPeer(participantId, true);
     });
 
-    this.signalR.on("JoinedProjectCall", (projectId, myParticipantId, currentParticipants) => {
-      console.log(`✅ YOU JOINED`);
+    this.signalR.on("JoinedProjectCall", (projectId, myParticipantId, participants) => {
       this.currentProjectId = projectId;
       this.myParticipantId = myParticipantId;
+      console.log(`✅ Joined project call. Participants: ${participants.length}`);
 
-      currentParticipants.forEach(id => {
+      participants.forEach(id => {
         if (id !== myParticipantId) this.connectToNewPeer(id, false);
       });
     });
 
-    this.signalR.on("ReceiveOffer", async (_, __, senderParticipantId, offerSdp) => {
-      if (senderParticipantId === this.myParticipantId) return;
-      console.log(`📥 RECEIVED OFFER from ${senderParticipantId}`);
+    this.signalR.on("ReceiveOffer", async (_, __, senderId, offerSdp) => {
+      if (senderId === this.myParticipantId) return;
+      console.log(`📥 Offer from ${senderId}`);
       try {
-        await this.peerManager.acceptOffer(senderParticipantId, JSON.parse(offerSdp));
+        await this.peerManager.acceptOffer(senderId, JSON.parse(offerSdp));
       } catch (e) { console.error(e); }
     });
 
-    this.signalR.on("ReceiveAnswer", async (_, __, senderParticipantId, answerSdp) => {
-      if (senderParticipantId === this.myParticipantId) return;
-      console.log(`📥 RECEIVED ANSWER from ${senderParticipantId}`);
+    this.signalR.on("ReceiveAnswer", async (_, __, senderId, answerSdp) => {
+      if (senderId === this.myParticipantId) return;
       try {
-        await this.peerManager.setRemoteAnswer(senderParticipantId, JSON.parse(answerSdp));
+        await this.peerManager.setRemoteAnswer(senderId, JSON.parse(answerSdp));
       } catch (e) { console.error(e); }
     });
 
-    this.signalR.on("ReceiveIceCandidate", async (_, __, senderParticipantId, candidate, sdpMid, sdpMLineIndex) => {
-      if (senderParticipantId === this.myParticipantId) return;
+    this.signalR.on("ReceiveIceCandidate", async (_, __, senderId, candidate, sdpMid, sdpMLineIndex) => {
+      if (senderId === this.myParticipantId) return;
       try {
-        await this.peerManager.handleRemoteIceCandidate(senderParticipantId, { candidate, sdpMid, sdpMLineIndex });
+        await this.peerManager.handleRemoteIceCandidate(senderId, { candidate, sdpMid, sdpMLineIndex });
       } catch (e) { console.error(e); }
     });
   }
 
   public async joinCall(projectId: string): Promise<void> {
     if (this.currentProjectId === projectId) return;
+
     await this.leaveCall();
+    this.currentProjectId = projectId;
+    this.connectedPeers.clear();
+
+    // Request camera early
+    await this.peerManager.getLocalStream();
+
     await this.signalR.start();
     await this.signalR.invoke("JoinProjectCall", projectId);
   }
@@ -118,6 +124,12 @@ export class ProjectCallService {
       candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex);
   }
 
-  public getPeerManager() { return this.peerManager; }
-  public async disconnect() { await this.leaveCall(); await this.signalR.stop(); }
+  public getPeerManager() {
+    return this.peerManager;
+  }
+
+  public async disconnect() {
+    await this.leaveCall();
+    await this.signalR.stop();
+  }
 }
