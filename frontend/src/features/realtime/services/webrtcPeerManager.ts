@@ -64,7 +64,10 @@ export class WebRTCPeerManager {
   }
 
   async getLocalStream(): Promise<MediaStream> {
-    if (this.localStream) return this.localStream;
+    if (this.localStream) {
+      console.log('✅ Local stream already exists');
+      return this.localStream;
+    }
 
     console.log('📹 Requesting camera + microphone...');
     try {
@@ -81,13 +84,25 @@ export class WebRTCPeerManager {
     }
   }
 
+  // ←←← RESTORED for your hook
+  getLocalStreamSync(): MediaStream | null {
+    return this.localStream;
+  }
+
+  stopLocalStream() {
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(track => track.stop());
+      this.localStream = null;
+    }
+  }
+
   private async ensurePeerConnection(peerId: string): Promise<RTCPeerConnection> {
     if (this.peers.has(peerId)) {
       return this.peers.get(peerId)!;
     }
 
     if (!this.localStream) {
-      await this.getLocalStream(); // ← Make sure we have media before creating PC
+      await this.getLocalStream();
     }
 
     console.log(`🔗 Creating peer connection for ${peerId}`);
@@ -186,12 +201,5 @@ export class WebRTCPeerManager {
     this.peers.clear();
     this.stopLocalStream();
     this.listeners = [];
-  }
-
-  stopLocalStream() {
-    if (this.localStream) {
-      this.localStream.getTracks().forEach(track => track.stop());
-      this.localStream = null;
-    }
   }
 }
