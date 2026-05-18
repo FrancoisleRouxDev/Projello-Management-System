@@ -31,42 +31,55 @@ export default function ManagementPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [projectModalOpen, setProjectModalOpen] = useState(false);
+  const [clients, setClients] = useState<{ clientID: number; name: string }[]>([]); // For client dropdown in project modal
 
   let isMounted = true; // To prevent state updates on unmounted component
+   const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const headers: HeadersInit = { "Content-Type": "application/json" };
-        if (token) headers["Authorization"] = `Bearer ${token}`;
-
-        const response = await fetch(`${API_BASE_URL}/projects`, {
-          method: "GET",
-          headers,
-        });
-
-        if (!response.ok) {
-          throw new Error(`Status ${response.status}: ${response.statusText}`);
-        }
-
-        const data: Project[] = await response.json();
-        console.log("All Projects Fetched:", data); // <--- CHECK THIS IN CONSOLE
-        setProjects(data);
-      } catch (err) {
+      const response = await fetch(`${API_BASE_URL}/projects`, { method: "GET", headers });
+      if (!response.ok) throw new Error(`Status ${response.status}: ${response.statusText}`);
+      const data: Project[] = await response.json();
+      setProjects(data);
+    } catch (err) {
       console.error("Fetch Error:", err);
-      if (isMounted) {
-        setError(err instanceof Error ? err.message : "Unknown error");
-      }
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
-      if (isMounted) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
-  fetchProjects();
-  return () => { isMounted = false; }; 
+  const fetchClients = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/clients`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || res.statusText || "Failed to load clients");
+      }
+      const data = await res.json();
+      const mapped = (data ?? []).map((c: any) => ({ clientID: c.clientID ?? c.ClientID ?? c.ClientId, name: c.name ?? c.Name ?? "" }));
+      setClients(mapped);
+    } catch (err: any) {
+      console.warn("Could not load clients for selector:", err);
+      setClients([]);
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    setError(null);
+    (async () => {
+      if (!mounted) return;
+      await Promise.all([fetchProjects(), fetchClients()]);
+    })();
+    return () => { mounted = false; };
   }, []);
 
   // Map Project data to ManagementClientRow for table display
@@ -93,14 +106,47 @@ export default function ManagementPage() {
   });
 
   const handleRowClick = (row: ManagementClientRow) => {
-    // Navigate to single project view using the project ID
     navigate(`/single-view/${row.clientId}`, { state: { from: "/management" } });
   };
 
-  const handleProjectSubmit = (data: any) => {
-    console.log("New project data:", data);
-    // TODO: Submit to API endpoint
-    // TODO: Refresh projects list
+  const handleProjectSubmit = async (data: any) => {
+    try {
+      const token = localStorage.getItem("token");
+      const payload = {
+        Name: data.name,
+        ClientID: Number(data.clientID),
+        Description: data.description || "",
+        StartDate: data.startDate || null,
+        DueDate: data.dueDate || null,
+      };
+
+      const res = await fetch(`${API_BASE_URL}/projects`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const text = await res.text();
+      const created = text ? JSON.parse(text) : null;
+
+      if (!res.ok) {
+        if (res.status === 403) {
+          console.error("Create forbidden: you need admin privileges.");
+        } else {
+          console.error("Failed to create project:", created ?? res.statusText);
+        }
+        return;
+      }
+
+      setProjectModalOpen(false);
+      await fetchProjects();
+      console.log("Project created:", created);
+    } catch (err) {
+      console.error("Error creating project:", err);
+    }
   };
 
   return (
@@ -138,67 +184,54 @@ export default function ManagementPage() {
         {activeView === "workers" && <WorkersPage />}
       </div>
      
-<ReusableEntryModal<{ name: string; clientName: string; description: string; dueDate: string }>
+<ReusableEntryModal<{ name: string; clientID: number; description: string; startDate: string; dueDate: string }>
   open={projectModalOpen}
   title="Add New Project"
   submitLabel="Create Project"
   onClose={() => setProjectModalOpen(false)}
   onSubmit={handleProjectSubmit}
-  initialValues={{ name: "", clientName: "", description: "", dueDate: "" }}
+  initialValues={{ name: "", clientID: clients.length ? clients[0].clientID : 0, description: "", startDate: "", dueDate: "" }}
   validate={(values) => {
     if (!values.name.trim()) return "Project name is required";
-    if (!values.clientName.trim()) return "Client name is required";
+    if (!values.clientID) return "Client is required";
     if (values.name.length > 200) return "Project name cannot exceed 200 characters";
     return null;
   }}
   renderFields={(values, setValue, error) => (
     <div>
       {error && <div className="reusable-entity-modal__error">{error}</div>}
+
       <div className="reusable-entity-modal__form-group">
-        <label className="reusable-entity-modal__label reusable-entity-modal__label--required">
-          Project Name
-        </label>
-        <input
-          className="reusable-entity-modal__input"
-          type="text"
-          value={values.name}
-          onChange={(e) => setValue("name", e.target.value)}
-          placeholder="Enter project name"
-        />
+        <label className="reusable-entity-modal__label reusable-entity-modal__label--required">Project Name</label>
+        <input className="reusable-entity-modal__input" type="text" value={values.name} onChange={(e) => setValue("name", e.target.value)} placeholder="Enter project name" />
       </div>
+
       <div className="reusable-entity-modal__form-group">
-        <label className="reusable-entity-modal__label reusable-entity-modal__label--required">
-          Client Name
-        </label>
-        <input
-          className="reusable-entity-modal__input"
-          type="text"
-          value={values.clientName}
-          onChange={(e) => setValue("clientName", e.target.value)}
-          placeholder="Enter client name"
-        />
+        <label className="reusable-entity-modal__label reusable-entity-modal__label--required">Client</label>
+        {/* NEW: added title attr for accessibility */}
+        <select className="reusable-entity-modal__select" title="Select a client" value={values.clientID} onChange={(e) => setValue("clientID", Number(e.target.value))}>
+          <option value={0} disabled>Select a client</option>
+          {clients.map((c) => (
+            <option key={c.clientID} value={c.clientID}>{c.name || `Client ${c.clientID}`}</option>
+          ))}
+        </select>
       </div>
+
       <div className="reusable-entity-modal__form-group">
         <label className="reusable-entity-modal__label">Description</label>
-        <textarea
-          className="reusable-entity-modal__textarea"
-          value={values.description}
-          onChange={(e) => setValue("description", e.target.value)}
-          placeholder="Enter project description"
-          rows={4}
-        />
+        <textarea className="reusable-entity-modal__textarea" value={values.description} onChange={(e) => setValue("description", e.target.value)} placeholder="Enter project description" rows={4} />
       </div>
+
       <div className="reusable-entity-modal__form-group">
-        <label className="reusable-entity-modal__label" htmlFor="project-due-date">
-          Due Date
-        </label>
-        <input
-          id="project-due-date"
-          type="date"
-          className="reusable-entity-modal__input"
-          value={values.dueDate}
-          onChange={(e) => setValue("dueDate", e.target.value)}
-        />
+        <label className="reusable-entity-modal__label">Start Date</label>
+        {/* NEW: added title attr for accessibility */}
+        <input className="reusable-entity-modal__input" type="date" title="Start date" value={values.startDate} onChange={(e) => setValue("startDate", e.target.value)} />
+      </div>
+
+      <div className="reusable-entity-modal__form-group">
+        <label className="reusable-entity-modal__label">Due Date</label>
+        {/* NEW: added title attr for accessibility */}
+        <input className="reusable-entity-modal__input" type="date" title="Due date" value={values.dueDate} onChange={(e) => setValue("dueDate", e.target.value)} />
       </div>
     </div>
   )}
