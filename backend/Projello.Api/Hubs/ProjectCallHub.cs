@@ -1,4 +1,4 @@
-// ProjectCallHub.cs
+// ProjectCallHub.cs  (Path B - Stable Participant ID)
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 
@@ -6,6 +6,10 @@ namespace Projello.Api.Hubs;
 
 public sealed class ProjectCallHub : Hub
 {
+    // participantId -> current ConnectionId
+    private static readonly ConcurrentDictionary<string, string> _participantConnections = new();
+
+    // projectId -> set of participantIds in the call
     private static readonly ConcurrentDictionary<string, HashSet<string>> _callParticipants = new();
 
     private static string GetGroupName(string projectId) => $"project-call:{projectId}";
@@ -19,80 +23,105 @@ public sealed class ProjectCallHub : Hub
 
         var groupName = GetGroupName(projectId);
         var participantId = GetParticipantId();
+        var connectionId = Context.ConnectionId;
 
-        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+        await Groups.AddToGroupAsync(connectionId, groupName);
+
+        // Update mapping
+        _participantConnections[participantId] = connectionId;
 
         var participants = _callParticipants.GetOrAdd(projectId, _ => new HashSet<string>());
         lock (participants)
         {
-            participants.Add(Context.ConnectionId);
+            participants.Add(participantId);
         }
 
-        await Clients.GroupExcept(groupName, Context.ConnectionId)
-            .SendAsync("ParticipantJoined", projectId, Context.ConnectionId, participantId);
+        // Notify others
+        await Clients.GroupExcept(groupName, connectionId)
+            .SendAsync("ParticipantJoined", projectId, participantId);
 
+        // Send current participants to the new joiner
         await Clients.Caller.SendAsync("JoinedProjectCall", 
-            projectId, Context.ConnectionId, participantId, participants.ToList());
+            projectId, participantId, participants.ToList());
     }
 
     public async Task LeaveProjectCall(string projectId)
     {
         var groupName = GetGroupName(projectId);
+        var participantId = GetParticipantId();
+
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
+
+        _participantConnections.TryRemove(participantId, out _);
 
         if (_callParticipants.TryGetValue(projectId, out var participants))
         {
             lock (participants)
             {
-                participants.Remove(Context.ConnectionId);
+                participants.Remove(participantId);
                 if (participants.Count == 0)
                     _callParticipants.TryRemove(projectId, out _);
             }
         }
 
         await Clients.Group(groupName)
-            .SendAsync("ParticipantLeft", projectId, Context.ConnectionId, GetParticipantId());
+            .SendAsync("ParticipantLeft", projectId, participantId);
     }
 
-    // ==================== SIGNALING (Targeted but safer) ====================
+    // ==================== SIGNALING USING participantId ====================
 
-    public async Task SendOffer(string projectId, string targetConnectionId, string offerSdp)
+    public async Task SendOffer(string projectId, string targetParticipantId, string offerSdp)
     {
-        if (string.IsNullOrWhiteSpace(targetConnectionId)) return;
-
-        // Send only to the target (more efficient)
-        await Clients.Client(targetConnectionId)
-            .SendAsync("ReceiveOffer", projectId, Context.ConnectionId, GetParticipantId(), offerSdp);
+        if (_participantConnections.TryGetValue(targetParticipantId, out var targetConnectionId))
+        {
+            await Clients.Client(targetConnectionId)
+                .SendAsync("ReceiveOffer", projectId, Context.ConnectionId, GetParticipantId(), offerSdp);
+        }
     }
 
-    public async Task SendAnswer(string projectId, string targetConnectionId, string answerSdp)
+    public async Task SendAnswer(string projectId, string targetParticipantId, string answerSdp)
     {
-        if (string.IsNullOrWhiteSpace(targetConnectionId)) return;
-
-        await Clients.Client(targetConnectionId)
-            .SendAsync("ReceiveAnswer", projectId, Context.ConnectionId, GetParticipantId(), answerSdp);
+        if (_participantConnections.TryGetValue(targetParticipantId, out var targetConnectionId))
+        {
+            await Clients.Client(targetConnectionId)
+                .SendAsync("ReceiveAnswer", projectId, Context.ConnectionId, GetParticipantId(), answerSdp);
+        }
     }
 
-    public async Task SendIceCandidate(string projectId, string targetConnectionId, 
-        string candidate, string? sdpMid, int? sdpMLineIndex)
+    public async Task SendIceCandidate(
+        string projectId, 
+        string targetParticipantId, 
+        string candidate, 
+        string? sdpMid, 
+        int? sdpMLineIndex)
     {
-        if (string.IsNullOrWhiteSpace(targetConnectionId)) return;
-
-        await Clients.Client(targetConnectionId)
-            .SendAsync("ReceiveIceCandidate", projectId, Context.ConnectionId, 
-                GetParticipantId(), candidate, sdpMid, sdpMLineIndex);
+        if (_participantConnections.TryGetValue(targetParticipantId, out var targetConnectionId))
+        {
+            await Clients.Client(targetConnectionId)
+                .SendAsync("ReceiveIceCandidate", projectId, Context.ConnectionId, 
+                    GetParticipantId(), candidate, sdpMid, sdpMLineIndex);
+        }
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        var participantId = GetParticipantId();
+        _participantConnections.TryRemove(participantId, out _);
+
         foreach (var projectId in _callParticipants.Keys.ToList())
         {
-            if (_callParticipants.TryGetValue(projectId, out var participants) &&
-                participants.Contains(Context.ConnectionId))
+            if (_callParticipants.TryGetValue(projectId, out var participants))
             {
-                await LeaveProjectCall(projectId);
+                lock (participants)
+                {
+                    if (participants.Remove(participantId) && participants.Count == 0)
+                    {
+                        _callParticipants.TryRemove(projectId, out _);
+                    }
+                }
             }
         }
+
         await base.OnDisconnectedAsync(exception);
     }
 }

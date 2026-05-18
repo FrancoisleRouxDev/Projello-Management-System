@@ -43,15 +43,22 @@ builder.Services.AddAuthentication(options => {
     };
 });
 
-// CORS
-// CORS
-builder.Services.AddCors(options => {
-options.AddPolicy("AllowElectron", policy => {
-policy.WithOrigins("http://localhost:3000")  // 
-      .AllowAnyHeader()
-      .AllowAnyMethod()
-      .AllowCredentials();
-});
+// CORS - Allow localhost (dev) + your Render domain + Electron
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowApp", policy =>
+    {
+        policy.SetIsOriginAllowed(origin =>
+            origin.StartsWith("http://localhost") ||
+            origin.StartsWith("https://localhost") ||
+            origin == "https://projello-management-system.onrender.com" ||
+            origin.StartsWith("app://") ||           // Common for Electron
+            origin.StartsWith("file://")              // Sometimes used by Electron
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
+    });
 });
 
 builder.Services.AddControllers();
@@ -104,7 +111,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-app.UseCors("AllowElectron");
+app.UseCors("AllowApp");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

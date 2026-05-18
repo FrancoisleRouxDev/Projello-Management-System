@@ -4,9 +4,9 @@ import { WebRTCPeerManager } from './webrtcPeerManager';
 import { API_BASE_URL } from '../../../config';
 
 type ProjectCallEvents = {
-  ParticipantJoined: [string, string, string];
-  JoinedProjectCall: [string, string, string, string[]];
-  ParticipantLeft: [string, string, string];
+  ParticipantJoined: [string, string];
+  JoinedProjectCall: [string, string, string[]];
+  ParticipantLeft: [string, string];
   ReceiveOffer: [string, string, string, string];
   ReceiveAnswer: [string, string, string, string];
   ReceiveIceCandidate: [string, string, string, string, string | null, number | null];
@@ -16,8 +16,7 @@ export class ProjectCallService {
   private signalR: SignalRClient<ProjectCallEvents>;
   private peerManager: WebRTCPeerManager;
   private currentProjectId: string | null = null;
-  private myConnectionId: string | null = null;
-  private isCallStarter: boolean = false;
+  private myParticipantId: string | null = null;
   private connectedPeers = new Set<string>();
 
   constructor(getAccessToken?: () => string | Promise<string | null>) {
@@ -35,7 +34,8 @@ export class ProjectCallService {
 
   private setupPeerManagerListeners() {
     this.peerManager.on((event: any) => {
-      if (!this.currentProjectId) return;
+      if (!this.currentProjectId || !this.myParticipantId) return;
+
       if (event.type === 'offer') this.sendOffer(event.peerId, event.sdp);
       if (event.type === 'answer') this.sendAnswer(event.peerId, event.sdp);
       if (event.type === 'ice-candidate') this.sendIceCandidate(event.peerId, event.candidate);
@@ -43,71 +43,48 @@ export class ProjectCallService {
   }
 
   private registerSignalRHandlers() {
-    this.signalR.on("ParticipantJoined", (projectId, connectionId, participantId) => {
+    this.signalR.on("ParticipantJoined", (_, participantId) => {
       console.log(`🟢 NEW PARTICIPANT JOINED: ${participantId}`);
-      // Existing members always initiate to new joiners
-      this.connectToNewPeer(connectionId, true);
+      this.connectToNewPeer(participantId, true);
     });
 
-    this.signalR.on("JoinedProjectCall", (projectId, connectionId, participantId, currentParticipants) => {
-      console.log(`✅ YOU JOINED. Current participants: ${currentParticipants.length}`);
+    this.signalR.on("JoinedProjectCall", (projectId, myParticipantId, currentParticipants) => {
+      console.log(`✅ YOU JOINED`);
       this.currentProjectId = projectId;
-      this.myConnectionId = connectionId;
+      this.myParticipantId = myParticipantId;
 
-      // Determine if we are the starter (first person in the room)
-      this.isCallStarter = currentParticipants.length <= 1;
-
-      currentParticipants.forEach(peerId => {
-        if (peerId !== connectionId) {
-          // Only the starter creates offers when joining an existing call
-          const shouldInitiate = this.isCallStarter;
-          this.connectToNewPeer(peerId, shouldInitiate);
-        }
+      currentParticipants.forEach(id => {
+        if (id !== myParticipantId) this.connectToNewPeer(id, false);
       });
     });
 
-  this.signalR.on("ReceiveOffer", async (_, senderConnId, senderPartId, offerSdp) => {
-    if (senderConnId === this.myConnectionId) return; // ignore own messages
+    this.signalR.on("ReceiveOffer", async (_, __, senderParticipantId, offerSdp) => {
+      if (senderParticipantId === this.myParticipantId) return;
+      console.log(`📥 RECEIVED OFFER from ${senderParticipantId}`);
+      try {
+        await this.peerManager.acceptOffer(senderParticipantId, JSON.parse(offerSdp));
+      } catch (e) { console.error(e); }
+    });
 
-    console.log(`📥 RECEIVED OFFER from ${senderPartId}`);
-    try {
-        const parsed = JSON.parse(offerSdp);
-        await this.peerManager.acceptOffer(senderConnId, parsed);
-    } catch (e) {
-        console.error("Failed to process offer:", e);
-    }
-});
+    this.signalR.on("ReceiveAnswer", async (_, __, senderParticipantId, answerSdp) => {
+      if (senderParticipantId === this.myParticipantId) return;
+      console.log(`📥 RECEIVED ANSWER from ${senderParticipantId}`);
+      try {
+        await this.peerManager.setRemoteAnswer(senderParticipantId, JSON.parse(answerSdp));
+      } catch (e) { console.error(e); }
+    });
 
-      this.signalR.on("ReceiveAnswer", async (_, senderConnId, senderPartId, answerSdp) => {
-          if (senderConnId === this.myConnectionId) return;
-
-          console.log(`📥 RECEIVED ANSWER from ${senderPartId}`);
-          try {
-              const parsed = JSON.parse(answerSdp);
-              await this.peerManager.setRemoteAnswer(senderConnId, parsed);
-          } catch (e) {
-              console.error("Failed to process answer:", e);
-          }
-      });
-
-      this.signalR.on("ReceiveIceCandidate", async (_, senderConnId, senderPartId, candidate, sdpMid, sdpMLineIndex) => {
-          if (senderConnId === this.myConnectionId) return;
-
-          console.log(`📥 RECEIVED ICE from ${senderPartId}`);
-          try {
-              await this.peerManager.handleRemoteIceCandidate(senderConnId, { candidate, sdpMid, sdpMLineIndex });
-          } catch (e) {
-              console.error("Failed to process ICE candidate:", e);
-          }
-      });
+    this.signalR.on("ReceiveIceCandidate", async (_, __, senderParticipantId, candidate, sdpMid, sdpMLineIndex) => {
+      if (senderParticipantId === this.myParticipantId) return;
+      try {
+        await this.peerManager.handleRemoteIceCandidate(senderParticipantId, { candidate, sdpMid, sdpMLineIndex });
+      } catch (e) { console.error(e); }
+    });
   }
 
   public async joinCall(projectId: string): Promise<void> {
     if (this.currentProjectId === projectId) return;
     await this.leaveCall();
-    this.currentProjectId = projectId;
-    this.connectedPeers.clear();
-    this.isCallStarter = false;
     await this.signalR.start();
     await this.signalR.invoke("JoinProjectCall", projectId);
   }
@@ -119,41 +96,28 @@ export class ProjectCallService {
     this.peerManager.cleanup();
     this.connectedPeers.clear();
     this.currentProjectId = null;
-    this.myConnectionId = null;
-    this.isCallStarter = false;
+    this.myParticipantId = null;
   }
 
-    private async connectToNewPeer(peerConnectionId: string, isInitiator: boolean) {
-        if (this.connectedPeers.has(peerConnectionId)) {
-            console.log(`⚠️ Already connected to ${peerConnectionId}, skipping`);
-            return;
-        }
-        this.connectedPeers.add(peerConnectionId);
-        console.log(`🔗 Connecting to ${peerConnectionId} (isInitiator: ${isInitiator})`);
-        await this.peerManager.connectToPeer(peerConnectionId, isInitiator);
-    }
-
-  private sendOffer(peerId: string, sdp: RTCSessionDescriptionInit) {
-    if (!this.currentProjectId) return;
-    this.signalR.invoke("SendOffer", this.currentProjectId, peerId, JSON.stringify(sdp));
+  private async connectToNewPeer(participantId: string, isInitiator: boolean) {
+    if (this.connectedPeers.has(participantId)) return;
+    this.connectedPeers.add(participantId);
+    await this.peerManager.connectToPeer(participantId, isInitiator);
   }
 
-  private sendAnswer(peerId: string, sdp: RTCSessionDescriptionInit) {
-    if (!this.currentProjectId) return;
-    this.signalR.invoke("SendAnswer", this.currentProjectId, peerId, JSON.stringify(sdp));
+  private sendOffer(participantId: string, sdp: any) {
+    this.signalR.invoke("SendOffer", this.currentProjectId, participantId, JSON.stringify(sdp));
   }
 
-  private sendIceCandidate(peerId: string, candidate: RTCIceCandidate) {
-    if (!this.currentProjectId) return;
-    this.signalR.invoke("SendIceCandidate", this.currentProjectId, peerId, candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex);
+  private sendAnswer(participantId: string, sdp: any) {
+    this.signalR.invoke("SendAnswer", this.currentProjectId, participantId, JSON.stringify(sdp));
   }
 
-  public getPeerManager() {
-    return this.peerManager;
+  private sendIceCandidate(participantId: string, candidate: any) {
+    this.signalR.invoke("SendIceCandidate", this.currentProjectId, participantId,
+      candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex);
   }
 
-  public async disconnect() {
-    await this.leaveCall();
-    await this.signalR.stop();
-  }
+  public getPeerManager() { return this.peerManager; }
+  public async disconnect() { await this.leaveCall(); await this.signalR.stop(); }
 }
