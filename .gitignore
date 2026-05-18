@@ -38,3 +38,4 @@ node_modules/react-dom/cjs/react-dom-profiling.profiling.js
 /node_modules
 *.json
 *.json
+backend/Projello.Api/bin/Debug/net10.0/Projello.Api.exe
