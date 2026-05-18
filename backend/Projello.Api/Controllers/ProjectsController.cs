@@ -20,44 +20,26 @@ namespace Projello.Api.Controllers
             _context = context;
         }
 
-        // GET: api/projects
-        // Returns a list of projects the user is authorized to see
+        // --- READ ALL (GET: api/projects) ---
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProjectReadDto>>> GetProjects()
         {
             var userId = GetCurrentUserId();
             var role = GetUserRole();
 
-            // Start query including Client to satisfy ProjectReadDto requirements
             var query = _context.Projects.Include(p => p.Client).AsQueryable();
 
-            // Security Logic: Only Admins (Role 1) see all projects. 
-            // Others only see projects they are assigned to in ProjectMembers.
+            // Security: Only Admins (Role 1) see all. Others see assigned projects.
             if (role != "1")
             {
                 query = query.Where(p => p.Members.Any(m => m.UserID == userId));
             }
 
             var projects = await query.ToListAsync();
-
-            // Map Models to DTOs
-            var projectDtos = projects.Select(p => new ProjectReadDto
-            {
-                ProjectID = p.ProjectID,
-                Name = p.Name,
-                Description = p.Description,
-                Status = p.Status,
-                DueDate = p.DueDate,
-                CreatedAt = p.CreatedAt,
-                ClientID = p.ClientID,
-                ClientName = p.Client.Name,
-                IsClientBlacklisted = p.Client.IsBlacklisted
-            });
-
-            return Ok(projectDtos);
+            return Ok(projects.Select(p => MapToReadDto(p)));
         }
 
-        // GET: api/projects/{id}
+        // --- READ ONE (GET: api/projects/{id}) ---
         [HttpGet("{id}")]
         public async Task<ActionResult<ProjectReadDto>> GetProject(int id)
         {
@@ -98,53 +80,71 @@ namespace Projello.Api.Controllers
             });
         }
 
-        // POST: api/projects
-        // Only Admins can create new projects
+        // --- CREATE (POST: api/projects) ---
         [HttpPost]
         public async Task<ActionResult<ProjectReadDto>> CreateProject([FromBody] ProjectCreateDto dto)
         {
-            if (GetUserRole() != "1") return Forbid();
+            if (GetUserRole() != "1") return Forbid(); // Only Admins can create
 
             var project = new Project
             {
                 Name = dto.Name,
                 ClientID = dto.ClientID,
                 Description = dto.Description,
-                StartDate = dto.StartDate,
-                DueDate = dto.DueDate,
-                Status = "Planning", // System default
-                CreatedByUserID = GetCurrentUserId()!,
+                StartDate = dto.StartDate, 
+                DueDate = dto.DueDate,     
+                Status = "Planning", 
+                CreatedByUserID = GetCurrentUserId()!, 
                 CreatedAt = DateTime.UtcNow
             };
 
             _context.Projects.Add(project);
             await _context.SaveChangesAsync();
 
-            // Fetch with Client info to return the full ReadDto
             await _context.Entry(project).Reference(p => p.Client).LoadAsync();
 
-            var response = new ProjectReadDto
-            {
-                ProjectID = project.ProjectID,
-                Name = project.Name,
-                Status = project.Status,
-                ClientID = project.ClientID,
-                ClientName = project.Client.Name,
-                IsClientBlacklisted = project.Client.IsBlacklisted
-            };
-
-            return CreatedAtAction(nameof(GetProject), new { id = project.ProjectID }, response);
+            return CreatedAtAction(nameof(GetProject), new { id = project.ProjectID }, MapToReadDto(project));
         }
 
-        // PUT: api/projects/{id}/status
-        // Allows status updates by Admins or the assigned Foreman
+        // --- UPDATE FULL (PUT: api/projects/{id}) ---
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProject(int id, [FromBody] ProjectUpdateDto dto)
+        {
+            var project = await _context.Projects.FindAsync(id);
+            if (project == null) return NotFound();
+
+            // Permission: Admin OR assigned Foreman
+            bool isForeman = await _context.ProjectMembers
+                .AnyAsync(m => m.ProjectID == id && m.UserID == GetCurrentUserId() && m.AssignedAs == "Foreman");
+
+            if (GetUserRole() != "1" && !isForeman) return Forbid();
+
+            // Map string/int fields
+            project.Name = dto.Name;
+            project.Description = dto.Description;
+            project.ClientID = dto.ClientID;
+            
+            // --- FULLY SAFE DATE CONVERSION ---
+            // Converts nullable DateTime (DTO) to nullable DateOnly (Model)
+            project.StartDate = dto.StartDate.HasValue 
+                ? DateOnly.FromDateTime(dto.StartDate.Value) 
+                : null;
+
+            project.DueDate = dto.DueDate.HasValue 
+                ? DateOnly.FromDateTime(dto.DueDate.Value) 
+                : null;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // --- UPDATE STATUS ONLY (PUT: api/projects/{id}/status) ---
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateProjectStatus(int id, [FromBody] ProjectStatusUpdateDto dto)
         {
             var project = await _context.Projects.FindAsync(id);
             if (project == null) return NotFound();
 
-            // Permission logic: Admin OR a ProjectMember with the 'Foreman' tag
             var isForeman = await _context.ProjectMembers
                 .AnyAsync(m => m.ProjectID == id && m.UserID == GetCurrentUserId() && m.AssignedAs == "Foreman");
 
@@ -156,9 +156,37 @@ namespace Projello.Api.Controllers
             return NoContent();
         }
 
+        // --- DELETE (DELETE: api/projects/{id}) ---
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteProject(int id)
+        {
+            if (GetUserRole() != "1") return Forbid(); // Only Admins can delete
+
+            var project = await _context.Projects.FindAsync(id);
+            if (project == null) return NotFound();
+
+            _context.Projects.Remove(project);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
         // --- PRIVATE HELPERS ---
         private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
         
         private string? GetUserRole() => User.FindFirst("RoleID")?.Value;
+
+        private ProjectReadDto MapToReadDto(Project p) => new ProjectReadDto
+        {
+            ProjectID = p.ProjectID,
+            Name = p.Name,
+            Description = p.Description,
+            Status = p.Status,
+            DueDate = p.DueDate,
+            CreatedAt = p.CreatedAt,
+            ClientID = p.ClientID,
+            ClientName = p.Client?.Name ?? "Unknown",
+            IsClientBlacklisted = p.Client?.IsBlacklisted ?? false
+        };
     }
 }

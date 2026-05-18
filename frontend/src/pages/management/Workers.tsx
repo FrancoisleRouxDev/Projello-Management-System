@@ -5,6 +5,7 @@ import { SearchInput } from "../../components/SearchInput";
 import { FilterButton } from "../../components/FilterButton";
 import { SortButton } from "../../components/SortButton";
 import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
+import { API_BASE_URL } from "../../config";
 import { AddButton } from "../../components/AddButton";
 import { WorkerAddModal } from "../../components/WorkerAddModal";
 
@@ -65,7 +66,7 @@ export default function WorkersPage() {
 
 			try {
 				const token = localStorage.getItem("token");
-				const response = await fetch("http://localhost:5049/api/users", {
+const response = await fetch(`${API_BASE_URL}/api/users`, {
 					headers: token ? { Authorization: `Bearer ${token}` } : undefined,
 				});
 

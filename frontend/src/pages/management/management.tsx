@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./management.css";
 import ManagementClientTable, { ManagementClientRow } from "../../components/ManagementClientTable";
-import ManagementTopNav from "./ManagementTopNav";
+import ManagementTopNav from '../../components/ManagementTopNav';
 import ClientsPage from "./Clients";
 import WorkersPage from "./Workers";
 import { API_BASE_URL } from "../../config";
@@ -87,9 +87,17 @@ export default function ManagementPage() {
     navigate(`/single-view/${row.clientId}`);
   };
 
-  return (
+return (
     <div className="management-page">
-      <ManagementTopNav activeView={activeView} onViewChange={setActiveView} />
+      <ManagementTopNav
+        tabs={[
+          { id: "projects", label: "Projects" },
+          { id: "clients", label: "Clients" },
+          { id: "workers", label: "Workers" },
+        ]}
+        activeTab={activeView}
+        onTabChange={(id) => setActiveView(id as ManagementView)}
+      />
       <div className="management-page__content">
         {activeView === "projects" && (
           <>
