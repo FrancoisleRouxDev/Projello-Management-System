@@ -2,100 +2,130 @@
 // It handles room membership and relays WebRTC signaling payloads between peers.
 
 using Microsoft.AspNetCore.SignalR;
+using System.Collections.Concurrent;
 
 namespace Projello.Api.Hubs;
 
 public sealed class ProjectCallHub : Hub
 {
-	// Group names are scoped by project so each project has an isolated call room.
-	private static string GetGroupName(string projectId) => $"project-call:{projectId}";
+    // Track active participants per project call (useful for knowing who to connect to)
+    private static readonly ConcurrentDictionary<string, HashSet<string>> _callParticipants = new();
 
-	// Prefer authenticated user identity when available; otherwise fall back to connection id.
-	private string GetParticipantId() => Context.UserIdentifier ?? Context.ConnectionId;
+    private static string GetGroupName(string projectId) => $"project-call:{projectId}";
 
-	// Adds the current connection to a project's call group and notifies peers.
-	public async Task JoinProjectCall(string projectId)
-	{
-		if (string.IsNullOrWhiteSpace(projectId))
-			throw new HubException("Project id is required.");
+    private string GetParticipantId() => Context.UserIdentifier ?? Context.ConnectionId;
 
-		var groupName = GetGroupName(projectId);
+    public async Task JoinProjectCall(string projectId)
+    {
+        if (string.IsNullOrWhiteSpace(projectId))
+            throw new HubException("Project id is required.");
 
-		await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+        var groupName = GetGroupName(projectId);
+        var participantId = GetParticipantId();
 
-		await Clients.GroupExcept(groupName, [Context.ConnectionId])
-			.SendAsync("ParticipantJoined", projectId, Context.ConnectionId, GetParticipantId());
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
 
-		await Clients.Caller
-			.SendAsync("JoinedProjectCall", projectId, Context.ConnectionId, GetParticipantId());
-	}
+        // Track participant
+        var participants = _callParticipants.GetOrAdd(projectId, _ => new HashSet<string>());
+        lock (participants)
+        {
+            participants.Add(Context.ConnectionId);
+        }
 
-	// Removes the current connection from the project's call group and notifies peers.
-	public async Task LeaveProjectCall(string projectId)
-	{
-		if (string.IsNullOrWhiteSpace(projectId))
-			throw new HubException("Project id is required.");
+        // Notify others
+        await Clients.GroupExcept(groupName, Context.ConnectionId)
+            .SendAsync("ParticipantJoined", projectId, Context.ConnectionId, participantId);
 
-		var groupName = GetGroupName(projectId);
+        // Tell the new user they joined + send current participants list
+        await Clients.Caller.SendAsync("JoinedProjectCall", 
+            projectId, 
+            Context.ConnectionId, 
+            participantId, 
+            participants.ToList());
+    }
 
-		await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
+    public async Task LeaveProjectCall(string projectId)
+    {
+        if (string.IsNullOrWhiteSpace(projectId))
+            throw new HubException("Project id is required.");
 
-		await Clients.Group(groupName)
-			.SendAsync("ParticipantLeft", projectId, Context.ConnectionId, GetParticipantId());
-	}
+        var groupName = GetGroupName(projectId);
 
-	// Relays a WebRTC offer SDP to a specific target connection.
-	public async Task SendOffer(string projectId, string targetConnectionId, string offerSdp)
-	{
-		if (string.IsNullOrWhiteSpace(projectId))
-			throw new HubException("Project id is required.");
-		if (string.IsNullOrWhiteSpace(targetConnectionId))
-			throw new HubException("Target connection id is required.");
-		if (string.IsNullOrWhiteSpace(offerSdp))
-			throw new HubException("Offer SDP is required.");
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
 
-		await Clients.Client(targetConnectionId)
-			.SendAsync("ReceiveOffer", projectId, Context.ConnectionId, GetParticipantId(), offerSdp);
-	}
+        // Remove from tracking
+        if (_callParticipants.TryGetValue(projectId, out var participants))
+        {
+            lock (participants)
+            {
+                participants.Remove(Context.ConnectionId);
+                if (participants.Count == 0)
+                    _callParticipants.TryRemove(projectId, out _);
+            }
+        }
 
-	// Relays a WebRTC answer SDP to a specific target connection.
-	public async Task SendAnswer(string projectId, string targetConnectionId, string answerSdp)
-	{
-		if (string.IsNullOrWhiteSpace(projectId))
-			throw new HubException("Project id is required.");
-		if (string.IsNullOrWhiteSpace(targetConnectionId))
-			throw new HubException("Target connection id is required.");
-		if (string.IsNullOrWhiteSpace(answerSdp))
-			throw new HubException("Answer SDP is required.");
+        await Clients.Group(groupName)
+            .SendAsync("ParticipantLeft", projectId, Context.ConnectionId, GetParticipantId());
+    }
 
-		await Clients.Client(targetConnectionId)
-			.SendAsync("ReceiveAnswer", projectId, Context.ConnectionId, GetParticipantId(), answerSdp);
-	}
+    public async Task SendOffer(string projectId, string targetConnectionId, string offerSdp)
+    {
+        if (string.IsNullOrWhiteSpace(targetConnectionId) || string.IsNullOrWhiteSpace(offerSdp))
+            throw new HubException("Invalid offer data.");
 
-	// Relays a single ICE candidate to a specific target connection.
-	public async Task SendIceCandidate(
-		string projectId,
-		string targetConnectionId,
-		string candidate,
-		string? sdpMid,
-		int? sdpMLineIndex)
-	{
-		if (string.IsNullOrWhiteSpace(projectId))
-			throw new HubException("Project id is required.");
-		if (string.IsNullOrWhiteSpace(targetConnectionId))
-			throw new HubException("Target connection id is required.");
-		if (string.IsNullOrWhiteSpace(candidate))
-			throw new HubException("ICE candidate is required.");
+        await Clients.Client(targetConnectionId)
+            .SendAsync("ReceiveOffer", projectId, Context.ConnectionId, GetParticipantId(), offerSdp);
+    }
 
-		await Clients.Client(targetConnectionId)
-			.SendAsync(
-				"ReceiveIceCandidate",
-				projectId,
-				Context.ConnectionId,
-				GetParticipantId(),
-				candidate,
-				sdpMid,
-				sdpMLineIndex);
-	}
+    public async Task SendAnswer(string projectId, string targetConnectionId, string answerSdp)
+    {
+        if (string.IsNullOrWhiteSpace(targetConnectionId) || string.IsNullOrWhiteSpace(answerSdp))
+            throw new HubException("Invalid answer data.");
+
+        await Clients.Client(targetConnectionId)
+            .SendAsync("ReceiveAnswer", projectId, Context.ConnectionId, GetParticipantId(), answerSdp);
+    }
+
+    public async Task SendIceCandidate(
+        string projectId,
+        string targetConnectionId,
+        string candidate,
+        string? sdpMid,
+        int? sdpMLineIndex)
+    {
+        if (string.IsNullOrWhiteSpace(targetConnectionId) || string.IsNullOrWhiteSpace(candidate))
+            throw new HubException("Invalid ICE candidate data.");
+
+        await Clients.Client(targetConnectionId)
+            .SendAsync("ReceiveIceCandidate",
+                projectId,
+                Context.ConnectionId,
+                GetParticipantId(),
+                candidate,
+                sdpMid,
+                sdpMLineIndex);
+    }
+
+    // Optional helper
+    public async Task GetParticipants(string projectId)
+    {
+        if (_callParticipants.TryGetValue(projectId, out var participants))
+        {
+            await Clients.Caller.SendAsync("CurrentParticipants", projectId, participants.ToList());
+        }
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        foreach (var projectId in _callParticipants.Keys.ToList())
+        {
+            if (_callParticipants.TryGetValue(projectId, out var participants) && 
+                participants.Contains(Context.ConnectionId))
+            {
+                await LeaveProjectCall(projectId);
+            }
+        }
+
+        await base.OnDisconnectedAsync(exception);
+    }
 }
-
