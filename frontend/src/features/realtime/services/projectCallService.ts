@@ -103,15 +103,15 @@ export class ProjectCallService {
     this.isCallStarter = false;
   }
 
-  private async connectToNewPeer(peerConnectionId: string, isInitiator: boolean) {
-    if (this.connectedPeers.has(peerConnectionId)) {
-      console.log(`⚠️ Already connected to ${peerConnectionId}, skipping`);
-      return;
+    private async connectToNewPeer(peerConnectionId: string, isInitiator: boolean) {
+        if (this.connectedPeers.has(peerConnectionId)) {
+            console.log(`⚠️ Already connected to ${peerConnectionId}, skipping`);
+            return;
+        }
+        this.connectedPeers.add(peerConnectionId);
+        console.log(`🔗 Connecting to ${peerConnectionId} (isInitiator: ${isInitiator})`);
+        await this.peerManager.connectToPeer(peerConnectionId, isInitiator);
     }
-    this.connectedPeers.add(peerConnectionId);
-    console.log(`🔗 Connecting to ${peerConnectionId} (isInitiator: ${isInitiator})`);
-    await this.peerManager.connectToPeer(peerConnectionId, isInitiator);
-  }
 
   private sendOffer(peerId: string, sdp: RTCSessionDescriptionInit) {
     if (!this.currentProjectId) return;
