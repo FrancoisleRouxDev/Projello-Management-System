@@ -11,7 +11,7 @@ const W = 680;
 const H = 680;
 const CX = W / 2;
 const CY = H / 2 - 40;
-const BEAR_SIZE = 340;
+const BEAR_SIZE = 500;
 
 // GRID is the size of each "cell" in the dot grid — think of the canvas as a 10x10px tile map
 // CHARS is just a big string of random characters that flash inside the cells during the animation (matrix-ish vibes)
@@ -32,7 +32,7 @@ const BRAND_CREAM = { r: 230, g: 215, b: 155 };
 // FULL_DOT_R = the final resting radius of each dot once it settles
 const TOTAL_MS = 5000;
 const EXPAND_MS = 1500;
-const SETTLE_MS = 1000;
+const SETTLE_MS = 0;
 const FULL_DOT_R = GRID * 0.72;
 
 // --- EASING FUNCTIONS ---
@@ -325,8 +325,8 @@ export default function SplashPage() {
       const labelY = CY + BEAR_SIZE * 0.44 + 38;
       const labelAlpha = Math.min(1, Math.max(0, (expandT - 0.5) / 0.5));
 
-      const ringY = labelY + 50;
-      const ringR = 26;
+      const ringY = labelY + 80;
+      const ringR = 40;
       const ringRot = (elapsed / 1000) * 1.6; // ring slowly rotates the whole time
 
       // faint full circle in the background (the "track" of the progress ring)
@@ -351,7 +351,7 @@ export default function SplashPage() {
       // the percentage text in the center of the ring (e.g. "42%")
       ctx.globalAlpha = labelAlpha;
       ctx.fillStyle = `rgb(${BRAND_GOLD.r},${BRAND_GOLD.g},${BRAND_GOLD.b})`;
-      ctx.font = "bold 11px monospace";
+      ctx.font = "bold 16px roboto";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(`${Math.floor(loadProg * 100)}%`, CX, ringY);

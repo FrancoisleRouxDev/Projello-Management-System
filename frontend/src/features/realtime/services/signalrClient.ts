@@ -4,6 +4,7 @@ import {
 	HubConnection,
 	HubConnectionBuilder,
 	HubConnectionState,
+	HttpTransportType,
 	IHttpConnectionOptions,
 	LogLevel,
 } from "@microsoft/signalr";
@@ -45,7 +46,6 @@ export interface SignalRClient<TEvents extends EventMap = EventMap> {
 const DEFAULT_RECONNECT_DELAYS_MS = [0, 2_000, 5_000, 10_000, 30_000];
 
 // Resolves hub URL from explicit option first, then env variable, then local fallback.
-// IMPORTANT: Backend is mapped to /hubs/project-call.
 const resolveHubUrl = (explicitUrl?: string): string => {
 	if (explicitUrl) return explicitUrl;
 
@@ -55,7 +55,7 @@ const resolveHubUrl = (explicitUrl?: string): string => {
 
 	if (envUrl) return envUrl;
 
-	return "/hubs/project-call";
+	return "/callhub";
 };
 
 // Creates a ready-to-use SignalR client with typed event subscriptions.
@@ -70,8 +70,10 @@ export const createSignalRClient = <TEvents extends EventMap = EventMap>(
 
 	const hubUrl = resolveHubUrl(options.hubUrl);
 
-	// accessTokenFactory is called by SignalR when negotiating and reconnecting.
+	// skipNegotiation + WebSockets bypasses the negotiate POST that Render's proxy drops.
 	const connectionOptions: IHttpConnectionOptions = {
+		transport: HttpTransportType.WebSockets,
+		skipNegotiation: true,
 		accessTokenFactory: async () => (await getAccessToken?.()) ?? "",
 	};
 

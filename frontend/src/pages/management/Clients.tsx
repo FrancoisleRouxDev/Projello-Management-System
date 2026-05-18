@@ -6,8 +6,7 @@ import ManagementClientTable, { ManagementClientRow } from "../../components/Man
 import { SearchInput } from "../../components/SearchInput";
 import { FilterButton } from "../../components/FilterButton";
 import { SortButton } from "../../components/SortButton";
-import { AddButton } from "../../components/AddButton";
-import { ClientAddModal } from "../../components/ClientAddModal";
+import { API_BASE_URL } from "../../config";
 
 /*
  * ClientsPage
@@ -34,7 +33,6 @@ export default function ClientsPage() {
 	const [rows, setRows] = useState<ManagementClientRow[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
-	const [clientModalOpen, setClientModalOpen] = useState(false);
 
 	useEffect(() => {
 		// Initial page load: fetch client list once when component mounts.
@@ -43,7 +41,7 @@ export default function ClientsPage() {
 			setError(null);
 			try {
 				const token = localStorage.getItem("token");
-				const res = await fetch("http://localhost:5049/api/clients", {
+				const res = await fetch(`${API_BASE_URL}/api/clients`, {
 					headers: token ? { Authorization: `Bearer ${token}` } : undefined,
 				});
 				if (!res.ok) {
@@ -85,55 +83,39 @@ export default function ClientsPage() {
 		navigate(`/single-view/${row.clientId}`);
 	};
 
-	const handleClientSubmit = (data: any) => {
-		console.log("New client data:", data);
-		// TODO: Submit to API endpoint
-		// TODO: Refresh clients list
-	};
-
 	return (
-		<>
-			<div className="clients-page">
-				{/* Summary cards for top-level client metrics */}
-				<div className="clients-page__stats">
-					<StatCard value="R400k" label="Total Revenue" tone="success" />
-					<StatCard value="R30k" label="Outstanding" tone="warning" />
-					<StatCard value="4" label="Active Clients" tone="success" />
-					<StatCard value="1" label="Blacklisted" tone="danger" />
-				</div>
-
-				{/* Search and filter controls placed above the client table */}
-				<div className="clients-page__controls">
-					<SearchInput placeholder="Search clients..." onSearch={(value) => console.log("Search clients:", value)} />
-					<FilterButton label="All Status" onFilter={() => console.log("Open client status filter")} />
-					<SortButton label="Sort" onSort={() => console.log("Open client sort options")} />
-				</div>
-
-				{/* Client table section */}
-				<section className="clients-page__table-section">
-					<div className="clients-page__section-header">
-						<div className="clients-page__section-header-top">
-							<h2 className="clients-page__title">Clients</h2>
-						<AddButton label="Client" onClick={() => setClientModalOpen(true)} />
-						</div>
-						<p className="clients-page__subtitle">Manage customer accounts, balances, and project counts.</p>
-					</div>
-
-					{loading ? (
-						<p style={{ padding: 20 }}>Loading clients...</p>
-					) : error ? (
-						<p style={{ padding: 20, color: "red" }}>Error: {error}</p>
-					) : (
-						<ManagementClientTable rows={rows} onRowAction={handleRowAction} onRowClick={handleRowClick} />
-					)}
-				</section>
+		<div className="clients-page">
+			{/* Summary cards for top-level client metrics */}
+			<div className="clients-page__stats">
+				<StatCard value="R400k" label="Total Revenue" tone="success" />
+				<StatCard value="R30k" label="Outstanding" tone="warning" />
+				<StatCard value="4" label="Active Clients" tone="success" />
+				<StatCard value="1" label="Blacklisted" tone="danger" />
 			</div>
-			<ClientAddModal 
-				open={clientModalOpen}
-				onClose={() => setClientModalOpen(false)}
-				onSubmit={handleClientSubmit}
-			/>
-		</>
+
+			{/* Search and filter controls placed above the client table */}
+			<div className="clients-page__controls">
+				<SearchInput placeholder="Search clients..." onSearch={(value) => console.log("Search clients:", value)} />
+				<FilterButton label="All Status" onFilter={() => console.log("Open client status filter")} />
+				<SortButton label="Sort" onSort={() => console.log("Open client sort options")} />
+			</div>
+
+			{/* Client table section */}
+			<section className="clients-page__table-section">
+				<div className="clients-page__section-header">
+					<h2 className="clients-page__title">Clients</h2>
+					<p className="clients-page__subtitle">Manage customer accounts, balances, and project counts.</p>
+				</div>
+
+				{loading ? (
+					<p style={{ padding: 20 }}>Loading clients...</p>
+				) : error ? (
+					<p style={{ padding: 20, color: "red" }}>Error: {error}</p>
+				) : (
+					<ManagementClientTable rows={rows} onRowAction={handleRowAction} onRowClick={handleRowClick} />
+				)}
+			</section>
+		</div>
 	);
 }
 
