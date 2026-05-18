@@ -66,20 +66,40 @@ export class ProjectCallService {
       });
     });
 
-    this.signalR.on("ReceiveOffer", async (_, senderConnId, senderPartId, offerSdp) => {
-      console.log(`📥 RECEIVED OFFER from ${senderPartId}`);
-      await this.peerManager.acceptOffer(senderConnId, JSON.parse(offerSdp));
-    });
+  this.signalR.on("ReceiveOffer", async (_, senderConnId, senderPartId, offerSdp) => {
+    if (senderConnId === this.myConnectionId) return; // ignore own messages
 
-    this.signalR.on("ReceiveAnswer", async (_, senderConnId, senderPartId, answerSdp) => {
-      console.log(`📥 RECEIVED ANSWER from ${senderPartId}`);
-      await this.peerManager.setRemoteAnswer(senderConnId, JSON.parse(answerSdp));
-    });
+    console.log(`📥 RECEIVED OFFER from ${senderPartId}`);
+    try {
+        const parsed = JSON.parse(offerSdp);
+        await this.peerManager.acceptOffer(senderConnId, parsed);
+    } catch (e) {
+        console.error("Failed to process offer:", e);
+    }
+});
 
-    this.signalR.on("ReceiveIceCandidate", async (_, senderConnId, senderPartId, candidate, sdpMid, sdpMLineIndex) => {
-      console.log(`📥 RECEIVED ICE from ${senderPartId}`);
-      await this.peerManager.handleRemoteIceCandidate(senderConnId, { candidate, sdpMid, sdpMLineIndex });
-    });
+      this.signalR.on("ReceiveAnswer", async (_, senderConnId, senderPartId, answerSdp) => {
+          if (senderConnId === this.myConnectionId) return;
+
+          console.log(`📥 RECEIVED ANSWER from ${senderPartId}`);
+          try {
+              const parsed = JSON.parse(answerSdp);
+              await this.peerManager.setRemoteAnswer(senderConnId, parsed);
+          } catch (e) {
+              console.error("Failed to process answer:", e);
+          }
+      });
+
+      this.signalR.on("ReceiveIceCandidate", async (_, senderConnId, senderPartId, candidate, sdpMid, sdpMLineIndex) => {
+          if (senderConnId === this.myConnectionId) return;
+
+          console.log(`📥 RECEIVED ICE from ${senderPartId}`);
+          try {
+              await this.peerManager.handleRemoteIceCandidate(senderConnId, { candidate, sdpMid, sdpMLineIndex });
+          } catch (e) {
+              console.error("Failed to process ICE candidate:", e);
+          }
+      });
   }
 
   public async joinCall(projectId: string): Promise<void> {

@@ -1,4 +1,4 @@
-// ProjectCallHub.cs  (Improved version)
+// ProjectCallHub.cs
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 
@@ -28,14 +28,11 @@ public sealed class ProjectCallHub : Hub
             participants.Add(Context.ConnectionId);
         }
 
-        // Notify others in the group
         await Clients.GroupExcept(groupName, Context.ConnectionId)
             .SendAsync("ParticipantJoined", projectId, Context.ConnectionId, participantId);
 
         await Clients.Caller.SendAsync("JoinedProjectCall", 
             projectId, Context.ConnectionId, participantId, participants.ToList());
-
-        Console.WriteLine($"[Hub] {participantId} joined project {projectId}");
     }
 
     public async Task LeaveProjectCall(string projectId)
@@ -57,33 +54,31 @@ public sealed class ProjectCallHub : Hub
             .SendAsync("ParticipantLeft", projectId, Context.ConnectionId, GetParticipantId());
     }
 
-    // ==================== IMPROVED SIGNALING ====================
+    // ==================== SIGNALING (Targeted but safer) ====================
 
     public async Task SendOffer(string projectId, string targetConnectionId, string offerSdp)
     {
-        var groupName = GetGroupName(projectId);
-        Console.WriteLine($"[Hub] SendOffer from {Context.ConnectionId} to {targetConnectionId}");
+        if (string.IsNullOrWhiteSpace(targetConnectionId)) return;
 
-        await Clients.Group(groupName)
+        // Send only to the target (more efficient)
+        await Clients.Client(targetConnectionId)
             .SendAsync("ReceiveOffer", projectId, Context.ConnectionId, GetParticipantId(), offerSdp);
     }
 
     public async Task SendAnswer(string projectId, string targetConnectionId, string answerSdp)
     {
-        var groupName = GetGroupName(projectId);
-        Console.WriteLine($"[Hub] SendAnswer from {Context.ConnectionId} to {targetConnectionId}");
+        if (string.IsNullOrWhiteSpace(targetConnectionId)) return;
 
-        await Clients.Group(groupName)
+        await Clients.Client(targetConnectionId)
             .SendAsync("ReceiveAnswer", projectId, Context.ConnectionId, GetParticipantId(), answerSdp);
     }
 
-    public async Task SendIceCandidate(
-        string projectId, string targetConnectionId, 
+    public async Task SendIceCandidate(string projectId, string targetConnectionId, 
         string candidate, string? sdpMid, int? sdpMLineIndex)
     {
-        var groupName = GetGroupName(projectId);
+        if (string.IsNullOrWhiteSpace(targetConnectionId)) return;
 
-        await Clients.Group(groupName)
+        await Clients.Client(targetConnectionId)
             .SendAsync("ReceiveIceCandidate", projectId, Context.ConnectionId, 
                 GetParticipantId(), candidate, sdpMid, sdpMLineIndex);
     }
