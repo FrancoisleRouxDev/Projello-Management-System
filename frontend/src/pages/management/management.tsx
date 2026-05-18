@@ -28,6 +28,7 @@ export default function ManagementPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [clients, setClients] = useState<{ clientID: number; name: string }[]>([]);
 
   let isMounted = true; // To prevent state updates on unmounted component
    const fetchProjects = async () => {
