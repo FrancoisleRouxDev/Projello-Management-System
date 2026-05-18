@@ -1,5 +1,5 @@
 // frontend/src/features/realtime/services/webrtcPeerManager.ts
-import { API_BASE_URL } from '../../../config';   // ← Make sure this path is correct
+import { API_BASE_URL } from '../../../config';
 
 export type PeerConnectionEvent = 
   | { type: 'ice-candidate'; candidate: RTCIceCandidateInit; peerId: string }
@@ -35,36 +35,23 @@ export class WebRTCPeerManager {
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
       const config = await response.json();
-
-      // Handle both camelCase and PascalCase from C#
       this.iceServers = config.iceServers || config.IceServers || [];
 
-      if (this.iceServers.length === 0) {
-        throw new Error('No ICE servers received');
-      }
+      if (this.iceServers.length === 0) throw new Error('No ICE servers received');
 
-      console.log('WebRTC ICE Servers loaded successfully from backend:', this.iceServers);
+      console.log('✅ WebRTC ICE Servers loaded successfully from backend');
       this.configLoaded = true;
 
     } catch (error) {
-      console.error('Failed to load WebRTC config from backend:', error);
-      
-      // Fallback to your Metered TURN servers
-      console.log('Using hardcoded Metered TURN servers as fallback');
+      console.error('❌ Failed to load WebRTC config:', error);
+      console.log('⚠️ Using hardcoded Metered TURN servers');
       this.iceServers = [
         { urls: 'stun:stun.l.google.com:19302' },
         {
-          urls: [
-            "turn:global.relay.metered.ca:80",
-            "turn:global.relay.metered.ca:80?transport=tcp",
-            "turn:global.relay.metered.ca:443",
-            "turns:global.relay.metered.ca:443?transport=tcp"
-          ],
+          urls: ["turn:global.relay.metered.ca:80", "turn:global.relay.metered.ca:80?transport=tcp", "turn:global.relay.metered.ca:443", "turns:global.relay.metered.ca:443?transport=tcp"],
           username: "3e7b559d3b4bbc9012e16d54",
           credential: "7szZjkmvlFyDOuK7"
         }
@@ -74,25 +61,27 @@ export class WebRTCPeerManager {
   }
 
   private getPeerConfig(): RTCConfiguration {
-    return {
-      iceServers: this.iceServers,
-      iceCandidatePoolSize: 10,
-    };
+    return { iceServers: this.iceServers, iceCandidatePoolSize: 10 };
   }
 
-  // ... (everything below stays exactly the same)
+  // ←←← THIS IS THE FIX: Early camera access + loud logging
   async getLocalStream(): Promise<MediaStream> {
-    if (this.localStream) return this.localStream;
+    if (this.localStream) {
+      console.log('✅ Local stream already exists');
+      return this.localStream;
+    }
 
+    console.log('📹 Requesting camera + microphone...');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true,
       });
       this.localStream = stream;
+      console.log('✅ CAMERA OPENED SUCCESSFULLY');
       return stream;
-    } catch (error) {
-      console.error('Error accessing media devices:', error);
+    } catch (error: any) {
+      console.error('❌ CAMERA ACCESS FAILED:', error.name, error.message);
       throw error;
     }
   }
@@ -103,15 +92,15 @@ export class WebRTCPeerManager {
 
   stopLocalStream() {
     if (this.localStream) {
-      this.localStream.getTracks().forEach((track) => track.stop());
+      this.localStream.getTracks().forEach(track => track.stop());
       this.localStream = null;
     }
   }
 
   async connectToPeer(peerId: string, isInitiator: boolean): Promise<void> {
-    if (!this.configLoaded) {
-      await this.loadIceServers();
-    }
+    if (!this.configLoaded) await this.loadIceServers();
+
+    console.log(`🔗 Creating peer connection for ${peerId} (initiator: ${isInitiator})`);
 
     if (this.peers.has(peerId)) {
       this.peers.get(peerId)!.close();
@@ -121,38 +110,35 @@ export class WebRTCPeerManager {
     const pc = new RTCPeerConnection(this.getPeerConfig());
     this.peers.set(peerId, pc);
 
-    const stream = await this.getLocalStream();
-    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+    const stream = await this.getLocalStream();   // ← This now runs every time
+    stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
     pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        this.notify({ type: 'ice-candidate', candidate: event.candidate, peerId });
-      }
+      if (event.candidate) this.notify({ type: 'ice-candidate', candidate: event.candidate, peerId });
     };
 
     pc.ontrack = (event) => {
+      console.log(`📹 REMOTE VIDEO RECEIVED from ${peerId}`);
       this.notify({ type: 'track', stream: event.streams[0], peerId });
     };
 
     pc.onconnectionstatechange = () => {
-      this.notify({ 
-        type: 'connection-state-change', 
-        state: pc.connectionState, 
-        peerId 
-      });
+      console.log(`🔄 Connection state for ${peerId} → ${pc.connectionState}`);
+      this.notify({ type: 'connection-state-change', state: pc.connectionState, peerId });
     };
 
     if (isInitiator) {
+      console.log(`📤 Creating offer for ${peerId}`);
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       this.notify({ type: 'offer', sdp: offer, peerId });
     }
   }
 
+  // The rest stays exactly the same
   async acceptOffer(peerId: string, sdp: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit | null> {
     const pc = this.peers.get(peerId);
     if (!pc) return null;
-
     try {
       await pc.setRemoteDescription(new RTCSessionDescription(sdp));
       const answer = await pc.createAnswer();
@@ -168,35 +154,22 @@ export class WebRTCPeerManager {
   async setRemoteAnswer(peerId: string, sdp: RTCSessionDescriptionInit): Promise<void> {
     const pc = this.peers.get(peerId);
     if (!pc) return;
-
-    try {
-      await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-    } catch (e) {
-      console.error('Error setting remote answer:', e);
-    }
+    try { await pc.setRemoteDescription(new RTCSessionDescription(sdp)); } catch (e) { console.error('Error setting remote answer:', e); }
   }
 
   async handleRemoteIceCandidate(peerId: string, candidate: RTCIceCandidateInit): Promise<void> {
     const pc = this.peers.get(peerId);
     if (!pc) return;
-
-    try {
-      await pc.addIceCandidate(new RTCIceCandidate(candidate));
-    } catch (e) {
-      console.error('Error adding remote ICE candidate:', e);
-    }
+    try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { console.error('Error adding remote ICE candidate:', e); }
   }
 
   disconnectFromPeer(peerId: string) {
     const pc = this.peers.get(peerId);
-    if (pc) {
-      pc.close();
-      this.peers.delete(peerId);
-    }
+    if (pc) { pc.close(); this.peers.delete(peerId); }
   }
 
   notify(event: PeerConnectionEvent) {
-    this.listeners.forEach((l) => l(event));
+    this.listeners.forEach(l => l(event));
   }
 
   on(callback: (event: PeerConnectionEvent) => void) {
@@ -204,7 +177,7 @@ export class WebRTCPeerManager {
   }
 
   cleanup() {
-    this.peers.forEach((pc) => pc.close());
+    this.peers.forEach(pc => pc.close());
     this.peers.clear();
     this.stopLocalStream();
     this.listeners = [];
