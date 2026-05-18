@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./SideNavBar.css";
@@ -6,14 +5,16 @@ import BearLogo from "../assets/Logo/Navbar_Logo.svg";
 import UserDefaultPfp from "../assets/UserDefaultPfp.svg";
 import { createAvatar } from '@dicebear/core';
 import { botttsNeutral } from '@dicebear/collection';
-
-
+import { API_BASE_URL } from "../config";
 
 function getUserInfoFromToken() {
     try {
         const token = localStorage.getItem("token");
         if (!token) return { id: "", name: "Unknown", role: "Unknown" };
-        const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/').padEnd(token.split('.')[1].length + (4 - token.split('.')[1].length % 4) % 4, '=')));
+        let payloadPart = token.split('.')[1];
+        payloadPart = payloadPart.replace(/-/g, '+').replace(/_/g, '/');
+        while (payloadPart.length % 4) payloadPart += '=';
+        const payload = JSON.parse(atob(payloadPart));
         const id = payload.sub || payload.nameid || payload.id || payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || "";
         const name = payload.FullName || payload.fullName || payload.name || payload.email || "Unknown";
         let role = payload.role || payload.Role || payload.roleName || payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"];
@@ -27,47 +28,61 @@ function getUserInfoFromToken() {
         }
         if (!role) role = "Unknown";
         return { id, name, role };
-    } catch {
+    } catch (e) {
         return { id: "", name: "Unknown", role: "Unknown" };
     }
 }
 
-
 export default function SideNavBar() {
     const navigate = useNavigate();
     const location = useLocation();
-    const { id: userId, name, role } = getUserInfoFromToken();
-    const [avatarSeed, setAvatarSeed] = useState("");
-    const [avatarBg, setAvatarBg] = useState("");
+    const { name, role } = getUserInfoFromToken();
+    
+    const [avatarSeed, setAvatarSeed] = useState<string>("");
+    const [avatarBg, setAvatarBg] = useState<string>("");
 
-    // Always fetch avatarSeed and avatarBackground from backend on mount
     useEffect(() => {
         const fetchProfile = async () => {
-            if (!userId) return;
             const token = localStorage.getItem("token");
+            if (!token) return;
+
             try {
-                const res = await fetch(`http://localhost:5049/api/users/${userId}/full`, {
-                    headers: { "Authorization": `Bearer ${token}` }
+                const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    }
                 });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.avatarSeed) setAvatarSeed(data.avatarSeed);
-                    if (data.avatarBackground) setAvatarBg(data.avatarBackground);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (typeof data.avatarSeed === 'string') setAvatarSeed(data.avatarSeed);
+                    if (typeof data.avatarBackground === 'string') setAvatarBg(data.avatarBackground);
+                } else {
+                    console.warn(`Failed to fetch profile. Status: ${response.status}`);
                 }
-            } catch (e) {
-                // ignore
+            } catch (error) {
+                console.error("Error fetching profile:", error);
             }
         };
-        fetchProfile();
-    }, [userId]);
 
-    // Local DiceBear SVG generation (no network request)
-    const hasCustomAvatar = avatarSeed && avatarBg;
-    // Use the user's avatarBg value, fallback to a default if missing (match settings page logic)
-    const bg = avatarBg && avatarBg.trim() !== "" ? avatarBg : "ffa000";
-    const avatarSvg = hasCustomAvatar
-        ? createAvatar(botttsNeutral, { seed: avatarSeed, backgroundColor: bg.startsWith('#') ? bg : `#${bg}` }).toString()
-        : null;
+        fetchProfile();
+    }, []);
+
+    // Safe guard for avatar generation
+    const hasCustomAvatar = !!avatarSeed && !!avatarBg;
+    const safeBg = avatarBg && avatarBg.trim() !== "" ? avatarBg : "ffa000";
+    const bgHex = safeBg.startsWith('#') ? safeBg : `#${safeBg}`;
+    
+    // Ensure seed is string for createAvatar
+    let avatarSvg: string | null = null;
+    
+    if (hasCustomAvatar && typeof avatarSeed === 'string') {
+        avatarSvg = createAvatar(botttsNeutral, {
+            seed: avatarSeed,
+            backgroundColor: [bgHex]   // ← Wrap in array
+        }).toString();
+    }
 
     return (
         <div className="side-nav-wrapper">
@@ -104,10 +119,15 @@ export default function SideNavBar() {
                     tabIndex={0}
                     role="button"
                     style={{ cursor: "pointer" }}
-                    onKeyDown={e => { if (e.key === "Enter" || e.key === " ") navigate("/settings"); }}
+                    onKeyDown={e => { 
+                        if (e.key === "Enter" || e.key === " ") {
+                            navigate("/settings");
+                            e.preventDefault();
+                        }
+                    }}
                 >
                     <div className="ProfilePic">
-                        {hasCustomAvatar ? (
+                        {hasCustomAvatar && avatarSvg ? (
                             <img
                                 src={`data:image/svg+xml;utf8,${encodeURIComponent(avatarSvg)}`}
                                 alt="User Avatar"
@@ -116,24 +136,32 @@ export default function SideNavBar() {
                                     height: 36,
                                     borderRadius: "50%",
                                     display: "block",
-                                    background: bg.startsWith('#') ? bg : `#${bg}`
+                                    background: bgHex
                                 }}
                             />
                         ) : (
-                            <span style={{
+                            <div style={{
                                 width: 36,
                                 height: 36,
                                 borderRadius: "50%",
-                                display: "block",
                                 background: "#C5D3C9",
-                                overflow: "hidden"
+                                overflow: "hidden",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center"
                             }}>
                                 <img
                                     src={UserDefaultPfp}
                                     alt="Default User Avatar"
-                                    style={{ width: 36, height: 36, borderRadius: "50%", display: "block", background: "transparent" }}
+                                    style={{
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: "50%",
+                                        display: "block",
+                                        background: "transparent"
+                                    }}
                                 />
-                            </span>
+                            </div>
                         )}
                     </div>
                     <div className="UserDetails">

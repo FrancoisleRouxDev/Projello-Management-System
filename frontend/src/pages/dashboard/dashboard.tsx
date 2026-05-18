@@ -5,6 +5,7 @@ import "./dashboard.css";
 import SearchIcon from "../../assets/Logo/SearchIcon.svg";
 import JelloItem from "../../components/JelloItem";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../config";
 
 export default function DashboardPage() {
   // Only one filter can be active at a time
@@ -15,7 +16,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("http://localhost:5049/api/Projects", {
+    fetch(`${API_BASE_URL}/api/Projects`, {
       headers: {
         Authorization: token ? `Bearer ${token}` : "",
       },

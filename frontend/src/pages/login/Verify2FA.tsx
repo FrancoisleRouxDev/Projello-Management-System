@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../../config';
 
 // NEW: Define the types for the props coming from LoginPage
 interface Verify2FAProps {
@@ -16,7 +17,7 @@ const Verify2FA = ({ email, onVerificationSuccess, onCancel }: Verify2FAProps) =
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5049/api/Auth/verify-2fa', { 
+      const response = await fetch(`${API_BASE_URL}/api/Auth/verify-2fa`, { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code })

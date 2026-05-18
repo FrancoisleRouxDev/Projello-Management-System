@@ -13,5 +13,8 @@ namespace Projello.Api.DTOs
         public int ClientID { get; set; }
         public string ClientName { get; set; } = null!;
         public bool IsClientBlacklisted { get; set; }
+
+         // New property to hold project members
+        public List<ProjectMemberDto> Members { get; set; } = new();
     }
 }

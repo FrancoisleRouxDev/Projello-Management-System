@@ -8,85 +8,96 @@ import CustomModal from "../../components/CustomModal";
 import CustomSwitch from "../../components/CustomSwitch";
 
 import { message as antdMessage } from "antd";
+import { API_BASE_URL } from "../../config";
 
-// Helper function to decode the JWT token and extract user info
 const getUserInfoFromToken = () => {
   const token = localStorage.getItem("token");
-  if (!token) return { id: "", email: "", username: "", avatarStyle: undefined, avatarSeed: undefined, avatarBg: undefined };
+  if (!token) return { id: "", email: "", username: "", avatarSeed: undefined, avatarBg: undefined };
+
   try {
     const parts = token.split(".");
-    if (parts.length !== 3) return { id: "", email: "", username: "", avatarStyle: undefined, avatarSeed: undefined, avatarBg: undefined };
+    if (parts.length !== 3) return { id: "", email: "", username: "", avatarSeed: undefined, avatarBg: undefined };
+
     let payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
     while (payloadBase64.length % 4 !== 0) payloadBase64 += '=';
+
     const decodedPayload = JSON.parse(atob(payloadBase64));
-    // Try all common claim keys for user id
-    const id = decodedPayload.sub || decodedPayload.nameid || decodedPayload.id || decodedPayload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || "";
+
+    const id = decodedPayload.sub || decodedPayload.nameid || decodedPayload.id || 
+               decodedPayload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || "";
+
     return {
       id,
       email: decodedPayload.email || decodedPayload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || "",
       username: decodedPayload.FullName || decodedPayload.fullName || decodedPayload.name || decodedPayload.username || decodedPayload.email || "",
-      avatarStyle: decodedPayload.avatarStyle,
       avatarSeed: decodedPayload.avatarSeed,
       avatarBg: decodedPayload.avatarBg
     };
   } catch (e) {
     console.error("Error decoding token:", e);
-    return { id: "", email: "", username: "", avatarStyle: undefined, avatarSeed: undefined, avatarBg: undefined };
+    return { id: "", email: "", username: "", avatarSeed: undefined, avatarBg: undefined };
   }
 };
 
-
 export default function SettingsPage() {
   const navigate = useNavigate();
-  // Get user info from token
-  const { id: userId, email: userEmail, username: userName, avatarStyle: userAvatarStyle, avatarSeed: userAvatarSeed, avatarBg: userAvatarBg } = getUserInfoFromToken();
 
-  // DiceBear avatar state
-  // Only Bottts Neutral style, seeds as avatars
+  const { id: userId, email: userEmail, username: userName, avatarSeed: userAvatarSeed, avatarBg: userAvatarBg } = getUserInfoFromToken();
+
   const BOTTT_SEEDS = [
-    "Mackenzie", "Avery", "Adrian", "Vivian", "Destiny", "Jude", "Liliana", "Liam", "Emery", "Wyatt", "George", "Jameson", "Kimberly", "Leah", "Alexander", "Ryan", "Sarah", "Oliver", "Amaya", "Leo"
+    "Mackenzie", "Avery", "Adrian", "Vivian", "Destiny", "Jude", "Liliana", "Liam",
+    "Emery", "Wyatt", "George", "Jameson", "Kimberly", "Leah", "Alexander", "Ryan",
+    "Sarah", "Oliver", "Amaya", "Leo"
   ];
-  const [avatarStyle] = useState("bottts-neutral");
+
   const [avatarSeed, setAvatarSeed] = useState(userAvatarSeed || userName || "");
   const [avatarBg, setAvatarBg] = useState(userAvatarBg || "");
 
-  // Always fetch avatarSeed and avatarBackground from backend on mount
+  // Fetch profile data (avatar) on mount
   useEffect(() => {
     const fetchProfile = async () => {
       if (!userId) return;
       const token = localStorage.getItem("token");
+      if (!token) return;
+
       try {
-        const res = await fetch(`http://localhost:5049/api/users/${userId}/full`, {
-          headers: { "Authorization": `Bearer ${token}` }
+        const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+          headers: { 
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
         });
+
         if (res.ok) {
           const data = await res.json();
           if (data.avatarSeed) setAvatarSeed(data.avatarSeed);
           if (data.avatarBackground) setAvatarBg(data.avatarBackground);
+          return;
         }
       } catch (e) {
-        // ignore
+        console.error("Error fetching profile:", e);
       }
     };
+
     fetchProfile();
-    // eslint-disable-next-line
   }, [userId]);
 
-  // Local DiceBear SVG generation (no network request)
-  const hasCustomAvatar = avatarSeed && avatarBg;
+  const hasCustomAvatar = !!avatarSeed && !!avatarBg;
+  
+  // Fixed: backgroundColor must be an array
   const avatarSvg = hasCustomAvatar
-    ? createAvatar(botttsNeutral, { seed: avatarSeed, backgroundColor: `#${avatarBg}` }).toString()
+    ? createAvatar(botttsNeutral, { 
+        seed: avatarSeed, 
+        backgroundColor: [`#${avatarBg}`] 
+      }).toString()
     : null;
+
   const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [modalBg, setModalBg] = useState(avatarBg);
-  const [modalSelectedSeed, setModalSelectedSeed] = useState(avatarSeed);
+  const [modalBg, setModalBg] = useState(avatarBg || "");
+  const [modalSelectedSeed, setModalSelectedSeed] = useState<string>(avatarSeed || "");
 
-  // Remove old avatarUrl, use avatarSvg only
-
-  // Existing Theme State
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
 
-  // Two-Step Verification State
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState("");
@@ -94,18 +105,15 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // --- NEW: Fetch the actual 2FA status from the database when the page loads ---
+  // Fetch 2FA status
   useEffect(() => {
     const fetch2FAStatus = async () => {
       if (!userEmail) return;
-
       try {
-        const response = await fetch(`http://localhost:5049/api/auth/2fa-status?email=${encodeURIComponent(userEmail)}`);
-        
+        const response = await fetch(`${API_BASE_URL}/api/auth/2fa-status?email=${encodeURIComponent(userEmail)}`);
         if (response.ok) {
           const data = await response.json();
-          // Update the React state to match the Database state!
-          setIs2FAEnabled(data.is2FAEnabled); 
+          setIs2FAEnabled(data.is2FAEnabled);
         }
       } catch (error) {
         console.error("Could not fetch 2FA status:", error);
@@ -115,29 +123,25 @@ export default function SettingsPage() {
     fetch2FAStatus();
   }, [userEmail]);
 
-  // Persist theme in localStorage
+  // Persist theme
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  // Handle toggling 2FA (Enable/Disable)
   const handleToggle2FA = async () => {
     setMessage("");
-
     if (!userEmail) {
       setMessage("Error: User email not found in session. Please log in again.");
       return;
     }
 
     if (is2FAEnabled) {
-      // Logic for disabling 2FA (Optional implementation for later)
       setMessage("Disabling 2FA requires additional backend endpoints. Contact Admin.");
     } else {
-      // Flow for enabling 2FA - REAL API CALL
       setLoading(true);
       try {
-        const response = await fetch('http://localhost:5049/api/auth/generate-2fa-secret', { 
+        const response = await fetch(`${API_BASE_URL}/api/auth/generate-2fa-secret`, { 
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: userEmail })
@@ -145,7 +149,6 @@ export default function SettingsPage() {
 
         if (response.ok) {
           const data = await response.json();
-          // We take the raw authenticator URI from C#, encode it, and feed it to the QR generator
           const encodedUri = encodeURIComponent(data.authenticatorUri);
           setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUri}`);
           setShowSetup(true);
@@ -161,23 +164,21 @@ export default function SettingsPage() {
     }
   };
 
-  // Handle verifying the 6-digit code - REAL API CALL
   const handleVerifyCode = async () => {
     setLoading(true);
     setMessage("");
     try {
-      const response = await fetch('http://localhost:5049/api/auth/verify-2fa', { 
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify-2fa`, { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: userEmail, code: verificationCode }) 
       });
       
       if (response.ok) {
-        // Success! The database is now updated.
         setIs2FAEnabled(true);
         setShowSetup(false);
         setVerificationCode("");
-        setMessage("Success! Two-Step Verification is enabled and saved to the database.");
+        setMessage("Success! Two-Step Verification is enabled.");
       } else {
         const errorData = await response.json();
         setMessage(errorData.message || "Invalid verification code.");
@@ -196,19 +197,19 @@ export default function SettingsPage() {
         <span className="settings-user">{userEmail && `Signed in as: ${userEmail}`}</span>
       </div>
 
-      {/* Profile Card */}
+             {/* Profile Card */}
       <div className="settings-card" style={{ marginBottom: 24 }}>
         <h3 className="settings-card-title">Profile</h3>
         <div className="settings-card-content" style={{ flexDirection: "row", alignItems: "center", gap: 32 }}>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 120 }}>
-            {hasCustomAvatar ? (
+            {hasCustomAvatar && avatarSvg ? (
               <img
                 src={`data:image/svg+xml;utf8,${encodeURIComponent(avatarSvg)}`}
                 alt="Avatar Preview"
                 style={{ width: 80, height: 80, borderRadius: "50%", background: `#${avatarBg}`, cursor: "pointer", boxShadow: "0 2px 8px #0001" }}
                 onClick={() => {
-                  setModalBg(avatarBg);
-                  setModalSelectedSeed(avatarSeed);
+                  setModalBg(avatarBg || "");
+                  setModalSelectedSeed(avatarSeed || "");
                   setShowAvatarModal(true);
                 }}
                 title="Click to change avatar"
@@ -240,15 +241,17 @@ export default function SettingsPage() {
           <div className="modal-content" style={{ background: "var(--secondary-background)", borderRadius: 16, padding: 32, minWidth: 400, maxWidth: 600, boxShadow: "0 4px 32px #0003", position: "relative" }}>
             <button onClick={() => setShowAvatarModal(false)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", fontSize: 24, cursor: "pointer" }}>&times;</button>
             <h3 style={{ marginTop: 0 }}>Choose Your Avatar</h3>
+            
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 16, justifyContent: "space-between" }}>
-              
-              <div className="colorPicker" style={{ display: "flex", alignItems: "center", gap: 4 }}><label><b>Choose Background Colour |</b></label>
-              <input
-                type="color"
-                value={`#${modalBg}`}
-                onChange={e => setModalBg(e.target.value.replace('#', ''))}
-                style={{ width: 44, height: 44, border: "none", background: "none", cursor: "pointer" }}
-              /></div>
+              <div className="colorPicker" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <label><b>Choose Background Colour |</b></label>
+                <input
+                  type="color"
+                  value={`#${modalBg}`}
+                  onChange={e => setModalBg(e.target.value.replace('#', ''))}
+                  style={{ width: 44, height: 44, border: "none", background: "none", cursor: "pointer" }}
+                />
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginLeft: 4 }}>
                 <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-dark)', marginBottom: 2 }}>HEX</span>
                 <input
@@ -263,24 +266,29 @@ export default function SettingsPage() {
                   maxLength={6}
                 />
               </div>
-              {/* <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', marginLeft: 8 }}>
-                <span style={{ fontWeight: 600, fontSize: 13, color: '#d7f3de', marginBottom: 2 }}>HEX</span>
-              </div> */}
-              
             </div>
+
             <div style={{ display: "flex", flexWrap: "wrap", gap: 20, justifyContent: "center", maxHeight: 320, overflowY: "auto" }}>
               {BOTTT_SEEDS.map(seed => (
-                <div key={seed} style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", border: modalSelectedSeed === seed ? "2px solid #ffa000" : "2px solid transparent", borderRadius: 12, padding: 6, background: modalSelectedSeed === seed ? "#fffbe6" : "#f7f7f3" }} onClick={() => setModalSelectedSeed(seed)}>
+                <div key={seed} 
+                     style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", 
+                              border: modalSelectedSeed === seed ? "2px solid #ffa000" : "2px solid transparent", 
+                              borderRadius: 12, padding: 6, background: modalSelectedSeed === seed ? "#fffbe6" : "#f7f7f3" }} 
+                     onClick={() => setModalSelectedSeed(seed)}>
                   <span
                     style={{ width: 64, height: 64, display: 'inline-block', borderRadius: '50%', marginBottom: 4, background: `#${modalBg}`, overflow: 'hidden' }}
                     dangerouslySetInnerHTML={{
-                      __html: createAvatar(botttsNeutral, { seed, backgroundColor: `#${modalBg}` }).toString()
+                      __html: createAvatar(botttsNeutral, { 
+                        seed, 
+                        backgroundColor: [`#${modalBg}`]   // ← Fixed here
+                      }).toString()
                     }}
                   />
                   <span style={{ fontSize: 13, color: "#28332b" }}>{seed}</span>
                 </div>
               ))}
             </div>
+
             <button
               className="btn-primary"
               style={{ marginTop: 24, width: "100%" }}
@@ -289,19 +297,14 @@ export default function SettingsPage() {
                 setAvatarBg(modalBg);
                 setShowAvatarModal(false);
 
-                // --- API call to update avatar in backend ---
                 const token = localStorage.getItem("token");
                 if (!token || !userId) {
                   antdMessage.error("Could not determine user ID.");
                   return;
                 }
-                if (!userEmail || !userName) {
-                  antdMessage.error("Email and username are required.");
-                  return;
-                }
 
                 try {
-                  const response = await fetch(`http://localhost:5049/api/users/${userId}`, {
+                  const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
                     method: "PUT",
                     headers: {
                       "Content-Type": "application/json",
@@ -314,26 +317,28 @@ export default function SettingsPage() {
                       avatarBackground: modalBg
                     })
                   });
+
                   if (response.ok) {
                     antdMessage.success("Avatar updated!");
                     window.location.reload();
                   } else {
                     const errorData = await response.json().catch(() => ({}));
                     antdMessage.error(errorData?.[0]?.description || errorData?.message || "Failed to update avatar.");
-                    console.error("Avatar update error:", errorData);
                   }
                 } catch (e) {
                   antdMessage.error("Network error updating avatar.");
                 }
               }}
-            >Save Avatar</button>
+            >
+              Save Avatar
+            </button>
           </div>
         </div>
       )}
 
       {message && <div className="settings-message">{message}</div>}
+
       <div className="settings-cards">
-        {/* Appearance Card */}
         <div className="settings-card">
           <h3 className="settings-card-title">Appearance</h3>
           <div className="settings-card-content">
@@ -350,7 +355,7 @@ export default function SettingsPage() {
             </label>
           </div>
         </div>
-        {/* Security Card */}
+
         <div className="settings-card">
           <h3 className="settings-card-title">Security</h3>
           <div className="settings-card-content">
@@ -363,6 +368,7 @@ export default function SettingsPage() {
                 label={is2FAEnabled ? "On" : "Off"}
               />
             </div>
+
             <CustomModal
               open={showSetup}
               onCancel={() => { setShowSetup(false); setMessage(""); }}
@@ -406,7 +412,7 @@ export default function SettingsPage() {
             </CustomModal>
           </div>
         </div>
-        {/* Logout Card */}
+
         <div className="settings-card settings-card-logout">
           <h3 className="settings-card-title">Session</h3>
           <div className="settings-card-content">
