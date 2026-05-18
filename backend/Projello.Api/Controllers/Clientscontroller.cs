@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Projello.Api.Data;
 using Projello.Api.DTOs;
 using Projello.Api.Models;
+using System.Data;
 using System.Security.Claims;
 
 namespace Projello.Api.Controllers
@@ -146,6 +147,46 @@ namespace Projello.Api.Controllers
 
             return Ok(new { Message = $"{client.Name} has been removed from the blacklist." });
         }
+
+        // -- CREATE: ADD NEW CLIENT (Admin only) --
+        // POST /api/clients
+        [HttpPost]
+        public async Task<IActionResult> CreateClient([FromBody] ClientCreateDto dto)
+        {
+            if (!IsAdmin()) return Forbid();
+
+            var client = new Client
+            {
+                Name = dto.Name,
+                ContactEmail = dto.Email,
+                ContactPhone = dto.Phone,
+                Notes = !string.IsNullOrEmpty(dto.Company)
+                    ? $"Company: {dto.Company}. {dto.Notes}"
+                    : dto.Notes,
+                IsBlacklisted = false,
+                CreatedAt =DateTime.UtcNow
+            };
+            
+            _context.Clients.Add(client);
+            await _context.SaveChangesAsync();
+
+            var result = new
+            {
+                ClientID = client.ClientID,
+                Name = client.Name,
+                Email = client.ContactEmail,
+                Phone = client.ContactPhone,
+                Company = dto.Company,
+                Notes = dto.Notes,
+                IsBlacklisted = client.IsBlacklisted,
+                CreateAt = client.CreatedAt
+             };
+
+            return CreatedAtAction(nameof(GetClient), new { id = client.ClientID }, result);
+        }
+
+
+
 
         // --- PRIVATE HELPERS ---
 

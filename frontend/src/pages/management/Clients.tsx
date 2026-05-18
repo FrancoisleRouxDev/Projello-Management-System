@@ -9,6 +9,8 @@ import { SortButton } from "../../components/SortButton";
 import { AddButton } from "../../components/AddButton";
 import { ReusableEntryModal } from "../../components/ReuseableEntityModal";
 
+const API_BASE_URL = "http://localhost:5049/api";
+
 /* ClientsPage - fetches and shows clients with inline action menu per row */
 
 const getInitials = (fullName?: string) => {
@@ -27,40 +29,42 @@ export default function ClientsPage() {
   const [error, setError] = useState<string | null>(null);
   const [clientModalOpen, setClientModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchClients = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:5049/api/clients", {
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        });
-        if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(txt || res.statusText || "Failed to load clients");
-        }
-        const data = await res.json();
-        const mapped: ManagementClientRow[] = (data ?? []).map((c: any) => ({
-          clientId: String(c.clientID ?? c.ClientID ?? c.ClientId ?? ""),
-          initials: getInitials(c.name ?? c.Name),
-          name: c.name ?? c.Name ?? "",
-          company: c.company ?? c.Company ?? "",
-          totalPaid: c.totalPaid ?? "R 0",
-          outstanding: c.outstanding ?? "R 0",
-          projects: c.projects ? String(c.projects) : "0",
-          activeProjects: c.activeProjects ?? "0 active",
-          status: c.isBlacklisted || c.IsBlacklisted ? "Blacklisted" : "Active",
-          statusTone: c.isBlacklisted || c.IsBlacklisted ? "danger" : "success",
-        }));
-        setRows(mapped);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch clients");
-      } finally {
-        setLoading(false);
+  // --- Move fetchClients to component level so other handlers can call it ---
+  const fetchClients = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5049/api/clients", {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || res.statusText || "Failed to load clients");
       }
-    };
+      const data = await res.json();
+      const mapped: ManagementClientRow[] = (data ?? []).map((c: any) => ({
+        clientId: String(c.clientID ?? c.ClientID ?? c.ClientId ?? ""),
+        initials: getInitials(c.name ?? c.Name),
+        name: c.name ?? c.Name ?? "",
+        company: c.company ?? c.Company ?? "",
+        totalPaid: c.totalPaid ?? "R 0",
+        outstanding: c.outstanding ?? "R 0",
+        projects: c.projects ? String(c.projects) : "0",
+        activeProjects: c.activeProjects ?? "0 active",
+        status: c.isBlacklisted || c.IsBlacklisted ? "Blacklisted" : "Active",
+        statusTone: c.isBlacklisted || c.IsBlacklisted ? "danger" : "success",
+      }));
+      setRows(mapped);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch clients");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // --- call on mount ---
+  useEffect(() => {
     fetchClients();
   }, []);
 
@@ -68,9 +72,45 @@ export default function ClientsPage() {
     navigate(`/single-view/${row.clientId}`);
   };
 
-  const handleClientSubmit = (data: any) => {
-    console.log("New client data:", data);
-    // TODO: Submit to API endpoint and refresh list
+  const handleClientSubmit = async (data: any) => {
+    try {
+      const token = localStorage.getItem("token");
+      const payload = {
+        Name: data.name,
+        Company: data.company,
+        Email: data.email,
+        Phone: data.phone || null,
+      };
+
+      const res = await fetch(`${API_BASE_URL}/clients`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const text = await res.text();
+      const created = text ? JSON.parse(text) : null;
+
+      if (!res.ok) {
+        if (res.status === 403) {
+          console.warn("Create forbidden: admin privileges required.");
+        } else {
+          console.error("Failed to create client:", created ?? res.statusText);
+        }
+        return;
+      }
+
+      // close modal and refresh client list (or optimistically add created)
+      setClientModalOpen(false);
+      await fetchClients();
+      console.log("Client created:", created);
+    } catch (err) {
+      console.error("Error creating client:", err);
+      setError(err instanceof Error ? err.message : "Failed to create client");
+    }
   };
 
   const handleToggleBlacklist = async (clientId: string) => {
@@ -82,7 +122,7 @@ export default function ClientsPage() {
       const isCurrentlyBlacklisted = client.status === "Blacklisted";
 
       // API assumed to exist; adjust endpoint/method as needed
-      const response = await fetch(`http://localhost:5049/api/clients/${clientId}/blacklist`, {
+      const response = await fetch(`${API_BASE_URL}/clients/${clientId}/blacklist`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

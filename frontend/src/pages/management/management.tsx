@@ -8,6 +8,7 @@ import ClientsPage from "./Clients";
 import WorkersPage from "./Workers";
 import { AddButton } from "../../components/AddButton";
 import { ReusableEntryModal } from "../../components/ReuseableEntityModal";
+
 const API_BASE_URL = "http://localhost:5049/api";
 
 interface Project {
