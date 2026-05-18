@@ -19,47 +19,43 @@ export function useProjectCall(projectId: number | string) {
     return token.startsWith('"') && token.endsWith('"') ? token.slice(1, -1) : token;
   }, []);
 
-  // Initialize service + listener ONCE
+  // Create service only once (outside effect when possible)
+  if (!callServiceRef.current) {
+    callServiceRef.current = new ProjectCallService(getAccessToken);
+  }
+
   useEffect(() => {
-    if (!callServiceRef.current) {
-      callServiceRef.current = new ProjectCallService(getAccessToken);
+    const service = callServiceRef.current!;
+    const peerManager = service.getPeerManager();
+
+    // Create listener only once
+    if (!listenerRef.current) {
+      listenerRef.current = (event: any) => {
+        if (event.type === 'track') {
+          console.log('📹 REMOTE STREAM RECEIVED!');
+          setRemoteStream(event.stream);
+        }
+        if (event.type === 'connection-state-change') {
+          console.log('🔄 UI STATE UPDATED →', event.state);
+          setConnectionState(event.state);
+        }
+      };
     }
-
-    const peerManager = callServiceRef.current.getPeerManager();
-
-    // Remove old listener if exists
-    if (listenerRef.current) {
-      // (we don't have off() implemented, so we just keep adding - it's fine for now)
-    }
-
-    listenerRef.current = (event: any) => {
-      console.log('🔥 useProjectCall received:', event.type, event.state || '');
-
-      if (event.type === 'track') {
-        console.log('📹 REMOTE STREAM RECEIVED!');
-        setRemoteStream(event.stream);
-      }
-
-      if (event.type === 'connection-state-change') {
-        console.log('🔄 UI STATE UPDATED →', event.state);
-        setConnectionState(event.state as any);
-      }
-    };
 
     peerManager.on(listenerRef.current);
 
     return () => {
-      // cleanup on unmount
-      callServiceRef.current?.disconnect();
+      // We don't remove listener for now (no off() implemented)
+      // But we do disconnect the service when component unmounts
     };
-  }, [getAccessToken]);
+  }, []); // Empty dependency array = run once
 
   const joinCall = useCallback(async () => {
     if (!callServiceRef.current) return;
 
     setIsFetching(true);
     setError(null);
-    setConnectionState('connecting');   // ← This fixes the "still disconnected" text
+    setConnectionState('connecting');
 
     try {
       await callServiceRef.current.joinCall(projectId.toString());
@@ -77,13 +73,22 @@ export function useProjectCall(projectId: number | string) {
   }, [projectId]);
 
   const leaveCall = useCallback(async () => {
-    if (callServiceRef.current) await callServiceRef.current.leaveCall();
-
+    if (callServiceRef.current) {
+      await callServiceRef.current.leaveCall();
+    }
     setIsJoined(false);
     setLocalStream(null);
     setRemoteStream(null);
     setConnectionState('disconnected');
     setError(null);
+  }, []);
+
+  // Cleanup on full unmount
+  useEffect(() => {
+    return () => {
+      callServiceRef.current?.disconnect();
+      callServiceRef.current = null;
+    };
   }, []);
 
   return {

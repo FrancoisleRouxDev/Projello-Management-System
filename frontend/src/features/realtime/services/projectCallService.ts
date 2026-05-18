@@ -16,6 +16,7 @@ export class ProjectCallService {
   private signalR: SignalRClient<ProjectCallEvents>;
   private peerManager: WebRTCPeerManager;
   private currentProjectId: string | null = null;
+  private myConnectionId: string | null = null;
   private connectedPeers = new Set<string>();
 
   constructor(getAccessToken?: () => string | Promise<string | null>) {
@@ -33,75 +34,53 @@ export class ProjectCallService {
 
   private setupPeerManagerListeners() {
     this.peerManager.on((event: any) => {
-      console.log('🔥 PEER MANAGER EVENT:', event.type, event.peerId || '');
       if (!this.currentProjectId) return;
-
-      switch (event.type) {
-        case 'ice-candidate':
-          this.sendIceCandidate(event.peerId, event.candidate);
-          break;
-        case 'offer':
-          console.log('📤 SENDING OFFER to', event.peerId);
-          this.sendOffer(event.peerId, event.sdp);
-          break;
-        case 'answer':
-          console.log('📤 SENDING ANSWER to', event.peerId);
-          this.sendAnswer(event.peerId, event.sdp);
-          break;
-      }
+      if (event.type === 'offer') this.sendOffer(event.peerId, event.sdp);
+      if (event.type === 'answer') this.sendAnswer(event.peerId, event.sdp);
+      if (event.type === 'ice-candidate') this.sendIceCandidate(event.peerId, event.candidate);
     });
   }
 
   private registerSignalRHandlers() {
     this.signalR.on("ParticipantJoined", (projectId, connectionId, participantId) => {
-      console.log(`🟢 NEW PARTICIPANT JOINED: ${participantId} (connectionId: ${connectionId})`);
-      this.connectToNewPeer(connectionId, true);
+      console.log(`🟢 NEW PARTICIPANT JOINED: ${participantId}`);
+      this.connectToNewPeer(connectionId, true); // existing user initiates
     });
 
     this.signalR.on("JoinedProjectCall", (projectId, connectionId, participantId, currentParticipants) => {
       console.log(`✅ YOU JOINED. Current participants: ${currentParticipants.length}`);
       this.currentProjectId = projectId;
+      this.myConnectionId = connectionId;
 
-      currentParticipants.forEach(peerId => {
-        if (peerId !== connectionId) {
-          console.log(`→ Connecting to existing peer: ${peerId}`);
-          this.connectToNewPeer(peerId, true);
-        }
-      });
+        currentParticipants.forEach(peerId => {
+            if (peerId !== connectionId) {
+                const shouldInitiate = this.myConnectionId != null && peerId < this.myConnectionId;
+                this.connectToNewPeer(peerId, shouldInitiate);
+            }
+        });
     });
 
-    this.signalR.on("ParticipantLeft", (projectId, connectionId, participantId) => {
-      console.log(`🔴 Participant left: ${participantId}`);
-      this.peerManager.disconnectFromPeer(connectionId);
-      this.connectedPeers.delete(connectionId);
-    });
-
-    this.signalR.on("ReceiveOffer", async (_projectId, senderConnId, senderPartId, offerSdp) => {
+    this.signalR.on("ReceiveOffer", async (_, senderConnId, senderPartId, offerSdp) => {
       console.log(`📥 RECEIVED OFFER from ${senderPartId}`);
       await this.peerManager.acceptOffer(senderConnId, JSON.parse(offerSdp));
     });
 
-    this.signalR.on("ReceiveAnswer", async (_projectId2, senderConnId, senderPartId, answerSdp) => {
+    this.signalR.on("ReceiveAnswer", async (_, senderConnId, senderPartId, answerSdp) => {
       console.log(`📥 RECEIVED ANSWER from ${senderPartId}`);
       await this.peerManager.setRemoteAnswer(senderConnId, JSON.parse(answerSdp));
     });
 
-    this.signalR.on("ReceiveIceCandidate", async (_projectId3, senderConnId, senderPartId, candidate, sdpMid, sdpMLineIndex) => {
-      console.log(`📥 RECEIVED ICE CANDIDATE from ${senderPartId}`);
-      await this.peerManager.handleRemoteIceCandidate(senderConnId, {
-        candidate,
-        sdpMid,
-        sdpMLineIndex
-      });
+    this.signalR.on("ReceiveIceCandidate", async (_, senderConnId, senderPartId, candidate, sdpMid, sdpMLineIndex) => {
+      console.log(`📥 RECEIVED ICE from ${senderPartId}`);
+      await this.peerManager.handleRemoteIceCandidate(senderConnId, { candidate, sdpMid, sdpMLineIndex });
     });
   }
 
   public async joinCall(projectId: string): Promise<void> {
     if (this.currentProjectId === projectId) return;
-
     await this.leaveCall();
     this.currentProjectId = projectId;
-
+    this.connectedPeers.clear();
     await this.signalR.start();
     await this.signalR.invoke("JoinProjectCall", projectId);
   }
@@ -110,19 +89,19 @@ export class ProjectCallService {
     if (this.currentProjectId) {
       await this.signalR.invoke("LeaveProjectCall", this.currentProjectId).catch(() => {});
     }
-
     this.peerManager.cleanup();
     this.connectedPeers.clear();
     this.currentProjectId = null;
+    this.myConnectionId = null;
   }
 
   private async connectToNewPeer(peerConnectionId: string, isInitiator: boolean) {
     if (this.connectedPeers.has(peerConnectionId)) {
-      console.log(`Already connected to ${peerConnectionId}, skipping`);
+      console.log(`⚠️ Already connected to ${peerConnectionId}, skipping`);
       return;
     }
-    console.log(`Connecting to new peer ${peerConnectionId} (isInitiator: ${isInitiator})`);
     this.connectedPeers.add(peerConnectionId);
+    console.log(`🔗 Connecting to ${peerConnectionId} (isInitiator: ${isInitiator})`);
     await this.peerManager.connectToPeer(peerConnectionId, isInitiator);
   }
 
@@ -138,19 +117,10 @@ export class ProjectCallService {
 
   private sendIceCandidate(peerId: string, candidate: RTCIceCandidate) {
     if (!this.currentProjectId) return;
-    this.signalR.invoke(
-      "SendIceCandidate",
-      this.currentProjectId,
-      peerId,
-      candidate.candidate,
-      candidate.sdpMid,
-      candidate.sdpMLineIndex
-    );
+    this.signalR.invoke("SendIceCandidate", this.currentProjectId, peerId, candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex);
   }
 
-  public getPeerManager() {
-    return this.peerManager;
-  }
+  public getPeerManager() { return this.peerManager; }
 
   public async disconnect() {
     await this.leaveCall();
