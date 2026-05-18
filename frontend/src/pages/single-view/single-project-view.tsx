@@ -1,6 +1,6 @@
 // frontend/src/pages/single-view/single-project-view.tsx
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./single-project-view.css";
 import CallOverlay from "../../components/CallOverlay";
 import { useProjectMember } from "../../features/realtime/hooks/useProjectMember";
@@ -67,13 +67,13 @@ export default function SingleProjectViewPage() {
   // Correct logic from old version
   const { members: teamMembers, loading: membersLoading } = useProjectMember(projectId || "");
 
-  useEffect(() => {
+  useEffect(() => { 
     const fetchProject = async () => {
       if (!projectId) {
         setError("Project ID is missing");
         setLoading(false);
         return;
-      }
+      } 
 
       const id = parseInt(projectId, 10);
       if (isNaN(id)) {

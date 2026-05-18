@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 // Import useNavigate for redirection and useLocation to read data passed from the previous page
 import { useNavigate, useLocation } from "react-router-dom";
-import Logo from "../../assets/Frame 106.svg";
-import { API_BASE_URL } from '../../config';
+import Logo from "../../assets/Frame 160.svg";
 import "./LoginPage.css"; // Reusing your login styling to keep it consistent
 
 const godzillaRoar = require("../../assets/zilla-1.mp3").default;
@@ -74,35 +73,24 @@ export default function Verify2FAPage({ onLoginSuccess }: Verify2FAPageProps) {
 
   return (
     <div className="login-container">
-      {/* Left column: Contains the 2FA verification form */}
       <div className="login-left">
         <div className="login-card">
-
           <h1 className="login-title" id="tfaHeading">Two-Step Verification</h1>
-          
           <p style={{ color: "#aaa", marginBottom: "20px" }}>
             Enter the 6-digit code from your authenticator app.
           </p>
-
           <form onSubmit={handleVerify}>
-            {/* Input field for the code, automatically strips non-numeric characters */}
             <input
               className="login-input"
               type="text"
               placeholder="000 000"
               value={code}
-
-              // Regex /\D/g replaces any non-digit characters with empty string
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
               maxLength={6}
               required
             />
-
-            {/* Conditionally render error message if verification fails */}
             {error && <p className="login-error-text" style={{ color: "red" }}>{error}</p>}
-
             <div className="login-button-row" style={{ marginTop: "20px" }}>
-              {/* Button to cancel 2FA and return to the main login page */}
               <button
                 type="button"
                 className="login-cancel-btn"
@@ -110,8 +98,6 @@ export default function Verify2FAPage({ onLoginSuccess }: Verify2FAPageProps) {
               >
                 Back to Login
               </button>
-
-              {/* Submit button disabled if loading OR if code is less than 6 digits */}
               <button
                 type="submit"
                 className="login-submit-btn"
@@ -122,15 +108,6 @@ export default function Verify2FAPage({ onLoginSuccess }: Verify2FAPageProps) {
             </div>
           </form>
         </div>
-      </div>
-
-      {/* Right column: Decorative elements and branding (matches LoginPage) */}
-      <div className="login-right">
-        <div className="login-overlay" />
-        <div className="login-logo">
-          <img className="login-logo-img" src={Logo} alt="Projello Logo" />
-        </div>
-        <div className="login-circle" />
       </div>
     </div>
   );

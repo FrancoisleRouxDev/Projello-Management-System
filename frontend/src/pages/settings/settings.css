@@ -1,5 +1,81 @@
-*{
+* {
   color: var(--text-dark, #28332b);
+}
+
+.settings-outer {
+  max-width: 540px;
+  /* margin: 48px 0 0 48px; */
+  /* padding: 0 16px 48px 16px; */
+  /* Align left, not centered */
+}
+
+.settings-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+.settings-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  /* color: var(--accent-1); */
+}
+.settings-user {
+  font-size: 0.95rem;
+  color: var(--accent-1-text);
+  margin-bottom: 0;
+}
+
+.settings-message {
+  background: var(--warning-yellow, #deab3d);
+  color: var(--background);
+  border: 1px solid var(--accent-3);
+  border-radius: 6px;
+  padding: 10px 16px;
+  margin-bottom: 18px;
+  font-size: 1rem;
+}
+
+.settings-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.settings-card {
+  background: var(--secondary-background-item);
+  border-radius: 14px;
+  box-shadow: 0 2px 12px var(--shadow-gray);
+  padding: 28px 24px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--accent-2-10_Opacity);
+}
+.settings-card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--accent-3);
+  letter-spacing: 0.01em;
+}
+.settings-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.settings-card-logout {
+  background: var(--secondary-background-item);
+  /* border: 1px solid var(--accent-3); */
+}
+.btn-logout {
+  width: 100%;
+  margin-top: 0;
+  font-size: 1.08rem;
+  padding: 10px 0;
+  background: var(--accent-3);
+  color: var(--white);
 }
 
 .ant-modal .ant-modal-content {
@@ -37,8 +113,9 @@
   margin-right: 8px;
   text-align: center;
 }
+/* Buttons */
 .btn-primary {
-  background: var(--accent-3, #d6ae34);
+  background: var(--error-red, #c34949);
   color: #fff;
   border: none;
   border-radius: 6px;

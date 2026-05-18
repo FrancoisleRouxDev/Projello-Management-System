@@ -9,22 +9,22 @@
 .management-client-table__header,
 .management-client-table__row {
   display: grid;
-  grid-template-columns: minmax(260px, 1.8fr) repeat(3, minmax(120px, 1fr)) minmax(140px, 1fr) 56px;
+  grid-template-columns: minmax(280px, 1.9fr) repeat(3, minmax(130px, 1fr)) minmax(150px, 1fr) 60px;
   align-items: center;
 }
 
 .management-client-table__header {
-  padding: 16px 24px;
+  padding: 18px 28px;
   background: #f9fafb;
   color: #4b5563;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .management-client-table__row {
-  padding: 18px 24px;
+  padding: 20px 28px;
   border-top: 1px solid #e5e7eb;
 }
 
@@ -53,18 +53,18 @@
 .management-client-table__identity {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .management-client-table__avatar {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 999px;
   display: grid;
   place-items: center;
   background: #e5e7eb;
   color: #111827;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   flex: 0 0 auto;
 }
@@ -75,22 +75,22 @@
 
 .management-client-table__name {
   color: #101828;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 500;
-  line-height: 24px;
+  line-height: 26px;
 }
 
 .management-client-table__company {
   color: #6a7282;
-  font-size: 15px;
-  line-height: 20px;
+  font-size: 16px;
+  line-height: 22px;
 }
 
 .management-client-table__value {
   color: #101828;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 500;
-  line-height: 24px;
+  line-height: 26px;
 }
 
 .management-client-table__value--warning {
@@ -99,19 +99,19 @@
 
 .management-client-table__subvalue {
   color: #6a7282;
-  font-size: 15px;
-  line-height: 20px;
+  font-size: 16px;
+  line-height: 22px;
 }
 
 .management-client-table__badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 12px;
+  padding: 5px 14px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  line-height: 16px;
+  line-height: 18px;
 }
 
 .management-client-table__badge--success {
@@ -151,7 +151,7 @@
 @media (max-width: 1100px) {
   .management-client-table__header,
   .management-client-table__row {
-    grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(110px, 1fr)) minmax(120px, 1fr) 52px;
+    grid-template-columns: minmax(240px, 1.5fr) repeat(3, minmax(120px, 1fr)) minmax(130px, 1fr) 56px;
   }
 }
 

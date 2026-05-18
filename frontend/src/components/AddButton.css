@@ -1,0 +1,71 @@
+/**
+ * AddButton Component Styles
+ * 
+ * BEM Naming Convention:
+ * - Block: .add-button (the main button)
+ * - Element: .add-button__<element> (parts of the button)
+ * 
+ * Structure:
+ * .add-button
+ * ├── .add-button__icon
+ * └── .add-button__label
+ */
+
+/* ============================================================================
+   BLOCK: Add Button
+   ============================================================================ */
+.add-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background-color: #a9ad89;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: "Roboto", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.add-button:hover:not(:disabled) {
+  background-color: #95a66d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.add-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.add-button:disabled {
+  background-color: #c0c4a8;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.add-button:focus-visible {
+  outline: 2px solid #95a66d;
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   ELEMENT: Icon
+   ============================================================================ */
+.add-button__icon {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* ============================================================================
+   ELEMENT: Label
+   ============================================================================ */
+.add-button__label {
+  font-size: 14px;
+  font-weight: 500;
+}

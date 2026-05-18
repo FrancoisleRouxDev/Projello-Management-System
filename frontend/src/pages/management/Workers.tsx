@@ -5,9 +5,10 @@ import { SearchInput } from "../../components/SearchInput";
 import { FilterButton } from "../../components/FilterButton";
 import { SortButton } from "../../components/SortButton";
 import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
-import { API_BASE_URL } from "../../config";
+import { AddButton } from "../../components/AddButton";
+import { WorkerAddModal } from "../../components/WorkerAddModal";
 
-interface UserDisplayDto {
+interface UserDisplay {
 id: string;
 fullName: string;
 email: string;
@@ -41,7 +42,7 @@ const getRoleLabel = (roleID: number) => {
 };
 
 // Centralized DTO -> UI mapping so future API changes only require edits in one place.
-const mapUserToWorkerCard = (user: UserDisplayDto): WorkerCardProps => ({
+const mapUserToWorkerCard = (user: UserDisplay): WorkerCardProps => ({
 	initials: getInitials(user.fullName),
 	name: user.fullName,
 	email: user.email,
@@ -54,6 +55,7 @@ export default function WorkersPage() {
 	const [workers, setWorkers] = useState<WorkerCardProps[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [workerModalOpen, setWorkerModalOpen] = useState(false);
 
 	useEffect(() => {
 		// Initial page load: fetch workers once and hydrate worker cards.
@@ -63,7 +65,7 @@ export default function WorkersPage() {
 
 			try {
 				const token = localStorage.getItem("token");
-const response = await fetch(`${API_BASE_URL}/api/users`, {
+				const response = await fetch("http://localhost:5049/api/users", {
 					headers: token ? { Authorization: `Bearer ${token}` } : undefined,
 				});
 
@@ -72,7 +74,7 @@ const response = await fetch(`${API_BASE_URL}/api/users`, {
 					throw new Error(text || response.statusText || "Failed to load workers");
 				}
 
-				const data: UserDisplayDto[] = await response.json();
+				const data: UserDisplay[] = await response.json();
 				// Hide admins from worker cards for now; this view focuses on field team users.
 				const visibleWorkers = (data ?? [])
 					.filter((user) => user.roleID !== 1)
@@ -93,6 +95,12 @@ const response = await fetch(`${API_BASE_URL}/api/users`, {
 		console.log("Open worker:", worker.name);
 	};
 
+	const handleWorkerSubmit = (data: any) => {
+		console.log("New worker data:", data);
+		// TODO: Submit to API endpoint
+		// TODO: Refresh workers list
+	};
+
 	// Dashboard counters are derived from current fetched data.
 	const totalWorkers = workers.length;
 	const foremen = workers.filter((worker) => worker.role === "Foreman").length;
@@ -100,50 +108,60 @@ const response = await fetch(`${API_BASE_URL}/api/users`, {
 	const onlineWorkers = workers.filter((worker) => worker.status === "Online").length;
 
 	return (
-		<div className="workers-page">
-			{/* Summary cards for worker status */}
-			<div className="workers-page__stats">
-				<StatCard value={String(onlineWorkers)} label="Online Workers" tone="success" />
-				<StatCard value={String(foremen)} label="Foremen" tone="warning" />
-				<StatCard value={String(visibleWorkers)} label="Workers" tone="neutral" />
-				<StatCard value={String(totalWorkers)} label="Total Team" tone="neutral" />
-			</div>
-
-			{/* Search and filter controls positioned under the worker stats */}
-			<div className="workers-page__controls">
-				<SearchInput placeholder="Search workers, roles, or projects..." onSearch={(value) => console.log("Search workers:", value)} />
-				<FilterButton label="All Status" onFilter={() => console.log("Open worker status filter")} />
-				<SortButton label="Sort" onSort={() => console.log("Open worker sort options")} />
-			</div>
-
-			<section className="workers-page__section">
-				<div className="workers-page__section-header">
-					<h2 className="workers-page__title">Workers</h2>
-					<p className="workers-page__subtitle">Manage your team members</p>
+		<>
+			<div className="workers-page">
+				{/* Summary cards for worker status */}
+				<div className="workers-page__stats">
+					<StatCard value={String(onlineWorkers)} label="Online Workers" tone="success" />
+					<StatCard value={String(foremen)} label="Foremen" tone="warning" />
+					<StatCard value={String(visibleWorkers)} label="Workers" tone="neutral" />
+					<StatCard value={String(totalWorkers)} label="Total Team" tone="neutral" />
 				</div>
 
-				{loading ? (
-					<p style={{ padding: 20 }}>Loading workers...</p>
-				) : error ? (
-					<p style={{ padding: 20, color: "red" }}>Error: {error}</p>
-				) : workers.length === 0 ? (
-					<p style={{ padding: 20 }}>No workers found yet.</p>
-				) : (
-					<div className="workers-page__grid">
-						{workers.map((worker) => (
-							<button
-								type="button"
-								key={`${worker.name}-${worker.email}`}
-								className="workers-page__card-button"
-								onClick={() => handleWorkerClick(worker)}
-							>
-								<WorkerCard {...worker} />
-							</button>
-						))}
+				{/* Search and filter controls positioned under the worker stats */}
+				<div className="workers-page__controls">
+					<SearchInput placeholder="Search workers, roles, or projects..." onSearch={(value) => console.log("Search workers:", value)} />
+					<FilterButton label="All Status" onFilter={() => console.log("Open worker status filter")} />
+					<SortButton label="Sort" onSort={() => console.log("Open worker sort options")} />
+				</div>
+
+				<section className="workers-page__section">
+					<div className="workers-page__section-header">
+						<div className="workers-page__section-header-top">
+							<h2 className="workers-page__title">Workers</h2>
+						<AddButton label="Worker" onClick={() => setWorkerModalOpen(true)} />
+						</div>
+						<p className="workers-page__subtitle">Manage your team members</p>
 					</div>
-				)}
-			</section>
-		</div>
+
+					{loading ? (
+						<p style={{ padding: 20 }}>Loading workers...</p>
+					) : error ? (
+						<p style={{ padding: 20, color: "red" }}>Error: {error}</p>
+					) : workers.length === 0 ? (
+						<p style={{ padding: 20 }}>No workers found yet.</p>
+					) : (
+						<div className="workers-page__grid">
+							{workers.map((worker) => (
+								<button
+									type="button"
+									key={`${worker.name}-${worker.email}`}
+									className="workers-page__card-button"
+									onClick={() => handleWorkerClick(worker)}
+								>
+									<WorkerCard {...worker} />
+								</button>
+							))}
+						</div>
+					)}
+				</section>
+			</div>
+			<WorkerAddModal 
+				open={workerModalOpen}
+				onClose={() => setWorkerModalOpen(false)}
+				onSubmit={handleWorkerSubmit}
+			/>
+		</>
 	);
 }
 

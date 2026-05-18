@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Logo from "../../assets/Frame 106.svg";
+import Logo from "../../assets/Frame 160.svg";
 import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from '../../config';
