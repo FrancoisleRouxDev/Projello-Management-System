@@ -506,6 +506,14 @@ namespace Projello.Api.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<string>("AvatarBackground")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AvatarSeed")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");

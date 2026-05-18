@@ -4,5 +4,8 @@ namespace Projello.Api.DTOs
     {
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
+
+        public string AvatarSeed { get; set; } = string.Empty;
+        public string AvatarBackground { get; set; } = string.Empty;
     }
 }

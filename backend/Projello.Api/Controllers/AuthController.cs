@@ -28,7 +28,8 @@ namespace Projello.Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto model)
         {
-            var user = new User {
+            var user = new User
+            {
                 UserName = model.Email,
                 Email = model.Email,
                 FullName = model.FullName,
@@ -50,18 +51,20 @@ namespace Projello.Api.Controllers
             {
                 if (user.IsTwoFactorEnabled)
                 {
-                    return Ok(new { 
-                        Requires2FA = true, 
+                    return Ok(new
+                    {
+                        Requires2FA = true,
                         Email = user.Email,
                         Message = "Two-Step Verification required."
                     });
                 }
 
                 var token = GenerateJwtToken(user);
-                return Ok(new { 
-                    Token = token, 
-                    User = user.FullName, 
-                    Requires2FA = false 
+                return Ok(new
+                {
+                    Token = token,
+                    User = user.FullName,
+                    Requires2FA = false
                 });
             }
             return Unauthorized(new { Message = "Invalid credentials" });
@@ -77,7 +80,8 @@ namespace Projello.Api.Controllers
 
             if (user == null) return NotFound();
 
-            return Ok(new {
+            return Ok(new
+            {
                 user.Id,
                 user.Email,
                 user.FullName,
@@ -160,7 +164,7 @@ namespace Projello.Api.Controllers
 
             // Save the secret, but DO NOT enable 2FA yet!
             user.TwoFactorSecret = base32Secret;
-            
+
             await _userManager.UpdateAsync(user);
 
             var issuer = "Projello";
@@ -197,26 +201,27 @@ namespace Projello.Api.Controllers
         }
 
         // --- HELPER: JWT GENERATION ---
-   private string GenerateJwtToken(User user)
-{
-    var claims = new[] {
-        new Claim(ClaimTypes.NameIdentifier, user.Email!),
+        private string GenerateJwtToken(User user)
+        {
+            var claims = new[] {
+        new Claim(ClaimTypes.NameIdentifier, user.Id),
         new Claim("FullName", user.FullName ?? ""),
-        new Claim("RoleID", user.RoleID.ToString())
+        new Claim("RoleID", user.RoleID.ToString()),
+        new Claim(ClaimTypes.Email, user.Email ?? "")
     };
 
-    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
-    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-    var token = new JwtSecurityToken(
-        issuer: _config["Jwt:Issuer"],
-        audience: _config["Jwt:Audience"],
-        claims: claims,
-        expires: DateTime.UtcNow.AddDays(1),  // change Now to UtcNow
-        signingCredentials: creds
-    );
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddDays(1),  // change Now to UtcNow
+                signingCredentials: creds
+            );
 
-    return new JwtSecurityTokenHandler().WriteToken(token);
-}
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
     }
 }

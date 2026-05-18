@@ -6,6 +6,8 @@ namespace Projello.Api.DTOs
         public string FullName { get; set; } = null!;
         public string Email { get; set; } = null!;
         public int RoleID { get; set; }
+        public string AvatarSeed { get; set; } = null!;
+        public string AvatarBackground { get; set; } = null!;
         public List<UserProjectDto> Projects { get; set; } = new();
         public List<UserTaskDto> AssignedTasks { get; set; } = new();
     }

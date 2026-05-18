@@ -45,7 +45,8 @@ namespace Projello.Api.Controllers
                     FullName = u.FullName,
                     Email = u.Email!,
                     RoleID = u.RoleID,
-                    IsTwoFactorEnabled = u.IsTwoFactorEnabled
+                    IsTwoFactorEnabled = u.IsTwoFactorEnabled,
+
                 })
                 .ToListAsync();
 
@@ -64,7 +65,8 @@ namespace Projello.Api.Controllers
 
             var projects = await _context.ProjectMembers
                 .Where(pm => pm.UserID == id)
-                .Select(pm => new UserProjectDto {
+                .Select(pm => new UserProjectDto
+                {
                     ProjectID = pm.ProjectID,
                     Name = pm.Project.Name,
                     RoleInProject = pm.AssignedAs
@@ -72,20 +74,24 @@ namespace Projello.Api.Controllers
 
             var tasks = await _context.Tasks
                 .Where(t => t.AssignedToUserID == id)
-                .Select(t => new UserTaskDto {
+                .Select(t => new UserTaskDto
+                {
                     TaskID = t.TaskID,
                     Title = t.Title,
                     Status = t.Status.ToString(),
                     DueDate = t.DueDate
                 }).ToListAsync();
 
-            return Ok(new UserProfileDto {
+            return Ok(new UserProfileDto
+            {
                 Id = user.Id,
                 FullName = user.FullName,
                 Email = user.Email!,
                 RoleID = user.RoleID,
                 Projects = projects,
-                AssignedTasks = tasks
+                AssignedTasks = tasks,
+                AvatarSeed = user.AvatarSeed,
+                AvatarBackground = user.AvatarBackground
             });
         }
 
@@ -120,6 +126,8 @@ namespace Projello.Api.Controllers
             user.FullName = model.FullName;
             user.Email = model.Email;
             user.UserName = model.Email;
+            user.AvatarSeed = model.AvatarSeed;
+            user.AvatarBackground = model.AvatarBackground;
 
             var result = await _userManager.UpdateAsync(user);
             return result.Succeeded ? NoContent() : BadRequest(result.Errors);
