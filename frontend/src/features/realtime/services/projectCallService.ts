@@ -17,6 +17,7 @@ export class ProjectCallService {
   private peerManager: WebRTCPeerManager;
   private currentProjectId: string | null = null;
   private myConnectionId: string | null = null;
+  private isCallStarter: boolean = false;
   private connectedPeers = new Set<string>();
 
   constructor(getAccessToken?: () => string | Promise<string | null>) {
@@ -44,7 +45,8 @@ export class ProjectCallService {
   private registerSignalRHandlers() {
     this.signalR.on("ParticipantJoined", (projectId, connectionId, participantId) => {
       console.log(`🟢 NEW PARTICIPANT JOINED: ${participantId}`);
-      this.connectToNewPeer(connectionId, true); // existing user initiates
+      // Existing members always initiate to new joiners
+      this.connectToNewPeer(connectionId, true);
     });
 
     this.signalR.on("JoinedProjectCall", (projectId, connectionId, participantId, currentParticipants) => {
@@ -52,12 +54,16 @@ export class ProjectCallService {
       this.currentProjectId = projectId;
       this.myConnectionId = connectionId;
 
-        currentParticipants.forEach(peerId => {
-            if (peerId !== connectionId) {
-                const shouldInitiate = this.myConnectionId != null && peerId < this.myConnectionId;
-                this.connectToNewPeer(peerId, shouldInitiate);
-            }
-        });
+      // Determine if we are the starter (first person in the room)
+      this.isCallStarter = currentParticipants.length <= 1;
+
+      currentParticipants.forEach(peerId => {
+        if (peerId !== connectionId) {
+          // Only the starter creates offers when joining an existing call
+          const shouldInitiate = this.isCallStarter;
+          this.connectToNewPeer(peerId, shouldInitiate);
+        }
+      });
     });
 
     this.signalR.on("ReceiveOffer", async (_, senderConnId, senderPartId, offerSdp) => {
@@ -81,6 +87,7 @@ export class ProjectCallService {
     await this.leaveCall();
     this.currentProjectId = projectId;
     this.connectedPeers.clear();
+    this.isCallStarter = false;
     await this.signalR.start();
     await this.signalR.invoke("JoinProjectCall", projectId);
   }
@@ -93,6 +100,7 @@ export class ProjectCallService {
     this.connectedPeers.clear();
     this.currentProjectId = null;
     this.myConnectionId = null;
+    this.isCallStarter = false;
   }
 
   private async connectToNewPeer(peerConnectionId: string, isInitiator: boolean) {
@@ -120,7 +128,9 @@ export class ProjectCallService {
     this.signalR.invoke("SendIceCandidate", this.currentProjectId, peerId, candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex);
   }
 
-  public getPeerManager() { return this.peerManager; }
+  public getPeerManager() {
+    return this.peerManager;
+  }
 
   public async disconnect() {
     await this.leaveCall();
