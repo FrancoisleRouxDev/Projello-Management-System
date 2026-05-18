@@ -45,6 +45,7 @@
   font-size: 1rem;
   font-weight: 500;
   letter-spacing: 0.01em;
+  overflow: ellipsis;
 }
 body {
   margin: 0;
@@ -138,6 +139,9 @@ body {
   padding: 0 20px 0 5px;
   margin-left: 13px;
   border-right: 1px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sorter h5 {

@@ -16,5 +16,9 @@ namespace Projello.Api.Models
 
         public string? TwoFactorSecret { get; set; }
         public bool IsTwoFactorEnabled { get; set; } = false;
+
+        public string AvatarSeed { get; set; } = string.Empty;
+
+        public string AvatarBackground { get; set; } = string.Empty;
     }
 }
