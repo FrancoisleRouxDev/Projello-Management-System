@@ -161,7 +161,8 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #ccc;
+  /* Remove default gray background to allow SVG or inline style to show */
+  background: transparent;
   margin-right: 14px;
   flex-shrink: 0;
 }
