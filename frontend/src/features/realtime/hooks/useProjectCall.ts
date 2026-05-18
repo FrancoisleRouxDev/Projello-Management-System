@@ -1,4 +1,4 @@
-// src/features/realtime/hooks/useProjectCall.ts
+// frontend/src/features/realtime/hooks/useProjectCall.ts
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { ProjectCallService } from '../services/projectCallService';
 
@@ -15,26 +15,27 @@ export function useProjectCall(projectId: number | string) {
   const getAccessToken = useCallback((): string | Promise<string | null> => {
     const token = localStorage.getItem('token');
     if (!token) return Promise.resolve(null);
-    return token.startsWith('"') && token.endsWith('"')
-      ? token.slice(1, -1)
+    return token.startsWith('"') && token.endsWith('"') 
+      ? token.slice(1, -1) 
       : token;
   }, []);
 
-  // Initialize service
   useEffect(() => {
     if (!callServiceRef.current) {
       callServiceRef.current = new ProjectCallService(getAccessToken);
     }
 
-    const service = callServiceRef.current;
-    const peerManager = service.getPeerManager();
+    const peerManager = callServiceRef.current.getPeerManager();
 
-    // Fixed: Don't assume it returns a function
     const listener = (event: any) => {
+      console.log('🔥 PEER EVENT:', event.type, event.state || '');
+
       if (event.type === 'track') {
+        console.log('📹 REMOTE STREAM RECEIVED!');
         setRemoteStream(event.stream);
       }
       if (event.type === 'connection-state-change') {
+        console.log('🔄 Connection state →', event.state);
         setConnectionState(event.state);
       }
     };
@@ -42,7 +43,7 @@ export function useProjectCall(projectId: number | string) {
     peerManager.on(listener);
 
     return () => {
-      // We can't reliably unsubscribe, so we'll just cleanup on unmount
+      // Cleanup is synchronous now
     };
   }, [getAccessToken]);
 
@@ -77,10 +78,10 @@ export function useProjectCall(projectId: number | string) {
     setError(null);
   }, []);
 
-  // Full cleanup
+  // Final cleanup (synchronous)
   useEffect(() => {
     return () => {
-      callServiceRef.current?.disconnect();
+      callServiceRef.current?.disconnect();   // fire-and-forget, no await
     };
   }, []);
 

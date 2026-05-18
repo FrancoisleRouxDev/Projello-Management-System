@@ -32,16 +32,19 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
-  // Attach streams
+  // After attaching local stream
   useEffect(() => {
     if (localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = localStream;
+      localVideoRef.current.play().catch(console.error);
     }
   }, [localStream]);
 
+  // After attaching remote stream
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
+      remoteVideoRef.current.play().catch(console.error);
     }
   }, [remoteStream]);
 
