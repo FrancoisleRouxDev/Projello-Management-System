@@ -3,11 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Projello.Api.DTOs;
 using Projello.Api.Models;
+using Projello.Api.Data;                    
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using OtpNet; // Required for 2FA
 using Microsoft.AspNetCore.Authorization;
+using Projello.Api.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace Projello.Api.Controllers
 {
@@ -17,28 +20,76 @@ namespace Projello.Api.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly IConfiguration _config;
+        private readonly AppDbContext _context;       
 
-        public AuthController(UserManager<User> userManager, IConfiguration config)
+        public AuthController(UserManager<User> userManager, IConfiguration config, AppDbContext context)
         {
             _userManager = userManager;
             _config = config;
+            _context = context;                     
         }
 
         // --- CREATE: REGISTER ---
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto model)
         {
+            // If an invite code was provided, validate it and get the company
+            Company? company = null;
+
+            if (!string.IsNullOrWhiteSpace(model.InviteCode))
+            {
+                var invite = await _context.CompanyInvites
+                    .Include(i => i.Company)
+                    .FirstOrDefaultAsync(i => i.Code == model.InviteCode);
+
+                if (invite == null)
+                    return BadRequest(new { Message = "Invalid invite code." });
+
+                if (invite.IsUsed)
+                    return BadRequest(new { Message = "This invite code has already been used." });
+
+                if (invite.ExpiresAt < DateTime.UtcNow)
+                    return BadRequest(new { Message = "This invite code has expired." });
+
+                company = invite.Company;
+            }
+
             var user = new User
             {
                 UserName = model.Email,
                 Email = model.Email,
                 FullName = model.FullName,
-                RoleID = model.RoleID // Maps to your ERD Role system
+                RoleID = (int)Role.Worker
             };
+
+            // Link user to company if invite code was used
+            if (company != null)
+            {
+                user.CompanyId = company.CompanyID;
+            }
 
             var result = await _userManager.CreateAsync(user, model.Password);
 
-            if (result.Succeeded) return Ok(new { Message = "User created successfully" });
+            if (result.Succeeded)
+            {
+                // Mark invite as used if one was provided
+                if (!string.IsNullOrWhiteSpace(model.InviteCode))
+                {
+                    var invite = await _context.CompanyInvites
+                        .FirstOrDefaultAsync(i => i.Code == model.InviteCode);
+
+                    if (invite != null)
+                    {
+                        invite.IsUsed = true;
+                        invite.UsedByUserId = user.Id;
+                        invite.UsedAt = DateTime.UtcNow;
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                return Ok(new { Message = "User created successfully" });
+            }
+
             return BadRequest(result.Errors);
         }
 
@@ -208,15 +259,97 @@ namespace Projello.Api.Controllers
             return Ok(new { is2FAEnabled = user.IsTwoFactorEnabled });
         }
 
+        [HttpPost("register-company")]
+        public async Task<IActionResult> RegisterCompany([FromBody] UserRegisterDto model)
+        {
+            if (string.IsNullOrWhiteSpace(model.CompanyName))
+            {
+                return BadRequest(new { Message = "Company name is required." });
+            }
+
+            // 1. Create the Company
+            var company = new Company
+            {
+                Name = model.CompanyName,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Companies.Add(company);
+            await _context.SaveChangesAsync();
+
+            // 2. Create the User as Owner and link to company
+            var user = new User
+            {
+                UserName = model.Email,
+                Email = model.Email,
+                FullName = model.FullName,
+                RoleID = (int)Role.Owner,
+                CompanyId = company.CompanyID
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                // 3. Link company back to owner
+                company.OwnerUserId = user.Id;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { Message = "Company registered successfully. You are now the Owner." });
+            }
+
+            return BadRequest(result.Errors);
+        }
+
+
+        [Authorize]
+        [HttpPost("generate-invite")]
+        public async Task<IActionResult> GenerateInviteCode()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || user.CompanyId == null)
+                return BadRequest(new { Message = "You must belong to a company to generate invite codes." });
+
+            // Only Owner or Admin can generate invites
+            if (user.RoleID != (int)Role.Owner && user.RoleID != (int)Role.Admin)
+                return Forbid();
+
+            // Generate code like: SIGMA-8K3P9X
+            string code = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
+
+            var invite = new CompanyInvite
+            {
+                Code = code,
+                CompanyID = user.CompanyId.Value,
+                CreatedByUserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddHours(24),
+                IsUsed = false
+            };
+
+            _context.CompanyInvites.Add(invite);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                InviteCode = code,
+                ExpiresAt = invite.ExpiresAt,
+                Message = "Invite code generated successfully. Valid for 24 hours and can only be used once."
+            });
+        }
         // --- HELPER: JWT GENERATION ---
         private string GenerateJwtToken(User user)
         {
             var claims = new[] {
-        new Claim(ClaimTypes.NameIdentifier, user.Id),
-        new Claim("FullName", user.FullName ?? ""),
-        new Claim("RoleID", user.RoleID.ToString()),
-        new Claim(ClaimTypes.Email, user.Email ?? "")
-    };
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim("FullName", user.FullName ?? ""),
+                new Claim("RoleID", user.RoleID.ToString()),
+                new Claim(ClaimTypes.Email, user.Email ?? "")
+            };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -225,7 +358,7 @@ namespace Projello.Api.Controllers
                 issuer: _config["Jwt:Issuer"],
                 audience: _config["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddDays(1),  // change Now to UtcNow
+                expires: DateTime.UtcNow.AddDays(1),
                 signingCredentials: creds
             );
 

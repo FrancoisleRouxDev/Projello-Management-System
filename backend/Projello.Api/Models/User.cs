@@ -20,5 +20,10 @@ namespace Projello.Api.Models
         public string AvatarSeed { get; set; } = string.Empty;
 
         public string AvatarBackground { get; set; } = string.Empty;
+
+        //link user to company
+
+        public int? CompanyId { get; set; }
+        public Company? Company { get; set; }
     }
 }

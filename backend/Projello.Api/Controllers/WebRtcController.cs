@@ -39,4 +39,10 @@ public sealed class WebRtcController : ControllerBase
         return Ok(config);
     }
     // This endpoint will return the WebRTC configuration (e.g. ICE servers) to authenticated clients.
+
+    [HttpGet("test")]
+    public IActionResult Test()
+    {
+        return Ok(new { message = "WebRTC controller is working!" });
+    }
 }

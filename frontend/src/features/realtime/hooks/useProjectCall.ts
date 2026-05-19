@@ -1,223 +1,104 @@
-// src/features/realtime/hooks/useProjectCall.ts
+// frontend/src/features/realtime/hooks/useProjectCall.ts
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { HubConnectionBuilder, HubConnection, HttpTransportType } from '@microsoft/signalr';
-import { WebRTCPeerManager } from '../services/webrtcPeerManager';
-import { API_BASE_URL } from '../../../config';
+import { ProjectCallService } from '../services/projectCallService';
 
-export interface CallState {
-  isJoined: boolean;
-  remoteStream: MediaStream | null;
-  localStream: MediaStream | null;
-  connectionState: 'disconnected' | 'connecting' | 'connected' | 'failed';
-}
-
-interface ProjectMember {
-  UserID: string;
-  FullName: string;
-  AssignedAs: string;
-}
-
-interface ProjectData {
-  ProjectID: number;
-  Name: string;
-  Members: ProjectMember[];
-}
-
-export function useProjectCall(projectId: number) {
-  const [callState, setCallState] = useState<CallState>({
-    isJoined: false,
-    remoteStream: null,
-    localStream: null,
-    connectionState: 'disconnected',
-  });
-
-  const [projectData, setProjectData] = useState<ProjectData | null>(null);
+export function useProjectCall(projectId: number | string) {
+  const [isJoined, setIsJoined] = useState(false);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  const [connectionState, setConnectionState] = useState<'disconnected' | 'connecting' | 'connected' | 'failed'>('disconnected');
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const connectionRef = useRef<HubConnection | null>(null);
-  const peerManagerRef = useRef<WebRTCPeerManager | null>(null);
+  const callServiceRef = useRef<ProjectCallService | null>(null);
+  const listenerRef = useRef<any>(null);
 
-  const getAuthToken = (): string | null => {
+  const getAccessToken = useCallback((): string | Promise<string | null> => {
     const token = localStorage.getItem('token');
-    if (!token) return null;
+    if (!token) return Promise.resolve(null);
     return token.startsWith('"') && token.endsWith('"') ? token.slice(1, -1) : token;
-  };
+  }, []);
 
-  const fetchProjectData = useCallback(async () => {
-    if (projectData) return;
+  // Create service once
+  if (!callServiceRef.current) {
+    callServiceRef.current = new ProjectCallService(getAccessToken);
+  }
+
+  useEffect(() => {
+    const service = callServiceRef.current!;
+    const peerManager = service.getPeerManager();
+
+    if (!listenerRef.current) {
+      listenerRef.current = (event: any) => {
+        if (event.type === 'track') {
+          console.log('📹 REMOTE STREAM RECEIVED');
+          setRemoteStream(event.stream);
+        }
+        if (event.type === 'connection-state-change') {
+          setConnectionState(event.state);
+        }
+      };
+    }
+
+    peerManager.on(listenerRef.current);
+
+    return () => {
+      // Cleanup can be improved later
+    };
+  }, []);
+
+  const joinCall = useCallback(async () => {
+    if (!callServiceRef.current) return;
 
     setIsFetching(true);
     setError(null);
+    setConnectionState('connecting');
 
     try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_BASE_URL}/api/projects/${projectId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
+      await callServiceRef.current.joinCall(projectId.toString());
+      setIsJoined(true);
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      const data = await res.json();
-      setProjectData(data);
-      console.log("✅ Project data fetched successfully");
+      // Get local stream (now requested early in the service)
+      const stream = callServiceRef.current.getPeerManager().getLocalStreamSync();
+      if (stream) {
+        setLocalStream(stream);
+      }
     } catch (err: any) {
-      console.error('Failed to fetch project data:', err);
-      setError('Failed to load project details');
+      console.error("Failed to join call:", err);
+      setError(err.message || "Failed to connect to call");
+      setConnectionState('failed');
     } finally {
       setIsFetching(false);
     }
-  }, [projectId, projectData]);
-
-  const joinCall = useCallback(async () => {
-    setError(null);
-    const token = getAuthToken();
-    if (!token) {
-      setError("No authentication token found. Please log in again.");
-      return;
-    }
-
-    await fetchProjectData();
-
-    const hubUrl = `${API_BASE_URL}/callhub`;
-
-    if (!peerManagerRef.current) {
-      peerManagerRef.current = new WebRTCPeerManager();
-    }
-    const peerManager = peerManagerRef.current;
-
-    if (!connectionRef.current) {
-      connectionRef.current = new HubConnectionBuilder()
-        .withUrl(hubUrl, {
-          accessTokenFactory: () => token
-        })
-        .withAutomaticReconnect()
-        .build();
-    }
-    const connection = connectionRef.current;
-
-    try {
-      console.log("🔄 Starting SignalR connection...");
-      await connection.start();
-      console.log("✅ SignalR Connected successfully!");
-
-      console.log(`🔄 Sending JoinProjectCall for project: ${projectId}`);
-      await connection.invoke('JoinProjectCall', projectId.toString());
-      console.log("✅ Successfully joined project call room!");
-
-      setCallState(prev => ({ ...prev, isJoined: true, connectionState: 'connected' }));
-
-      // ==================== SignalR Event Handlers ====================
-      connection.on('ReceiveOffer', async (pid: string, fromConnectionId: string, fromParticipantId: string, offerSdp: string) => {
-        console.log(`📥 Received Offer from ${fromParticipantId}`);
-        await peerManager.connectToPeer(fromConnectionId, false);
-        const answer = await peerManager.acceptOffer(fromConnectionId, { type: 'offer', sdp: offerSdp });
-        if (answer) {
-          await connection.invoke('SendAnswer', projectId.toString(), fromConnectionId, answer.sdp);
-        }
-      });
-
-      connection.on('ReceiveAnswer', async (pid: string, fromConnectionId: string, fromParticipantId: string, answerSdp: string) => {
-        console.log(`📥 Received Answer from ${fromParticipantId}`);
-        await peerManager.setRemoteAnswer(fromConnectionId, { type: 'answer', sdp: answerSdp });
-      });
-
-      connection.on('ReceiveIceCandidate', async (
-        pid: string, fromConnectionId: string, fromParticipantId: string,
-        candidate: string, sdpMid: string | null, sdpMLineIndex: number | null
-      ) => {
-        await peerManager.handleRemoteIceCandidate(fromConnectionId, {
-          candidate,
-          sdpMid,
-          sdpMLineIndex: sdpMLineIndex ?? undefined
-        });
-      });
-
-      connection.on('ParticipantJoined', async (pid: string, connectionId: string, participantId: string) => {
-        console.log(`👤 New participant joined: ${participantId}`);
-        await peerManager.connectToPeer(connectionId, true);
-      });
-
-      connection.on('ParticipantLeft', (pid: string, connectionId: string) => {
-        console.log(`👤 Participant left: ${connectionId}`);
-        peerManager.disconnectFromPeer(connectionId);
-      });
-
-      // WebRTC Peer Manager Events
-      peerManager.on(async (event) => {
-        if (event.type === 'track') {
-          console.log("📹 Received remote stream");
-          setCallState(prev => ({ ...prev, remoteStream: event.stream }));
-        }
-        if (event.type === 'connection-state-change') {
-          setCallState(prev => ({ ...prev, connectionState: event.state as any }));
-        }
-        if (event.type === 'offer') {
-          await connection.invoke('SendOffer', projectId.toString(), event.peerId, event.sdp.sdp);
-        }
-        if (event.type === 'ice-candidate') {
-          await connection.invoke(
-            'SendIceCandidate',
-            projectId.toString(),
-            event.peerId,
-            event.candidate.candidate,
-            event.candidate.sdpMid ?? null,
-            event.candidate.sdpMLineIndex ?? null
-          );
-        }
-      });
-
-      const localStream = await peerManager.getLocalStream();
-      setCallState(prev => ({ ...prev, localStream }));
-      console.log("🎤 Local stream acquired");
-
-    } catch (err: any) {
-      console.error("❌ Failed to join call:", err);
-      setError(err.message || 'Failed to connect to call server');
-      setCallState(prev => ({ ...prev, connectionState: 'failed' }));
-    }
-  }, [projectId, fetchProjectData]);
-
-  const leaveCall = useCallback(async () => {
-    if (connectionRef.current) {
-      try {
-        await connectionRef.current.invoke('LeaveProjectCall', projectId.toString());
-        await connectionRef.current.stop();
-      } catch (_) {}
-      connectionRef.current = null;
-    }
-
-    if (peerManagerRef.current) {
-      peerManagerRef.current.cleanup();
-      peerManagerRef.current = null;
-    }
-
-    setCallState({
-      isJoined: false,
-      remoteStream: null,
-      localStream: null,
-      connectionState: 'disconnected',
-    });
-    setProjectData(null);
   }, [projectId]);
 
+  const leaveCall = useCallback(async () => {
+    if (callServiceRef.current) {
+      await callServiceRef.current.leaveCall();
+    }
+    setIsJoined(false);
+    setLocalStream(null);
+    setRemoteStream(null);
+    setConnectionState('disconnected');
+    setError(null);
+  }, []);
+
+  // Cleanup on unmount
   useEffect(() => {
-    return () => { leaveCall(); };
-  }, [leaveCall]);
+    return () => {
+      callServiceRef.current?.disconnect();
+      callServiceRef.current = null;
+    };
+  }, []);
 
   return {
     joinCall,
     leaveCall,
-    isJoined: callState.isJoined,
-    localStream: callState.localStream,
-    remoteStream: callState.remoteStream,
-    connectionState: callState.connectionState,
+    isJoined,
+    localStream,
+    remoteStream,
+    connectionState,
     isFetching,
     error,
-    members: projectData?.Members || [],
   };
 }

@@ -1,68 +1,117 @@
 // frontend/src/features/realtime/services/webrtcPeerManager.ts
+import { API_BASE_URL } from '../../../config';
+
 export type PeerConnectionEvent = 
-| { type: 'ice-candidate'; candidate: RTCIceCandidateInit; peerId: string }
-| { type: 'track'; stream: MediaStream; peerId: string }
-| { type: 'connection-state-change'; state: string; peerId: string }
-| { type: 'offer'; sdp: RTCSessionDescriptionInit; peerId: string }
-| { type: 'answer'; sdp: RTCSessionDescriptionInit; peerId: string };
+  | { type: 'ice-candidate'; candidate: RTCIceCandidateInit; peerId: string }
+  | { type: 'track'; stream: MediaStream; peerId: string }
+  | { type: 'connection-state-change'; state: string; peerId: string }
+  | { type: 'offer'; sdp: RTCSessionDescriptionInit; peerId: string }
+  | { type: 'answer'; sdp: RTCSessionDescriptionInit; peerId: string };
 
 export class WebRTCPeerManager {
   private peers: Map<string, RTCPeerConnection> = new Map();
   private localStream: MediaStream | null = null;
   private listeners: ((event: PeerConnectionEvent) => void)[] = [];
+  
+  private iceServers: RTCIceServer[] = [];
+  private configLoaded = false;
 
   constructor() {
-    const config: RTCConfiguration = {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        // Add TURN servers here if external users need to connect to your Electron app
-      ],
-      iceCandidatePoolSize: 10, 
-    };
+    this.loadIceServers();
+  }
 
-    if (typeof RTCPeerConnection === 'undefined') {
-      console.warn('WebRTC not supported in this environment.');
+  private async loadIceServers() {
+    try {
+      const token = localStorage.getItem('token') || '';
+      const cleanToken = token.startsWith('"') && token.endsWith('"') 
+        ? token.slice(1, -1) 
+        : token;
+
+      const response = await fetch(`${API_BASE_URL}/api/webrtc/config`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cleanToken}`,
+        },
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+      const config = await response.json();
+      this.iceServers = config.iceServers || config.IceServers || [];
+
+      if (this.iceServers.length === 0) throw new Error('No ICE servers received');
+
+      console.log('✅ WebRTC ICE Servers loaded successfully from backend');
+      this.configLoaded = true;
+
+    } catch (error) {
+      console.error('❌ Failed to load WebRTC config:', error);
+      this.iceServers = [
+        { urls: 'stun:stun.l.google.com:19302' },
+        {
+          urls: ["turn:global.relay.metered.ca:80", "turn:global.relay.metered.ca:80?transport=tcp", "turn:global.relay.metered.ca:443", "turns:global.relay.metered.ca:443?transport=tcp"],
+          username: "3e7b559d3b4bbc9012e16d54",
+          credential: "7szZjkmvlFyDOuK7"
+        }
+      ];
+      this.configLoaded = true;
     }
   }
 
+  private getPeerConfig(): RTCConfiguration {
+    return { iceServers: this.iceServers, iceCandidatePoolSize: 10 };
+  }
+
   async getLocalStream(): Promise<MediaStream> {
-    if (this.localStream) return this.localStream;
+    if (this.localStream) {
+      console.log('✅ Local stream already exists');
+      return this.localStream;
+    }
+
+    console.log('📹 Requesting camera + microphone...');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true,
       });
       this.localStream = stream;
+      console.log('✅ CAMERA OPENED SUCCESSFULLY');
       return stream;
-    } catch (error) {
-      console.error('Error accessing media devices:', error);
+    } catch (error: any) {
+      console.error('❌ CAMERA ACCESS FAILED:', error.name, error.message);
       throw error;
     }
   }
 
+  // ←←← RESTORED for your hook
   getLocalStreamSync(): MediaStream | null {
     return this.localStream;
   }
 
   stopLocalStream() {
     if (this.localStream) {
-      this.localStream.getTracks().forEach((track) => track.stop());
+      this.localStream.getTracks().forEach(track => track.stop());
       this.localStream = null;
     }
   }
 
-  async connectToPeer(peerId: string, isInitiator: boolean): Promise<void> {
+  private async ensurePeerConnection(peerId: string): Promise<RTCPeerConnection> {
     if (this.peers.has(peerId)) {
-      const existing = this.peers.get(peerId)!;
-      existing.close();
-      this.peers.delete(peerId);
+      return this.peers.get(peerId)!;
     }
 
-    const pc = new RTCPeerConnection();
+    if (!this.localStream) {
+      await this.getLocalStream();
+    }
+
+    console.log(`🔗 Creating peer connection for ${peerId}`);
+    const pc = new RTCPeerConnection(this.getPeerConfig());
     this.peers.set(peerId, pc);
-    
-    const stream = await this.getLocalStream();
-    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(track => pc.addTrack(track, this.localStream!));
+    }
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
@@ -71,14 +120,25 @@ export class WebRTCPeerManager {
     };
 
     pc.ontrack = (event) => {
+      console.log(`📹 REMOTE VIDEO RECEIVED from ${peerId}`);
       this.notify({ type: 'track', stream: event.streams[0], peerId });
     };
 
     pc.onconnectionstatechange = () => {
+      console.log(`🔄 Connection state for ${peerId} → ${pc.connectionState}`);
       this.notify({ type: 'connection-state-change', state: pc.connectionState, peerId });
     };
 
+    return pc;
+  }
+
+  async connectToPeer(peerId: string, isInitiator: boolean): Promise<void> {
+    if (!this.configLoaded) await this.loadIceServers();
+
+    const pc = await this.ensurePeerConnection(peerId);
+
     if (isInitiator) {
+      console.log(`📤 Creating offer for ${peerId}`);
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       this.notify({ type: 'offer', sdp: offer, peerId });
@@ -86,9 +146,8 @@ export class WebRTCPeerManager {
   }
 
   async acceptOffer(peerId: string, sdp: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit | null> {
-    const pc = this.peers.get(peerId);
-    if (!pc) return null;
-    
+    const pc = await this.ensurePeerConnection(peerId);
+
     try {
       await pc.setRemoteDescription(new RTCSessionDescription(sdp));
       const answer = await pc.createAnswer();
@@ -102,26 +161,20 @@ export class WebRTCPeerManager {
   }
 
   async setRemoteAnswer(peerId: string, sdp: RTCSessionDescriptionInit): Promise<void> {
-    const pc = this.peers.get(peerId);
-    if (!pc) {
-      console.warn(`No peer connection found for ID: ${peerId}. Cannot set remote answer.`);
-      return;
-    }
-
+    const pc = await this.ensurePeerConnection(peerId);
     try {
       await pc.setRemoteDescription(new RTCSessionDescription(sdp));
     } catch (e) {
       console.error('Error setting remote answer:', e);
-      throw e;
     }
   }
 
-  async handleRemoteIceCandidate(peerId: string, candidate: RTCIceCandidateInit): Promise<void> {
-    const pc = this.peers.get(peerId);
-    if (!pc) return;
-    
+  async handleRemoteIceCandidate(peerId: string, candidateInit: RTCIceCandidateInit): Promise<void> {
+    const pc = await this.ensurePeerConnection(peerId);
     try {
-      await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      if (candidateInit.candidate) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidateInit));
+      }
     } catch (e) {
       console.error('Error adding remote ICE candidate:', e);
     }
@@ -136,7 +189,7 @@ export class WebRTCPeerManager {
   }
 
   notify(event: PeerConnectionEvent) {
-    this.listeners.forEach((l) => l(event));
+    this.listeners.forEach(l => l(event));
   }
 
   on(callback: (event: PeerConnectionEvent) => void) {
@@ -144,9 +197,7 @@ export class WebRTCPeerManager {
   }
 
   cleanup() {
-    this.peers.forEach((pc) => {
-      pc.close();
-    });
+    this.peers.forEach(pc => pc.close());
     this.peers.clear();
     this.stopLocalStream();
     this.listeners = [];
