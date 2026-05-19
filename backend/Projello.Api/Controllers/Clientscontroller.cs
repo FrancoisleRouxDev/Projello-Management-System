@@ -11,7 +11,7 @@ namespace Projello.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // All endpoints require a valid JWT
+    [Authorize]
     public class ClientsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -23,123 +23,148 @@ namespace Projello.Api.Controllers
             _userManager = userManager;
         }
 
-        // --- READ: GET ALL CLIENTS ---
+        // GET: api/clients
         [HttpGet]
         public async Task<IActionResult> GetClients()
         {
-            // Fetch from DB first (including the admin who blacklisted)
-            var clients = await _context.Clients
-                .Include(c => c.BlacklistedBy) // FIXED
-                .ToListAsync();
+            var role = GetUserRole();
+            var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
 
-            // Map in memory — avoids EF struggling to translate FullName in a Select projection
+            var query = _context.Clients
+                .Include(c => c.BlacklistedBy)
+                .AsQueryable();
+
+            if (role != "1" && currentUser?.CompanyId != null)
+            {
+                query = query.Where(c => c.CompanyID == currentUser.CompanyId);
+            }
+
+            var clients = await query.ToListAsync();
+
             var result = clients.Select(c => new ClientBlacklistStatusDto
             {
-                ClientID          = c.ClientID,
-                Name              = c.Name,
-                IsBlacklisted     = c.IsBlacklisted,
-                BlacklistReason   = IsAdmin() ? c.BlacklistReason : null,
-                BlacklistedAt     = IsAdmin() ? c.BlacklistedAt : null,
-                BlacklistedByName = IsAdmin() ? c.BlacklistedBy?.FullName : null // FIXED
+                ClientID = c.ClientID,
+                Name = c.Name,
+                IsBlacklisted = c.IsBlacklisted,
+                BlacklistReason = (role == "1" || role == "4") ? c.BlacklistReason : null,
+                BlacklistedAt = (role == "1" || role == "4") ? c.BlacklistedAt : null,
+                BlacklistedByName = (role == "1" || role == "4") ? c.BlacklistedBy?.FullName : null
             });
 
             return Ok(result);
         }
 
-        // --- READ: GET SINGLE CLIENT ---
+        // GET: api/clients/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetClient(int id)
         {
+            var role = GetUserRole();
+            var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
+
             var client = await _context.Clients
-                .Include(c => c.BlacklistedBy) // FIXED
+                .Include(c => c.BlacklistedBy)
                 .FirstOrDefaultAsync(c => c.ClientID == id);
 
-            if (client == null) return NotFound(new { Message = "Client not found." });
+            if (client == null) return NotFound();
+
+            // Owners can only view clients from their own company
+            if (role == "4" && client.CompanyID != currentUser?.CompanyId)
+                return Forbid();
 
             return Ok(new ClientBlacklistStatusDto
             {
-                ClientID          = client.ClientID,
-                Name              = client.Name,
-                IsBlacklisted     = client.IsBlacklisted,
-                BlacklistReason   = IsAdmin() ? client.BlacklistReason : null,
-                BlacklistedAt     = IsAdmin() ? client.BlacklistedAt : null,
-                BlacklistedByName = IsAdmin() ? client.BlacklistedBy?.FullName : null // FIXED
+                ClientID = client.ClientID,
+                Name = client.Name,
+                IsBlacklisted = client.IsBlacklisted,
+                BlacklistReason = (role == "1" || role == "4") ? client.BlacklistReason : null,
+                BlacklistedAt = (role == "1" || role == "4") ? client.BlacklistedAt : null,
+                BlacklistedByName = (role == "1" || role == "4") ? client.BlacklistedBy?.FullName : null
             });
         }
 
-        // --- READ: GET ALL BLACKLISTED CLIENTS (Admin only) ---
-        [HttpGet("blacklisted")]
-        public async Task<IActionResult> GetBlacklistedClients()
+        // POST: api/clients
+        [HttpPost]
+        public async Task<IActionResult> CreateClient([FromBody] CreateClientDto dto)
         {
-            if (!IsAdmin()) return Forbid();
+            var role = GetUserRole();
+            if (role != "1" && role != "4") return Forbid();
 
-            var blacklisted = await _context.Clients
-                .Include(c => c.BlacklistedBy) // FIXED
-                .Where(c => c.IsBlacklisted)
-                .ToListAsync();
+            var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
+            if (currentUser?.CompanyId == null)
+                return BadRequest(new { Message = "You must belong to a company." });
 
-            var result = blacklisted.Select(c => new ClientBlacklistStatusDto
+            // Prevent duplicate client names in the same company
+            bool exists = await _context.Clients.AnyAsync(c =>
+                c.CompanyID == currentUser.CompanyId &&
+                c.Name.ToLower() == dto.Name.ToLower());
+
+            if (exists)
+                return BadRequest(new { Message = "A client with this name already exists in your company." });
+
+            var client = new Client
             {
-                ClientID          = c.ClientID,
-                Name              = c.Name,
-                IsBlacklisted     = c.IsBlacklisted,
-                BlacklistReason   = c.BlacklistReason,
-                BlacklistedAt     = c.BlacklistedAt,
-                BlacklistedByName = c.BlacklistedBy?.FullName // FIXED
-            });
+                Name = dto.Name,
+                ContactEmail = dto.ContactEmail,
+                ContactPhone = dto.ContactPhone,
+                Notes = dto.Notes,
+                CompanyID = currentUser.CompanyId.Value
+            };
 
-            return Ok(result);
+            _context.Clients.Add(client);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Client created successfully.", ClientID = client.ClientID });
         }
 
-        // --- UPDATE: BLACKLIST A CLIENT (Admin only) ---
-        // POST /api/clients/{id}/blacklist
+        // Blacklist
         [HttpPost("{id}/blacklist")]
         public async Task<IActionResult> BlacklistClient(int id, [FromBody] BlacklistClientDto dto)
         {
-            if (!IsAdmin()) return Forbid();
+            var role = GetUserRole();
+            if (role != "1" && role != "4") return Forbid();
 
             var client = await _context.Clients.FindAsync(id);
-            if (client == null) return NotFound(new { Message = "Client not found." });
+            if (client == null) return NotFound();
+
+            var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
+
+            if (role == "4" && client.CompanyID != currentUser?.CompanyId)
+                return Forbid();
 
             if (client.IsBlacklisted)
-                return BadRequest(new { Message = $"{client.Name} is already blacklisted." });
+                return BadRequest(new { Message = "Client is already blacklisted." });
 
-            // Look up the admin doing the blacklisting
-            var adminEmail = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var admin = await _userManager.FindByEmailAsync(adminEmail!);
-
-            client.IsBlacklisted   = true;
+            client.IsBlacklisted = true;
             client.BlacklistReason = dto.Reason;
-            client.BlacklistedAt   = DateTime.UtcNow;
-            client.BlacklistedById = admin?.Id;
+            client.BlacklistedAt = DateTime.UtcNow;
+            client.BlacklistedById = GetCurrentUserId();
 
             await _context.SaveChangesAsync();
 
-            return Ok(new
-            {
-                Message       = $"{client.Name} has been blacklisted.",
-                Reason        = client.BlacklistReason,
-                BlacklistedAt = client.BlacklistedAt,
-                BlacklistedBy = admin?.FullName
-            });
+            return Ok(new { Message = $"{client.Name} has been blacklisted." });
         }
 
-        // --- UPDATE: REMOVE CLIENT FROM BLACKLIST (Admin only) ---
-        // DELETE /api/clients/{id}/blacklist
+        // Remove from Blacklist
         [HttpDelete("{id}/blacklist")]
         public async Task<IActionResult> RemoveFromBlacklist(int id)
         {
-            if (!IsAdmin()) return Forbid();
+            var role = GetUserRole();
+            if (role != "1" && role != "4") return Forbid();
 
             var client = await _context.Clients.FindAsync(id);
-            if (client == null) return NotFound(new { Message = "Client not found." });
+            if (client == null) return NotFound();
+
+            var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
+
+            if (role == "4" && client.CompanyID != currentUser?.CompanyId)
+                return Forbid();
 
             if (!client.IsBlacklisted)
-                return BadRequest(new { Message = $"{client.Name} is not currently blacklisted." });
+                return BadRequest(new { Message = "Client is not blacklisted." });
 
-            client.IsBlacklisted   = false;
+            client.IsBlacklisted = false;
             client.BlacklistReason = null;
-            client.BlacklistedAt   = null;
+            client.BlacklistedAt = null;
             client.BlacklistedById = null;
 
             await _context.SaveChangesAsync();
@@ -147,12 +172,8 @@ namespace Projello.Api.Controllers
             return Ok(new { Message = $"{client.Name} has been removed from the blacklist." });
         }
 
-        // --- PRIVATE HELPERS ---
-
-        private bool IsAdmin()
-        {
-            var roleClaim = User.FindFirst("RoleID")?.Value;
-            return roleClaim == "1"; // 1 = Admin, 2 = Foreman, 3 = Worker
-        }
+        // helpers
+        private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
+        private string? GetUserRole() => User.FindFirst("RoleID")?.Value;
     }
 }

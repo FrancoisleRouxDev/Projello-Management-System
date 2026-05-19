@@ -5,19 +5,22 @@ using Projello.Api.Data;
 using Projello.Api.Models;
 using Projello.Api.DTOs;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;   // ← ADDED
 
 namespace Projello.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Requires a valid JWT for all endpoints
+    [Authorize]
     public class ProjectsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly UserManager<User> _userManager;   // ← ADDED
 
-        public ProjectsController(AppDbContext context)
+        public ProjectsController(AppDbContext context, UserManager<User> userManager)   // ← CHANGED
         {
             _context = context;
+            _userManager = userManager;   // ← ADDED
         }
 
         // --- READ ALL (GET: api/projects) ---
@@ -27,12 +30,32 @@ namespace Projello.Api.Controllers
             var userId = GetCurrentUserId();
             var role = GetUserRole();
 
-            var query = _context.Projects.Include(p => p.Client).AsQueryable();
+            var query = _context.Projects
+                .Include(p => p.Client)
+                .AsQueryable();
 
-            // Security: Only Admins (Role 1) see all. Others see assigned projects.
-            if (role != "1")
+            // ← NEW: Get current user's company for proper scoping
+            var currentUser = await _userManager.FindByIdAsync(userId!);
+            var userCompanyId = currentUser?.CompanyId;
+
+            if (role != "1") // Not a global Admin
             {
-                query = query.Where(p => p.Members.Any(m => m.UserID == userId));
+                if (userCompanyId != null)
+                {
+                    // Only show projects whose client belongs to the same company
+                    query = query.Where(p => p.Client != null && p.Client.CompanyID == userCompanyId);
+                }
+                else
+                {
+                    // User has no company → see nothing
+                    query = query.Where(p => false);
+                }
+
+                // Non-Owners can only see projects they are members of
+                if (role != "4")
+                {
+                    query = query.Where(p => p.Members.Any(m => m.UserID == userId));
+                }
             }
 
             var projects = await query.ToListAsync();
@@ -46,18 +69,25 @@ namespace Projello.Api.Controllers
             var project = await _context.Projects
                 .Include(p => p.Client)
                 .Include(p => p.Members)
-                .ThenInclude(pm => pm.User)           // Important: This loads the User data
+                    .ThenInclude(pm => pm.User)
                 .FirstOrDefaultAsync(p => p.ProjectID == id);
 
             if (project == null) return NotFound();
 
-            // Security Check: Must be Admin OR a member of this specific project
-            if (GetUserRole() != "1" && !project.Members.Any(m => m.UserID == GetCurrentUserId()))
+            var role = GetUserRole();
+            var userId = GetCurrentUserId();
+
+            // Security Check
+            if (role != "1")
             {
-                return Forbid();
+                var currentUser = await _userManager.FindByIdAsync(userId!);
+                if (currentUser?.CompanyId != null && project.Client?.CompanyID != currentUser.CompanyId)
+                    return Forbid();
+
+                if (role != "4" && !project.Members.Any(m => m.UserID == userId))
+                    return Forbid();
             }
 
-            // Map members to DTOs
             var memberDtos = project.Members.Select(m => new ProjectMemberDto
             {
                 UserID = m.UserID,
@@ -74,9 +104,9 @@ namespace Projello.Api.Controllers
                 DueDate = project.DueDate,
                 CreatedAt = project.CreatedAt,
                 ClientID = project.ClientID,
-                ClientName = project.Client.Name,
-                IsClientBlacklisted = project.Client.IsBlacklisted,
-                Members = memberDtos          //  new part
+                ClientName = project.Client?.Name ?? "Unknown",
+                IsClientBlacklisted = project.Client?.IsBlacklisted ?? false,
+                Members = memberDtos
             });
         }
 
@@ -84,17 +114,30 @@ namespace Projello.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<ProjectReadDto>> CreateProject([FromBody] ProjectCreateDto dto)
         {
-            if (GetUserRole() != "1") return Forbid(); // Only Admins can create
+            if (GetUserRole() != "1" && GetUserRole() != "4") return Forbid();
+
+            var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
+            var userCompanyId = currentUser?.CompanyId;
+
+            // ← NEW: Validate that the client belongs to the user's company
+            if (GetUserRole() != "1")
+            {
+                var client = await _context.Clients.FindAsync(dto.ClientID);
+                if (client == null) return BadRequest("Client not found.");
+
+                if (userCompanyId != null && client.CompanyID != userCompanyId)
+                    return Forbid("You can only create projects for clients in your own company.");
+            }
 
             var project = new Project
             {
                 Name = dto.Name,
                 ClientID = dto.ClientID,
                 Description = dto.Description,
-                StartDate = dto.StartDate, 
-                DueDate = dto.DueDate,     
-                Status = "Planning", 
-                CreatedByUserID = GetCurrentUserId()!, 
+                StartDate = dto.StartDate,
+                DueDate = dto.DueDate,
+                Status = "Planning",
+                CreatedByUserID = GetCurrentUserId()!,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -113,32 +156,23 @@ namespace Projello.Api.Controllers
             var project = await _context.Projects.FindAsync(id);
             if (project == null) return NotFound();
 
-            // Permission: Admin OR assigned Foreman
             bool isForeman = await _context.ProjectMembers
                 .AnyAsync(m => m.ProjectID == id && m.UserID == GetCurrentUserId() && m.AssignedAs == "Foreman");
 
             if (GetUserRole() != "1" && !isForeman) return Forbid();
 
-            // Map string/int fields
             project.Name = dto.Name;
             project.Description = dto.Description;
             project.ClientID = dto.ClientID;
-            
-            // --- FULLY SAFE DATE CONVERSION ---
-            // Converts nullable DateTime (DTO) to nullable DateOnly (Model)
-            project.StartDate = dto.StartDate.HasValue 
-                ? DateOnly.FromDateTime(dto.StartDate.Value) 
-                : null;
 
-            project.DueDate = dto.DueDate.HasValue 
-                ? DateOnly.FromDateTime(dto.DueDate.Value) 
-                : null;
+            project.StartDate = dto.StartDate.HasValue ? DateOnly.FromDateTime(dto.StartDate.Value) : null;
+            project.DueDate = dto.DueDate.HasValue ? DateOnly.FromDateTime(dto.DueDate.Value) : null;
 
             await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        // --- UPDATE STATUS ONLY (PUT: api/projects/{id}/status) ---
+        // --- UPDATE STATUS ONLY ---
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateProjectStatus(int id, [FromBody] ProjectStatusUpdateDto dto)
         {
@@ -148,7 +182,7 @@ namespace Projello.Api.Controllers
             var isForeman = await _context.ProjectMembers
                 .AnyAsync(m => m.ProjectID == id && m.UserID == GetCurrentUserId() && m.AssignedAs == "Foreman");
 
-            if (GetUserRole() != "1" && !isForeman) return Forbid();
+            if (GetUserRole() != "1" && GetUserRole() != "4" && !isForeman) return Forbid();
 
             project.Status = dto.Status;
             await _context.SaveChangesAsync();
@@ -156,11 +190,11 @@ namespace Projello.Api.Controllers
             return NoContent();
         }
 
-        // --- DELETE (DELETE: api/projects/{id}) ---
+        // --- DELETE ---
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProject(int id)
         {
-            if (GetUserRole() != "1") return Forbid(); // Only Admins can delete
+            if (GetUserRole() != "1" && GetUserRole() != "4") return Forbid();
 
             var project = await _context.Projects.FindAsync(id);
             if (project == null) return NotFound();
@@ -173,7 +207,7 @@ namespace Projello.Api.Controllers
 
         // --- PRIVATE HELPERS ---
         private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
-        
+
         private string? GetUserRole() => User.FindFirst("RoleID")?.Value;
 
         private ProjectReadDto MapToReadDto(Project p) => new ProjectReadDto

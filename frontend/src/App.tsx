@@ -11,6 +11,7 @@ import HistoryPage from "./pages/history/history";
 import SideNavBar from "./components/SideNavBar";
 import BodyBlock from "./components/BodyBlock";
 import SplashPage from "./pages/splash/SplashPage";
+import RegisterCompanyPage from "./pages/signup/RegisterCompanyPage";
 
 function LoginWrapper() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ function LoginWrapper() {
     <LoginPage
       key="login"
       onSwitchToSignUp={() => navigate("/signup")}
+      onSwitchToRegisterCompany={() => navigate("/register-company")}   // ← NEW
       onLoginSuccess={() => navigate("/dashboard")}
     />
   );
@@ -25,7 +27,17 @@ function LoginWrapper() {
 
 function SignUpWrapper() {
   const navigate = useNavigate();
-  return <SignUpPage key="signup" onSwitchToLogin={() => navigate("/login")} />;
+  return (
+    <SignUpPage 
+      key="signup" 
+      onSwitchToLogin={() => navigate("/login")} 
+    />
+  );
+}
+
+function RegisterCompanyWrapper() {
+  const navigate = useNavigate();
+  return <RegisterCompanyPage onSwitchToLogin={() => navigate("/login")} />;
 }
 
 // --- NEW WRAPPER FOR 2FA ---
@@ -63,6 +75,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<SplashPage />} />
           <Route path="/login" element={<LoginWrapper />} />
+          <Route path="/register-company" element={<RegisterCompanyWrapper />} />
           <Route path="/signup" element={<SignUpWrapper />} />
           
           {/* NEW 2FA ROUTE */}
