@@ -44,7 +44,8 @@ export class ProjectCallService {
     });
   }
   private registerSignalRHandlers() {
-    this.signalR.on("ParticipantJoined", (_, participantId) => {
+    this.signalR.on("ParticipantJoined", (projectId, participantId) => {
+      console.log(">>> [SIGNALR] ParticipantJoined RECEIVED", { projectId, participantId });
       console.log(`NEW PARTICIPANT: ${participantId}`);
       this.connectToNewPeer(participantId, true);
     });
