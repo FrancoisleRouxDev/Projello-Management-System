@@ -79,26 +79,26 @@ public sealed class ProjectCallHub : Hub
     }
 
     // Simple direct signaling (more reliable)
-    public async Task SendOffer(string projectId, string targetParticipantId, string offerSdp)
-    {
-        // Changed to targeted Client instead of Group broadcast
-        await Clients.Client(targetParticipantId)
-            .SendAsync("ReceiveOffer", projectId, Context.ConnectionId, GetParticipantId(), offerSdp);
-    }
+    // Targeted signaling using User (correct way)
+public async Task SendOffer(string projectId, string targetParticipantId, string offerSdp)
+{
+    await Clients.User(targetParticipantId)   //Changed from Clients.Client
+        .SendAsync("ReceiveOffer", projectId, Context.ConnectionId, GetParticipantId(), offerSdp);
+}
 
-    public async Task SendAnswer(string projectId, string targetParticipantId, string answerSdp)
-    {
-        await Clients.Client(targetParticipantId)
-            .SendAsync("ReceiveAnswer", projectId, Context.ConnectionId, GetParticipantId(), answerSdp);
-    }
+public async Task SendAnswer(string projectId, string targetParticipantId, string answerSdp)
+{
+    await Clients.User(targetParticipantId)
+        .SendAsync("ReceiveAnswer", projectId, Context.ConnectionId, GetParticipantId(), answerSdp);
+}
 
-    public async Task SendIceCandidate(string projectId, string targetParticipantId,
-        string candidate, string? sdpMid, int? sdpMLineIndex)
-    {
-        await Clients.Client(targetParticipantId)
-            .SendAsync("ReceiveIceCandidate", projectId, Context.ConnectionId,
-                GetParticipantId(), candidate, sdpMid, sdpMLineIndex);
-    }
+public async Task SendIceCandidate(string projectId, string targetParticipantId,
+    string candidate, string? sdpMid, int? sdpMLineIndex)
+{
+    await Clients.User(targetParticipantId)
+        .SendAsync("ReceiveIceCandidate", projectId, Context.ConnectionId,
+            GetParticipantId(), candidate, sdpMid, sdpMLineIndex);
+}
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
