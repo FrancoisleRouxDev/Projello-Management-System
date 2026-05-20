@@ -28,7 +28,6 @@ public sealed class ProjectCallHub : Hub
         if (string.IsNullOrEmpty(userId))
             throw new HubException("User not authenticated.");
 
-        // === Authorization: Only project members can join ===
         bool isMember = _dbContext.ProjectMembers
             .Any(m => m.ProjectID == int.Parse(projectId) && m.UserID == userId);
 
@@ -38,25 +37,24 @@ public sealed class ProjectCallHub : Hub
         var groupName = $"project-call:{projectId}";
         var participantId = GetParticipantId();
 
+        Console.WriteLine($"[HUB] >>> JoinProjectCall called by User={userId} | ParticipantId={participantId} | Project={projectId}");
+
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
 
-        // Track active call
         var participants = _activeProjectCalls.GetOrAdd(projectId, _ => new HashSet<string>());
         lock (participants)
         {
             participants.Add(participantId);
+            Console.WriteLine($"[HUB] >>> After ADD → Project {projectId} now has {participants.Count} participants: {string.Join(", ", participants)}");
         }
 
-        // Notify others in the project that someone joined
         await Clients.GroupExcept(groupName, Context.ConnectionId)
             .SendAsync("ParticipantJoined", projectId, participantId);
 
-        // Send current state to the person who just joined
         await Clients.Caller.SendAsync("JoinedProjectCall", projectId, participantId, participants.ToList());
 
-        Console.WriteLine($"[CallHub] {participantId} joined project call {projectId}");
+        Console.WriteLine($"[HUB] >>> Sent JoinedProjectCall to {participantId} with list of {participants.Count}");
     }
-
     public async Task LeaveProjectCall(string projectId)
     {
         var groupName = $"project-call:{projectId}";
