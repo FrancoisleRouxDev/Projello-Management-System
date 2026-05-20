@@ -34,8 +34,6 @@ export class ProjectCallService {
 
   private setupPeerManagerListeners() {
     this.peerManager.on((event: any) => {
-      console.log(">>> [PEER LISTENER] event received:", event.type, " | currentProjectId =", this.currentProjectId);
-
       if (!this.currentProjectId) return;
 
       if (event.type === 'offer') this.sendOffer(event.peerId, event.sdp);
@@ -43,47 +41,50 @@ export class ProjectCallService {
       if (event.type === 'ice-candidate') this.sendIceCandidate(event.peerId, event.candidate);
     });
   }
+
   private registerSignalRHandlers() {
-    this.signalR.on("ParticipantJoined", (projectId, participantId) => {
-      console.log(">>> [SIGNALR] ParticipantJoined RECEIVED", { projectId, participantId });
-      console.log(`NEW PARTICIPANT: ${participantId}`);
+    this.signalR.on("ParticipantJoined", (_, participantId) => {
+      if (participantId === this.myParticipantId) return;
       this.connectToNewPeer(participantId, true);
     });
 
     this.signalR.on("JoinedProjectCall", (projectId, myParticipantId, participants) => {
       this.currentProjectId = projectId;
       this.myParticipantId = myParticipantId;
-      console.log(`Joined project call. Participants: ${participants.length}`);
 
       participants.forEach(id => {
         if (id !== myParticipantId) {
-          // New joiner also initiates to existing people (makes it robust)
           this.connectToNewPeer(id, true);
         }
       });
     });
 
     this.signalR.on("ReceiveOffer", async (_, __, senderId, offerSdp) => {
-      if (senderId === this.myParticipantId) return;
-      console.log(`RECEIVED OFFER from ${senderId}`);
+      if (senderId === this.myParticipantId || this.connectedPeers.has(senderId)) return;
+
       try {
         await this.peerManager.acceptOffer(senderId, JSON.parse(offerSdp));
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error("Error accepting offer:", e);
+      }
     });
 
     this.signalR.on("ReceiveAnswer", async (_, __, senderId, answerSdp) => {
       if (senderId === this.myParticipantId) return;
-      console.log(`RECEIVED ANSWER from ${senderId}`);
       try {
         await this.peerManager.setRemoteAnswer(senderId, JSON.parse(answerSdp));
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error("Error setting remote answer:", e);
+      }
     });
 
     this.signalR.on("ReceiveIceCandidate", async (_, __, senderId, candidate, sdpMid, sdpMLineIndex) => {
       if (senderId === this.myParticipantId) return;
       try {
         await this.peerManager.handleRemoteIceCandidate(senderId, { candidate, sdpMid, sdpMLineIndex });
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error("Error handling ICE candidate:", e);
+      }
     });
   }
 
@@ -94,9 +95,7 @@ export class ProjectCallService {
     this.currentProjectId = projectId;
     this.connectedPeers.clear();
 
-    // Request camera early
     await this.peerManager.getLocalStream();
-
     await this.signalR.start();
     await this.signalR.invoke("JoinProjectCall", projectId);
   }
@@ -118,24 +117,17 @@ export class ProjectCallService {
   }
 
   private sendOffer(participantId: string, sdp: any) {
-    console.log(">>> [FRONTEND] sendOffer called → target:", participantId);
-    this.signalR.invoke("SendOffer", this.currentProjectId, participantId, JSON.stringify(sdp))
-        .then(() => console.log(">>> [FRONTEND] SendOffer invoke SUCCESS"))
-        .catch(err => console.error(">>> [FRONTEND] SendOffer invoke FAILED:", err));
-}
+    this.signalR.invoke("SendOffer", this.currentProjectId, participantId, JSON.stringify(sdp));
+  }
 
-private sendAnswer(participantId: string, sdp: any) {
-    console.log(">>> [FRONTEND] sendAnswer called → target:", participantId);
-    this.signalR.invoke("SendAnswer", this.currentProjectId, participantId, JSON.stringify(sdp))
-        .then(() => console.log(">>> [FRONTEND] SendAnswer invoke SUCCESS"))
-        .catch(err => console.error(">>> [FRONTEND] SendAnswer invoke FAILED:", err));
-}
+  private sendAnswer(participantId: string, sdp: any) {
+    this.signalR.invoke("SendAnswer", this.currentProjectId, participantId, JSON.stringify(sdp));
+  }
 
-private sendIceCandidate(participantId: string, candidate: any) {
+  private sendIceCandidate(participantId: string, candidate: any) {
     this.signalR.invoke("SendIceCandidate", this.currentProjectId, participantId,
-        candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex)
-        .catch(err => console.error(">>> [FRONTEND] SendIceCandidate FAILED:", err));
-}
+      candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex);
+  }
 
   public getPeerManager() {
     return this.peerManager;
