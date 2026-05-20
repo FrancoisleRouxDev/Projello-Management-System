@@ -34,6 +34,8 @@ export class ProjectCallService {
 
   private setupPeerManagerListeners() {
     this.peerManager.on((event: any) => {
+      console.log(">>> [PEER LISTENER] event received:", event.type, " | currentProjectId =", this.currentProjectId);
+
       if (!this.currentProjectId) return;
 
       if (event.type === 'offer') this.sendOffer(event.peerId, event.sdp);
@@ -41,7 +43,6 @@ export class ProjectCallService {
       if (event.type === 'ice-candidate') this.sendIceCandidate(event.peerId, event.candidate);
     });
   }
-
   private registerSignalRHandlers() {
     this.signalR.on("ParticipantJoined", (_, participantId) => {
       console.log(`NEW PARTICIPANT: ${participantId}`);
