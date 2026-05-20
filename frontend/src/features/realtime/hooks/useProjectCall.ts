@@ -2,6 +2,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { ProjectCallService } from '../services/projectCallService';
 
+// === GLOBAL SINGLETON (added) ===
+let globalCallService: ProjectCallService | null = null;
+
 export function useProjectCall(projectId: number | string) {
   const [isJoined, setIsJoined] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -19,9 +22,12 @@ export function useProjectCall(projectId: number | string) {
     return token.startsWith('"') && token.endsWith('"') ? token.slice(1, -1) : token;
   }, []);
 
-  // Create service once
+  // Create service once (now using global singleton)
   if (!callServiceRef.current) {
-    callServiceRef.current = new ProjectCallService(getAccessToken);
+    if (!globalCallService) {
+      globalCallService = new ProjectCallService(getAccessToken);
+    }
+    callServiceRef.current = globalCallService;
   }
 
   useEffect(() => {
@@ -31,7 +37,7 @@ export function useProjectCall(projectId: number | string) {
     if (!listenerRef.current) {
       listenerRef.current = (event: any) => {
         if (event.type === 'track') {
-          console.log('📹 REMOTE STREAM RECEIVED');
+          console.log('REMOTE STREAM RECEIVED');
           setRemoteStream(event.stream);
         }
         if (event.type === 'connection-state-change') {
@@ -86,8 +92,9 @@ export function useProjectCall(projectId: number | string) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      callServiceRef.current?.disconnect();
-      callServiceRef.current = null;
+      // NOTE: We no longer null the global service here so it survives remounts
+      // callServiceRef.current?.disconnect();
+      // callServiceRef.current = null;
     };
   }, []);
 
