@@ -127,7 +127,7 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    backdrop-filter: blur(4px);
+    /* backdrop-filter: blur(4px); */
 }
 
 .action-modal {
@@ -346,3 +346,14 @@ select.action-modal__input {
     background-position: right 14px center;
     padding-right: 40px;
 }
+
+/* Idk, these where  inline but they were cause errors/problems */
+.clients-page__message {
+    padding: 20px;
+    font-size: 1rem;
+    color: #0a0a0a;
+}   
+
+.clients-page__message--error {
+    color: red;
+}   

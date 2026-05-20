@@ -304,8 +304,8 @@ export default function ClientsPage() {
                     </div>
                 </div>
 
-                {loading ? <p style={{ padding: 20 }}>Loading clients...</p> :
-                 error ? <p style={{ padding: 20, color: "red" }}>Error: {error}</p> :
+                {loading ? <p className="clients-page__message">Loading clients...</p> :
+                 error ? <p className="clients-page__message--error">Error: {error}</p> :
                  <ManagementClientTable rows={rows} onRowAction={handleRowAction} onRowClick={handleRowClick} />}
             </section>
 

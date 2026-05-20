@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { API_BASE_URL } from "../config";
+import "./WorkerClientAddModal.css";
 
 interface ClientAddModalProps {
   open: boolean;
@@ -67,66 +68,73 @@ export default function ClientAddModal({ open, onClose, onClientAdded }: ClientA
   };
 
   return (
-    <div style={{
-      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: "rgba(0,0,0,0.5)", display: "flex",
-      alignItems: "center", justifyContent: "center", zIndex: 1000
-    }}>
-      <div style={{
-        background: "white", padding: "30px", borderRadius: "12px",
-        width: "450px", maxWidth: "90%"
-      }}>
-        <h2 style={{ marginTop: 0 }}>Add New Client</h2>
+    <div className="client-add-modal">
+      <div className="client-add-modal__content">
+        <h2>Add New Client</h2>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Client Name *"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            style={{ width: "100%", padding: "10px", marginBottom: "12px" }}
-          />
+       <form className="client-add-modal__form" onSubmit={handleSubmit}>
+          <div className="client-add-modal__form-group">
+            <label className="client-add-modal__label client-add-modal__label--required">
+              Client Name
+            </label>
+            <input
+              type="text"
+              placeholder="Client Name *"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="client-add-modal__input"
+            />
+          </div>
 
-          <input
-            type="email"
-            placeholder="Contact Email"
-            value={contactEmail}
-            onChange={(e) => setContactEmail(e.target.value)}
-            style={{ width: "100%", padding: "10px", marginBottom: "12px" }}
-          />
+          <div className="client-add-modal__form-group">
+            <label className="client-add-modal__label">Contact Email</label>
+            <input
+              type="email"
+              placeholder="Contact Email"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              className="client-add-modal__input"
+            />
+          </div>
 
-          <input
-            type="text"
-            placeholder="Contact Phone"
-            value={contactPhone}
-            onChange={(e) => setContactPhone(e.target.value)}
-            style={{ width: "100%", padding: "10px", marginBottom: "12px" }}
-          />
+          <div className="client-add-modal__form-group">
+            <label className="client-add-modal__label">Contact Phone</label>
+            <input
+              type="text"
+              placeholder="Contact Phone"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+              className="client-add-modal__input"
+            />
+          </div>
 
-          <textarea
-            placeholder="Notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            style={{ width: "100%", padding: "10px", marginBottom: "12px" }}
-          />
+          <div className="client-add-modal__form-group">
+            <label className="client-add-modal__label">Notes</label>
+            <textarea
+              placeholder="Notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              className="client-add-modal__textarea"
+            />
+          </div>
 
-          {error && <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>}
+          {error && <p className="client-add-modal__error">{error}</p>}
 
-          <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+          <div className="client-add-modal__button-row">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              style={{ padding: "10px 20px" }}
+              className="client-add-modal__cancel-button"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              style={{ padding: "10px 20px", background: "#3b82f6", color: "white", border: "none" }}
+              className="client-add-modal__submit-button"
             >
               {loading ? "Creating..." : "Create Client"}
             </button>

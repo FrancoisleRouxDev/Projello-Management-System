@@ -1,0 +1,219 @@
+/* Shared content wrapper */
+.reusable-entity-modal__content,
+.worker-add-modal__form,
+.client-add-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Shared error */
+.reusable-entity-modal__error,
+.worker-add-modal__error,
+.client-add-modal__error {
+  color: #d32f2f;
+  background-color: #ffebee;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+/* Shared form group */
+.reusable-entity-modal__form-group,
+.worker-add-modal__form-group,
+.client-add-modal__form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Shared labels */
+.reusable-entity-modal__label,
+.worker-add-modal__label,
+.client-add-modal__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a2420;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reusable-entity-modal__label--required::after,
+.worker-add-modal__label--required::after,
+.client-add-modal__label--required::after {
+  content: " *";
+  color: #d32f2f;
+}
+
+/* Shared input controls */
+.reusable-entity-modal__input,
+.reusable-entity-modal__textarea,
+.reusable-entity-modal__select,
+.worker-add-modal__input,
+.worker-add-modal__textarea,
+.worker-add-modal__select,
+.client-add-modal__input,
+.client-add-modal__textarea,
+.client-add-modal__select {
+  border-radius: 1000px;
+  background: var(--Shadow-Gray, #e5e5e2);
+  box-shadow: 0 -2px 4px 0 rgba(249, 251, 236, 0.25) inset,
+    0 2px 4px 0 rgba(0, 0, 0, 0.25) inset;
+  border: none;
+  padding: 16px 24px;
+  font-size: 15px;
+  color: #444;
+  font-family: "Roboto", sans-serif;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.3s ease-in-out;
+}
+
+/* Client modal shell */
+.client-add-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.client-add-modal__content {
+  background: #fff;
+  padding: 30px;
+  border-radius: 12px;
+  width: 450px;
+  max-width: 90%;
+  box-sizing: border-box;
+}
+
+.client-add-modal__content h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a2420;
+}
+
+/* Shared content wrapper */
+.reusable-entity-modal__content,
+.worker-add-modal__form,
+.client-add-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Shared form group */
+.reusable-entity-modal__form-group,
+.worker-add-modal__form-group,
+.client-add-modal__form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Shared labels */
+.reusable-entity-modal__label,
+.worker-add-modal__label,
+.client-add-modal__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a2420;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reusable-entity-modal__label--required::after,
+.worker-add-modal__label--required::after,
+.client-add-modal__label--required::after {
+  content: " *";
+  color: #d32f2f;
+}
+
+/* Shared input controls */
+.reusable-entity-modal__input,
+.reusable-entity-modal__textarea,
+.reusable-entity-modal__select,
+.worker-add-modal__input,
+.worker-add-modal__textarea,
+.worker-add-modal__select,
+.client-add-modal__input,
+.client-add-modal__textarea,
+.client-add-modal__select {
+  border-radius: 1000px;
+  background: var(--Shadow-Gray, #e5e5e2);
+  box-shadow: 0 -2px 4px 0 rgba(249, 251, 236, 0.25) inset,
+    0 2px 4px 0 rgba(0, 0, 0, 0.25) inset;
+  border: none;
+  padding: 16px 24px;
+  font-size: 15px;
+  color: #444;
+  font-family: "Roboto", sans-serif;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: background 0.3s ease-in-out;
+}
+
+.client-add-modal__textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Error */
+.client-add-modal__error {
+  color: #d32f2f;
+  background-color: #ffebee;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+/* Buttons */
+.client-add-modal__button-row {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.client-add-modal__cancel-button,
+.client-add-modal__submit-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.client-add-modal__cancel-button {
+  background: #e5e5e2;
+  color: #1a2420;
+}
+
+.client-add-modal__submit-button {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.client-add-modal__submit-button:disabled,
+.client-add-modal__cancel-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+

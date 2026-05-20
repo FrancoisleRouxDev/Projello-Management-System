@@ -115,14 +115,18 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
         </div>
 
         <div className="project-add-modal__form-group">
-          <label className="project-add-modal__label">Due Date</label>
+          <label className="project-add-modal__label" htmlFor="project-due-date">Due Date</label>
           <input
+            id="project-due-date"
             type="date"
             className="project-add-modal__input"
             value={formData.dueDate}
             onChange={(e) =>
               setFormData({ ...formData, dueDate: e.target.value })
             }
+            title="Due date"
+            placeholder="Select due date"
+            aria-label="Due date"
           />
         </div>
       </div>

@@ -7,7 +7,7 @@ import { SortButton } from "../../components/SortButton";
 import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
 import { API_BASE_URL } from "../../config";
 import { AddButton } from "../../components/AddButton";
-import { ReusableEntryModal } from "../../components/ReuseableEntityModal";
+import { WorkerAddModal } from "../../components/WorkerAddModal";
 
 interface UserDisplay {
   id: string;
@@ -231,7 +231,7 @@ export default function WorkersPage() {
                 <h2 className="workers-page__title">Workers</h2>
                 <p className="workers-page__subtitle">Manage your team members</p>
               </div>
-             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+             <div className="workers-page__actions">
   
 							  {/* Only Admin (1), Foreman (2), and Owner (4) can generate invite codes */}
 							  {[1, 2, 4].includes(currentUserRole) && (
@@ -250,20 +250,21 @@ export default function WorkersPage() {
           </div>
 
           {loading ? (
-            <p style={{ padding: 20 }}>Loading workers...</p>
+            <p className="workers-page__message">Loading workers...</p>
           ) : error ? (
-            <p style={{ padding: 20, color: "red" }}>Error: {error}</p>
+            <p className="workers-page__message--error">Error: {error}</p>
           ) : filteredWorkers.length === 0 ? (
-            <p style={{ padding: 20 }}>
+            <p className="workers-page__message">
               {searchTerm.trim() ? "No workers match your search." : "No workers found yet."}
             </p>
           ) : (
-            <div className="workers-page__grid">
+             <div className="workers-page__grid">
               {filteredWorkers.map((worker) => (
                 <button
                   type="button"
                   key={`${worker.name}-${worker.email}`}
                   className="workers-page__card-button"
+                  title={`View details for ${worker.name}`}
                   onClick={() => handleWorkerClick(worker)}
                 >
                   <WorkerCard {...worker} />
