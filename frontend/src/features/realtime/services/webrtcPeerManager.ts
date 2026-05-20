@@ -1,4 +1,3 @@
-// frontend/src/features/realtime/services/webrtcPeerManager.ts
 import { API_BASE_URL } from '../../../config';
 
 export type PeerConnectionEvent = 
@@ -8,6 +7,9 @@ export type PeerConnectionEvent =
   | { type: 'offer'; sdp: RTCSessionDescriptionInit; peerId: string }
   | { type: 'answer'; sdp: RTCSessionDescriptionInit; peerId: string };
 
+// === SINGLETON INSTANCE (added) ===
+let peerManagerInstance: WebRTCPeerManager | null = null;
+
 export class WebRTCPeerManager {
   private peers: Map<string, RTCPeerConnection> = new Map();
   private localStream: MediaStream | null = null;
@@ -16,8 +18,17 @@ export class WebRTCPeerManager {
   private iceServers: RTCIceServer[] = [];
   private configLoaded = false;
 
-  constructor() {
+  // Constructor is now private so only getInstance() can create it
+  private constructor() {
     this.loadIceServers();
+  }
+
+  // === NEW: Singleton getter (added) ===
+  public static getInstance(): WebRTCPeerManager {
+    if (!peerManagerInstance) {
+      peerManagerInstance = new WebRTCPeerManager();
+    }
+    return peerManagerInstance;
   }
 
   private async loadIceServers() {
