@@ -5,6 +5,7 @@ import "./single-project-view.css";
 import CallOverlay from "../../components/CallOverlay";
 import { useProjectMember } from "../../features/realtime/hooks/useProjectMember";
 import { API_BASE_URL } from "../../config";
+import AddProjectMemberModal from "../../components/AddProjectMemberModal";   
 
 type ProjectReadDto = {
   projectID: number;
@@ -64,8 +65,26 @@ export default function SingleProjectViewPage() {
   const [error, setError] = useState<string | null>(null);
   const [showCallOverlay, setShowCallOverlay] = useState(false);
 
+  // New state for Add Member Modal
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState<number>(0);
+
   // Correct logic from old version
   const { members: teamMembers, loading: membersLoading } = useProjectMember(projectId || "");
+
+  // Get current user role
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const role = parseInt(payload.RoleID || payload["RoleID"] || "0");
+        setCurrentUserRole(role);
+      } catch (e) {
+        console.error("Failed to decode token for role");
+      }
+    }
+  }, []);
 
   useEffect(() => { 
     const fetchProject = async () => {
@@ -206,6 +225,36 @@ export default function SingleProjectViewPage() {
 
       <RecentSitePhotosSection project={project} />
 
+      {/* Team Members Section + Add Button */}
+      <div className="single-project-view__panel">
+        <div className="single-project-view__panel-header-row">
+          <h3 className="single-project-view__panel-title">Team Members ({teamMembers.length})</h3>
+          
+          {/* Only Owners (4) and Admins (1) can add members */}
+          {[1, 4].includes(currentUserRole) && (
+            <button 
+              onClick={() => setShowAddMemberModal(true)}
+              className="single-project-view__view-all-button"
+              style={{ color: "#0a0a0a", fontWeight: "600" }}
+            >
+              + Add Member
+            </button>
+          )}
+        </div>
+
+        {teamMembers.length === 0 ? (
+          <p>No team members yet.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {teamMembers.map((m: any) => (
+              <div key={m.UserID} style={{ padding: "8px", background: "#f8fafc", borderRadius: "8px" }}>
+                {m.FullName || m.fullName} — <strong>{m.AssignedAs || m.assignedAs}</strong>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Proper Call Overlay */}
       {showCallOverlay && (
         <CallOverlay
@@ -216,6 +265,17 @@ export default function SingleProjectViewPage() {
           members={teamMembers}
         />
       )}
+
+      {/* Add Member Modal */}
+      <AddProjectMemberModal
+        open={showAddMemberModal}
+        onClose={() => setShowAddMemberModal(false)}
+        projectId={project.projectID}
+        onMemberAdded={() => {
+          // The useProjectMember hook will automatically refresh
+          console.log("Member added - list should refresh");
+        }}
+      />
     </div>
   );
 }
