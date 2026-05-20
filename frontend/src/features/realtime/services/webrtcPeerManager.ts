@@ -74,10 +74,9 @@ export class WebRTCPeerManager {
     return {
       iceServers: this.iceServers,
       iceCandidatePoolSize: 10,
-      iceTransportPolicy: "all"   // add this line
+      iceTransportPolicy: "relay"   // ← change to "relay"
     };
-  }
-
+}
   async getLocalStream(): Promise<MediaStream> {
     if (this.localStream) {
       console.log('Local stream already exists');

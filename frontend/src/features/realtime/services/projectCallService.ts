@@ -48,15 +48,10 @@ export class ProjectCallService {
     });
 
     this.signalR.on("JoinedProjectCall", (projectId, myParticipantId, participants) => {
-      this.currentProjectId = projectId;
-      this.myParticipantId = myParticipantId;
-
-      participants.forEach(id => {
-        if (id !== myParticipantId && !this.connectedPeers.has(id)) {
-          this.connectToNewPeer(id, true);
-        }
-      });
-    });
+    this.currentProjectId = projectId;
+    this.myParticipantId = myParticipantId;
+    // Do NOT initiate offers here. Only existing people should initiate.
+});
 
     this.signalR.on("ParticipantLeft", (_, participantId) => {
       this.connectedPeers.delete(participantId);
