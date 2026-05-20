@@ -56,7 +56,10 @@ export class ProjectCallService {
       console.log(`Joined project call. Participants: ${participants.length}`);
 
       participants.forEach(id => {
-        if (id !== myParticipantId) this.connectToNewPeer(id, false);
+        if (id !== myParticipantId) {
+          // New joiner also initiates to existing people (makes it robust)
+          this.connectToNewPeer(id, true);
+        }
       });
     });
 
