@@ -113,17 +113,24 @@ export class ProjectCallService {
   }
 
   private sendOffer(participantId: string, sdp: any) {
-    this.signalR.invoke("SendOffer", this.currentProjectId, participantId, JSON.stringify(sdp));
-  }
+    console.log(">>> [FRONTEND] sendOffer called → target:", participantId);
+    this.signalR.invoke("SendOffer", this.currentProjectId, participantId, JSON.stringify(sdp))
+        .then(() => console.log(">>> [FRONTEND] SendOffer invoke SUCCESS"))
+        .catch(err => console.error(">>> [FRONTEND] SendOffer invoke FAILED:", err));
+}
 
-  private sendAnswer(participantId: string, sdp: any) {
-    this.signalR.invoke("SendAnswer", this.currentProjectId, participantId, JSON.stringify(sdp));
-  }
+private sendAnswer(participantId: string, sdp: any) {
+    console.log(">>> [FRONTEND] sendAnswer called → target:", participantId);
+    this.signalR.invoke("SendAnswer", this.currentProjectId, participantId, JSON.stringify(sdp))
+        .then(() => console.log(">>> [FRONTEND] SendAnswer invoke SUCCESS"))
+        .catch(err => console.error(">>> [FRONTEND] SendAnswer invoke FAILED:", err));
+}
 
-  private sendIceCandidate(participantId: string, candidate: any) {
+private sendIceCandidate(participantId: string, candidate: any) {
     this.signalR.invoke("SendIceCandidate", this.currentProjectId, participantId,
-      candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex);
-  }
+        candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex)
+        .catch(err => console.error(">>> [FRONTEND] SendIceCandidate FAILED:", err));
+}
 
   public getPeerManager() {
     return this.peerManager;
