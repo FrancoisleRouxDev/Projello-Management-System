@@ -20,7 +20,7 @@ export class ProjectCallService {
   private connectedPeers = new Set<string>();
 
   constructor(getAccessToken?: () => string | Promise<string | null>) {
-    this.peerManager = new WebRTCPeerManager();
+    this.peerManager = WebRTCPeerManager.getInstance();
     this.setupPeerManagerListeners();
 
     this.signalR = createSignalRClient<ProjectCallEvents>({
