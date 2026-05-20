@@ -42,11 +42,11 @@ export class WebRTCPeerManager {
 
       if (this.iceServers.length === 0) throw new Error('No ICE servers received');
 
-      console.log('✅ WebRTC ICE Servers loaded successfully from backend');
+      console.log('WebRTC ICE Servers loaded successfully from backend');
       this.configLoaded = true;
 
     } catch (error) {
-      console.error('❌ Failed to load WebRTC config:', error);
+      console.error('Failed to load WebRTC config:', error);
       this.iceServers = [
         { urls: 'stun:stun.l.google.com:19302' },
         {
@@ -65,26 +65,25 @@ export class WebRTCPeerManager {
 
   async getLocalStream(): Promise<MediaStream> {
     if (this.localStream) {
-      console.log('✅ Local stream already exists');
+      console.log('Local stream already exists');
       return this.localStream;
     }
 
-    console.log('📹 Requesting camera + microphone...');
+    console.log('Requesting camera + microphone...');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true,
       });
       this.localStream = stream;
-      console.log('✅ CAMERA OPENED SUCCESSFULLY');
+      console.log('CAMERA OPENED SUCCESSFULLY');
       return stream;
     } catch (error: any) {
-      console.error('❌ CAMERA ACCESS FAILED:', error.name, error.message);
+      console.error('CAMERA ACCESS FAILED:', error.name, error.message);
       throw error;
     }
   }
 
-  // ←←← RESTORED for your hook
   getLocalStreamSync(): MediaStream | null {
     return this.localStream;
   }
@@ -105,7 +104,7 @@ export class WebRTCPeerManager {
       await this.getLocalStream();
     }
 
-    console.log(`🔗 Creating peer connection for ${peerId}`);
+    console.log(`Creating peer connection for ${peerId}`);
     const pc = new RTCPeerConnection(this.getPeerConfig());
     this.peers.set(peerId, pc);
 
@@ -120,12 +119,12 @@ export class WebRTCPeerManager {
     };
 
     pc.ontrack = (event) => {
-      console.log(`📹 REMOTE VIDEO RECEIVED from ${peerId}`);
+      console.log(`REMOTE VIDEO RECEIVED from ${peerId}`);
       this.notify({ type: 'track', stream: event.streams[0], peerId });
     };
 
     pc.onconnectionstatechange = () => {
-      console.log(`🔄 Connection state for ${peerId} → ${pc.connectionState}`);
+      console.log(`Connection state for ${peerId} → ${pc.connectionState}`);
       this.notify({ type: 'connection-state-change', state: pc.connectionState, peerId });
     };
 
@@ -138,7 +137,7 @@ export class WebRTCPeerManager {
     const pc = await this.ensurePeerConnection(peerId);
 
     if (isInitiator) {
-      console.log(`📤 Creating offer for ${peerId}`);
+      console.log(`Creating offer for ${peerId}`);
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       this.notify({ type: 'offer', sdp: offer, peerId });

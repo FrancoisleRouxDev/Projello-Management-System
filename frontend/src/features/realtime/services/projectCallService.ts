@@ -44,14 +44,14 @@ export class ProjectCallService {
 
   private registerSignalRHandlers() {
     this.signalR.on("ParticipantJoined", (_, participantId) => {
-      console.log(`🟢 NEW PARTICIPANT: ${participantId}`);
+      console.log(`NEW PARTICIPANT: ${participantId}`);
       this.connectToNewPeer(participantId, true);
     });
 
     this.signalR.on("JoinedProjectCall", (projectId, myParticipantId, participants) => {
       this.currentProjectId = projectId;
       this.myParticipantId = myParticipantId;
-      console.log(`✅ Joined project call. Participants: ${participants.length}`);
+      console.log(`Joined project call. Participants: ${participants.length}`);
 
       participants.forEach(id => {
         if (id !== myParticipantId) this.connectToNewPeer(id, false);
@@ -60,7 +60,7 @@ export class ProjectCallService {
 
     this.signalR.on("ReceiveOffer", async (_, __, senderId, offerSdp) => {
       if (senderId === this.myParticipantId) return;
-      console.log(`📥 Offer from ${senderId}`);
+      console.log(`RECEIVED OFFER from ${senderId}`);
       try {
         await this.peerManager.acceptOffer(senderId, JSON.parse(offerSdp));
       } catch (e) { console.error(e); }
@@ -68,6 +68,7 @@ export class ProjectCallService {
 
     this.signalR.on("ReceiveAnswer", async (_, __, senderId, answerSdp) => {
       if (senderId === this.myParticipantId) return;
+      console.log(`RECEIVED ANSWER from ${senderId}`);
       try {
         await this.peerManager.setRemoteAnswer(senderId, JSON.parse(answerSdp));
       } catch (e) { console.error(e); }
