@@ -1,4 +1,3 @@
-// frontend/src/features/realtime/services/projectCallService.ts
 import { createSignalRClient, SignalRClient } from './signalrClient';
 import { WebRTCPeerManager } from './webrtcPeerManager';
 import { API_BASE_URL } from '../../../config';
@@ -53,10 +52,15 @@ export class ProjectCallService {
       this.myParticipantId = myParticipantId;
 
       participants.forEach(id => {
-        if (id !== myParticipantId) {
+        if (id !== myParticipantId && !this.connectedPeers.has(id)) {
           this.connectToNewPeer(id, true);
         }
       });
+    });
+
+    this.signalR.on("ParticipantLeft", (_, participantId) => {
+      this.connectedPeers.delete(participantId);
+      this.peerManager.disconnectFromPeer(participantId);
     });
 
     this.signalR.on("ReceiveOffer", async (_, __, senderId, offerSdp) => {
