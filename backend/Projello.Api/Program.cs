@@ -41,6 +41,19 @@ builder.Services.AddAuthentication(options => {
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ClockSkew = TimeSpan.Zero
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            // SignalR sends token in query string
+            var accessToken = context.Request.Query["access_token"];
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 // CORS - Allow localhost (dev) + your Render domain + Electron
@@ -117,6 +130,21 @@ app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.UseCors("AllowApp");
 app.UseAuthentication();
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/callhub"))
+    {
+        var isAuth = context.User.Identity?.IsAuthenticated ?? false;
+        var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value 
+                  ?? "No UserIdentifier";
+
+        Console.WriteLine($"[SignalR] Authenticated: {isAuth}");
+        Console.WriteLine($"[SignalR] UserIdentifier: {userId}");
+    }
+    await next();
+});
+
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<ProjectCallHub>("/callhub"); 
