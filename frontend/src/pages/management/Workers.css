@@ -70,6 +70,22 @@
 	text-align: left;
 	cursor: pointer;
 	min-width: 0;
+	width: 100%;
+	border-radius: 12px;
+	overflow: hidden;
+	transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+	            box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.workers-page__card-button:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 
+	            0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+.workers-page__card-button:focus-visible {
+	outline: 2px solid #3b82f6;
+	outline-offset: 2px;
 }
 
 .workers-page__state {
@@ -99,4 +115,3 @@
 		grid-template-columns: 1fr;
 	}
 }
-

@@ -10,10 +10,10 @@ const godzillaRoar = require("../../assets/zilla-1.mp3").default;
 // Define the expected properties: function to switch views and function to handle successful login
 interface LoginPageProps {
   onSwitchToSignUp: () => void;
+  onSwitchToRegisterCompany?: () => void;   // ← Add this line
   onLoginSuccess: () => void;
 }
-
-export default function LoginPage({ onSwitchToSignUp, onLoginSuccess }: LoginPageProps) {
+export default function LoginPage({ onSwitchToSignUp, onSwitchToRegisterCompany, onLoginSuccess }: LoginPageProps) {
   // State for email input
   const [email, setEmail] = useState("");
   // State for password input
@@ -126,6 +126,19 @@ export default function LoginPage({ onSwitchToSignUp, onLoginSuccess }: LoginPag
                 Sign Up
               </span>
             </p>
+
+            {onSwitchToRegisterCompany && (
+              <p className="login-signup-text" style={{ marginTop: "4px" }}>
+                Want to create a company?{" "}
+                <span
+                  className="login-link"
+                  onClick={onSwitchToRegisterCompany}
+                  style={{ fontWeight: 700 }}
+                >
+                  Register Company
+                </span>
+              </p>
+            )}
             
             <div className="login-button-row">
               {/* Cancel button: clears all form inputs and error states without submitting */}

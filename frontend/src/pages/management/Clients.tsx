@@ -6,17 +6,11 @@ import ManagementClientTable, { ManagementClientRow } from "../../components/Man
 import { SearchInput } from "../../components/SearchInput";
 import { FilterButton } from "../../components/FilterButton";
 import { SortButton } from "../../components/SortButton";
+import { AddButton } from "../../components/AddButton";
 import { API_BASE_URL } from "../../config";
+import ClientAddModal from "../../components/ClientAddModal";
+import { ProjectAddModal } from "../../components/ProjectAddModal";
 
-/*
- * ClientsPage
- * - Fetches clients from backend: GET /api/clients
- * - Uses JWT from localStorage (`token`) in Authorization header
- * - Maps API DTOs into `ManagementClientRow` for `ManagementClientTable`
- * - Handles loading and error states before rendering table rows
- */
-
-// Build avatar initials from a full name for the table's identity cell.
 const getInitials = (fullName?: string) => {
   if (!fullName) return "--";
   const parts = fullName.split(" ").filter(Boolean);
@@ -25,95 +19,345 @@ const getInitials = (fullName?: string) => {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
-export default function ClientsPage() {
-  const navigate = useNavigate();
-
-	const [rows, setRows] = useState<ManagementClientRow[]>([]);
-	const [loading, setLoading] = useState<boolean>(true);
-	const [error, setError] = useState<string | null>(null);
-
-	useEffect(() => {
-		// Initial page load: fetch client list once when component mounts.
-		const fetchClients = async () => {
-			setLoading(true);
-			setError(null);
-			try {
-				const token = localStorage.getItem("token");
-				const res = await fetch(`${API_BASE_URL}/api/clients`, {
-					headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-				});
-				if (!res.ok) {
-					const txt = await res.text();
-					throw new Error(txt || res.statusText || "Failed to load clients");
-				}
-				const data = await res.json();
-				// Normalize casing differences from API responses and map to table row shape.
-				const mapped: ManagementClientRow[] = (data ?? []).map((c: any) => ({
-					clientId: String(c.clientID ?? c.ClientID ?? c.ClientId ?? ""),
-					initials: getInitials(c.name ?? c.Name),
-					name: c.name ?? c.Name ?? "",
-					company: c.company ?? c.Company ?? "",
-					totalPaid: c.totalPaid ?? "R 0",
-					outstanding: c.outstanding ?? "R 0",
-					projects: c.projects ? String(c.projects) : "0",
-					activeProjects: c.activeProjects ?? "0 active",
-					status: c.isBlacklisted || c.IsBlacklisted ? "Blacklisted" : "Active",
-					statusTone: c.isBlacklisted || c.IsBlacklisted ? "danger" : "success",
-				}));
-				setRows(mapped);
-			} catch (err: any) {
-				setError(err.message || "Failed to fetch clients");
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		fetchClients();
-	}, []);
-
-	const handleRowAction = (row: ManagementClientRow) => {
-		// TODO: Open a drawer, menu, or details page for this client.
-		console.log("Row action for:", row.name);
-	};
-
-	const handleRowClick = (row: ManagementClientRow) => {
-		// Navigates into the single-client project view route using client id.
-		navigate(`/single-view/${row.clientId}`);
-	};
-
-	return (
-		<div className="clients-page">
-			{/* Summary cards for top-level client metrics */}
-			<div className="clients-page__stats">
-				<StatCard value="R400k" label="Total Revenue" tone="success" />
-				<StatCard value="R30k" label="Outstanding" tone="warning" />
-				<StatCard value="4" label="Active Clients" tone="success" />
-				<StatCard value="1" label="Blacklisted" tone="danger" />
-			</div>
-
-			{/* Search and filter controls placed above the client table */}
-			<div className="clients-page__controls">
-				<SearchInput placeholder="Search clients..." onSearch={(value) => console.log("Search clients:", value)} />
-				<FilterButton label="All Status" onFilter={() => console.log("Open client status filter")} />
-				<SortButton label="Sort" onSort={() => console.log("Open client sort options")} />
-			</div>
-
-			{/* Client table section */}
-			<section className="clients-page__table-section">
-				<div className="clients-page__section-header">
-					<h2 className="clients-page__title">Clients</h2>
-					<p className="clients-page__subtitle">Manage customer accounts, balances, and project counts.</p>
-				</div>
-
-				{loading ? (
-					<p style={{ padding: 20 }}>Loading clients...</p>
-				) : error ? (
-					<p style={{ padding: 20, color: "red" }}>Error: {error}</p>
-				) : (
-					<ManagementClientTable rows={rows} onRowAction={handleRowAction} onRowClick={handleRowClick} />
-				)}
-			</section>
-		</div>
-	);
+function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
+    return (
+        <div className="action-modal__header">
+            <h3 className="action-modal__title">{title}</h3>
+            <button className="action-modal__close" onClick={onClose} aria-label="Close modal">×</button>
+        </div>
+    );
 }
 
+type ModalStep = "menu" | "blacklist-reason" | "status-pick" | "confirm-unblacklist";
+
+interface ActionModalProps {
+    row: ManagementClientRow;
+    onClose: () => void;
+    onRefresh: () => void;
+    onAddProject?: (row: ManagementClientRow) => void;
+}
+
+function ClientActionModal({ row, onClose, onRefresh, onAddProject }: ActionModalProps) {
+    const [step, setStep] = useState<ModalStep>("menu");
+    const [blacklistReason, setBlacklistReason] = useState("");
+    const [busy, setBusy] = useState(false);
+    const [feedback, setFeedback] = useState<string | null>(null);
+
+    const isBlacklisted = row.status === "Blacklisted";
+
+    const doBlacklist = async () => {
+        setBusy(true);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE_URL}/api/clients/${row.clientId}/blacklist`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({ reason: blacklistReason || "No reason provided" }),
+            });
+            if (!res.ok) throw new Error("Failed to blacklist client");
+            setFeedback(`${row.name} has been blacklisted.`);
+            onRefresh();
+        } catch {
+            setFeedback("Failed to blacklist client. Please try again.");
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const doUnblacklist = async () => {
+        setBusy(true);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE_URL}/api/clients/${row.clientId}/blacklist`, {
+                method: "DELETE",
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            });
+            if (!res.ok) throw new Error("Failed to remove from blacklist");
+            setFeedback(`${row.name} has been removed from the blacklist.`);
+            onRefresh();
+        } catch {
+            setFeedback("Failed to remove from blacklist. Please try again.");
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const doStatusChange = (statusLabel: string) => {
+        setFeedback(`Status for "${row.name}" changed to ${statusLabel} (UI only for now).`);
+        onRefresh();
+    };
+
+    if (feedback) {
+        return (
+            <div className="action-modal-overlay" onClick={onClose}>
+                <div className="action-modal" onClick={e => e.stopPropagation()}>
+                    <ModalHeader title="Done" onClose={onClose} />
+                    <div className="action-modal__body">
+                        <p className="action-modal__feedback">{feedback}</p>
+                    </div>
+                    <div className="action-modal__actions">
+                        <button className="action-modal__btn action-modal__btn--primary" onClick={onClose}>Close</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (step === "menu") {
+        return (
+            <div className="action-modal-overlay" onClick={onClose}>
+                <div className="action-modal" onClick={e => e.stopPropagation()}>
+                    <ModalHeader title={row.name} onClose={onClose} />
+                    <div className="action-modal__body">
+                        <p className="action-modal__sub">Choose an action below</p>
+                    </div>
+                    <div className="action-modal__actions">
+                        <button
+                            className={`action-modal__btn ${isBlacklisted ? "action-modal__btn--warning" : "action-modal__btn--danger"}`}
+                            onClick={() => setStep(isBlacklisted ? "confirm-unblacklist" : "blacklist-reason")}
+                        >
+                            {isBlacklisted ? "Remove from Blacklist" : "Blacklist Client"}
+                        </button>
+
+                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => setStep("status-pick")}>
+                            Change Status
+                        </button>
+
+                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => setFeedback("Edit functionality coming soon.")}>
+                            Edit Client
+                        </button>
+
+                        <button
+                            className="action-modal__btn action-modal__btn--secondary"
+                            onClick={() => {
+                                onClose();
+                                onAddProject?.(row);
+                            }}
+                        >
+                            Add New Project
+                        </button>
+
+                        <button className="action-modal__btn action-modal__btn--ghost" onClick={onClose}>Cancel</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (step === "blacklist-reason") {
+        return (
+            <div className="action-modal-overlay" onClick={onClose}>
+                <div className="action-modal" onClick={e => e.stopPropagation()}>
+                    <ModalHeader title={`Blacklist "${row.name}"`} onClose={onClose} />
+                    <div className="action-modal__body">
+                        <p className="action-modal__sub">Enter a reason (optional)</p>
+                        <textarea
+                            className="action-modal__textarea"
+                            placeholder="No reason provided"
+                            value={blacklistReason}
+                            onChange={e => setBlacklistReason(e.target.value)}
+                            rows={3}
+                        />
+                    </div>
+                    <div className="action-modal__actions">
+                        <button className="action-modal__btn action-modal__btn--danger" onClick={doBlacklist} disabled={busy}>
+                            {busy ? "Blacklisting..." : "Confirm Blacklist"}
+                        </button>
+                        <button className="action-modal__btn action-modal__btn--ghost" onClick={() => setStep("menu")}>Back</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (step === "confirm-unblacklist") {
+        return (
+            <div className="action-modal-overlay" onClick={onClose}>
+                <div className="action-modal" onClick={e => e.stopPropagation()}>
+                    <ModalHeader title="Remove from Blacklist?" onClose={onClose} />
+                    <div className="action-modal__body">
+                        <p className="action-modal__sub">Are you sure you want to remove <strong>"{row.name}"</strong> from the blacklist?</p>
+                    </div>
+                    <div className="action-modal__actions">
+                        <button className="action-modal__btn action-modal__btn--warning" onClick={doUnblacklist} disabled={busy}>
+                            {busy ? "Removing..." : "Yes, Remove from Blacklist"}
+                        </button>
+                        <button className="action-modal__btn action-modal__btn--ghost" onClick={() => setStep("menu")}>Back</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (step === "status-pick") {
+        return (
+            <div className="action-modal-overlay" onClick={onClose}>
+                <div className="action-modal" onClick={e => e.stopPropagation()}>
+                    <ModalHeader title="Change Status" onClose={onClose} />
+                    <div className="action-modal__body">
+                        <p className="action-modal__sub">Select a new status for <strong>"{row.name}"</strong></p>
+                    </div>
+                    <div className="action-modal__actions">
+                        <button className="action-modal__btn action-modal__btn--primary" onClick={() => doStatusChange("Active")}>Active</button>
+                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => doStatusChange("Pending")}>Pending</button>
+                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => doStatusChange("Completed")}>Completed</button>
+                        <button className="action-modal__btn action-modal__btn--ghost" onClick={() => setStep("menu")}>Back</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return null;
+}
+
+export default function ClientsPage() {
+    const navigate = useNavigate();
+
+    const [rows, setRows] = useState<ManagementClientRow[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const [currentUserRole, setCurrentUserRole] = useState<number>(0);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [actionRow, setActionRow] = useState<ManagementClientRow | null>(null);
+
+    const [showProjectAddModal, setShowProjectAddModal] = useState(false);
+    const [selectedClientForProject, setSelectedClientForProject] = useState<ManagementClientRow | null>(null);
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const role = parseInt(payload.RoleID || payload["RoleID"] || "0");
+                setCurrentUserRole(role);
+            } catch {}
+        }
+    }, []);
+
+    const fetchClients = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE_URL}/api/clients`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            });
+            if (!res.ok) throw new Error(await res.text() || "Failed to load clients");
+            const data = await res.json();
+            const mapped: ManagementClientRow[] = (data ?? []).map((c: any) => ({
+                clientId: String(c.clientID ?? c.ClientID ?? c.ClientId ?? ""),
+                initials: getInitials(c.name ?? c.Name),
+                name: c.name ?? c.Name ?? "",
+                company: c.company ?? c.Company ?? "",
+                totalPaid: c.totalPaid ?? "R 0",
+                outstanding: c.outstanding ?? "R 0",
+                projects: c.projects ? String(c.projects) : "0",
+                activeProjects: c.activeProjects ?? "0 active",
+                status: c.isBlacklisted || c.IsBlacklisted ? "Blacklisted" : "Active",
+                statusTone: c.isBlacklisted || c.IsBlacklisted ? "danger" : "success",
+            }));
+            setRows(mapped);
+        } catch (err: any) {
+            setError(err.message || "Failed to fetch clients");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => { fetchClients(); }, []);
+
+    const handleRowAction = (row: ManagementClientRow) => setActionRow(row);
+    const handleRowClick = (row: ManagementClientRow) => navigate(`/single-view/${row.clientId}`);
+
+    const handleAddProject = (row: ManagementClientRow) => {
+        setSelectedClientForProject(row);
+        setShowProjectAddModal(true);
+    };
+
+    return (
+        <div className="clients-page">
+            <div className="clients-page__stats">
+                <StatCard value="R400k" label="Total Revenue" tone="success" />
+                <StatCard value="R30k" label="Outstanding" tone="warning" />
+                <StatCard value="4" label="Active Clients" tone="success" />
+                <StatCard value="1" label="Blacklisted" tone="danger" />
+            </div>
+
+            <div className="clients-page__controls">
+                <SearchInput placeholder="Search clients..." onSearch={(v) => console.log(v)} />
+                <FilterButton label="All Status" onFilter={() => {}} />
+                <SortButton label="Sort" onSort={() => {}} />
+            </div>
+
+            <section className="clients-page__table-section">
+                <div className="clients-page__section-header">
+                    <div className="clients-page__section-header-top">
+                        <div>
+                            <h2 className="clients-page__title">Clients</h2>
+                            <p className="clients-page__subtitle">Manage customer accounts, balances, and project counts.</p>
+                        </div>
+                        {[1, 4].includes(currentUserRole) && <AddButton label="Add Client" onClick={() => setShowAddModal(true)} />}
+                    </div>
+                </div>
+
+                {loading ? <p style={{ padding: 20 }}>Loading clients...</p> :
+                 error ? <p style={{ padding: 20, color: "red" }}>Error: {error}</p> :
+                 <ManagementClientTable rows={rows} onRowAction={handleRowAction} onRowClick={handleRowClick} />}
+            </section>
+
+            <ClientAddModal open={showAddModal} onClose={() => setShowAddModal(false)} onClientAdded={fetchClients} />
+
+            {actionRow && (
+                <ClientActionModal
+                    row={actionRow}
+                    onClose={() => setActionRow(null)}
+                    onRefresh={fetchClients}
+                    onAddProject={handleAddProject}
+                />
+            )}
+
+            {showProjectAddModal && selectedClientForProject && (
+                <ProjectAddModal
+                    open={showProjectAddModal}
+                    onClose={() => {
+                        setShowProjectAddModal(false);
+                        setSelectedClientForProject(null);
+                    }}
+                    clientId={selectedClientForProject.clientId}
+                    clientName={selectedClientForProject.name}
+                    onSubmit={async (data) => {
+                        try {
+                            const token = localStorage.getItem("token");
+                            const res = await fetch(`${API_BASE_URL}/api/projects`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                                },
+                                body: JSON.stringify({
+                                    name: data.name.trim(),
+                                    description: data.description?.trim() || null,
+                                    clientID: parseInt(selectedClientForProject.clientId, 10),
+                                    status: "Planning",
+                                    dueDate: data.dueDate || null,
+                                    startDate: null,
+                                }),
+                            });
+                            if (!res.ok) throw new Error(await res.text() || "Failed to create project");
+                            alert("Project created successfully!");
+                        } catch (err: any) {
+                            alert("Failed to create project: " + err.message);
+                        } finally {
+                            setShowProjectAddModal(false);
+                            setSelectedClientForProject(null);
+                        }
+                    }}
+                />
+            )}
+        </div>
+    );
+}

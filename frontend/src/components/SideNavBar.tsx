@@ -23,6 +23,7 @@ function getUserInfoFromToken() {
                 case "1": role = "Admin"; break;
                 case "2": role = "Foreman"; break;
                 case "3": role = "Worker"; break;
+                case "4": role = "Big Boss"; break;
                 default: role = `Role ${payload.RoleID}`;
             }
         }

@@ -29,9 +29,25 @@ namespace Projello.Api.Controllers
         public async Task<ActionResult<IEnumerable<UserDisplayDto>>> GetUsers([FromQuery] string? search)
         {
             var role = GetUserRole();
-            if (role != "1" && role != "2") return Forbid();
+            if (role != "1" && role != "2" && role != "4") return Forbid();
+
+            var currentUserId = GetCurrentUserId();
+            var currentUser = await _userManager.FindByIdAsync(currentUserId!);
 
             var query = _userManager.Users.AsQueryable();
+
+            // === IMPORTANT: Only show users from the same company ===
+            if (role != "1") // Not a global Admin
+            {
+                if (currentUser?.CompanyId != null)
+                {
+                    query = query.Where(u => u.CompanyId == currentUser.CompanyId);
+                }
+                else
+                {
+                    return Ok(new List<UserDisplayDto>()); // No company = see nothing
+                }
+            }
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -46,7 +62,6 @@ namespace Projello.Api.Controllers
                     Email = u.Email!,
                     RoleID = u.RoleID,
                     IsTwoFactorEnabled = u.IsTwoFactorEnabled,
-
                 })
                 .ToListAsync();
 
@@ -183,7 +198,7 @@ namespace Projello.Api.Controllers
         }
 
         // --- HELPERS ---
-        private bool IsAdmin() => GetUserRole() == "1";
+        private bool IsAdmin() => GetUserRole() == "1" || GetUserRole() == "4";
         private string? GetUserRole() => User.FindFirst("RoleID")?.Value;
         private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
     }

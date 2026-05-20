@@ -19,6 +19,10 @@ namespace Projello.Api.Data
         public DbSet<Reaction> Reactions { get; set; } = null!;
         public DbSet<Attachment> Attachments { get; set; } = null!;
 
+        public DbSet<Company> Companies { get; set; } = null!;
+
+        public DbSet<CompanyInvite> CompanyInvites { get; set; } = null!;
+
 
 
 //Section below is extra rule for the database, This one is so no client can be blacklisted by default, they have to be manually blacklisted by an admin.
@@ -26,17 +30,31 @@ namespace Projello.Api.Data
 {
     base.OnModelCreating(builder);
 
-    // No client is blacklisted by default
-    builder.Entity<Client>()
-        .Property(c => c.IsBlacklisted)
-        .HasDefaultValue(false);
+            // No client is blacklisted by default
+            builder.Entity<Client>()
+                .Property(c => c.IsBlacklisted)
+                .HasDefaultValue(false);
 
-    // Correct relationship configuration
-    builder.Entity<Client>()
-        .HasOne(c => c.BlacklistedBy)           // Navigation property (User)
-        .WithMany()                             // Admin can blacklist many clients
-        .HasForeignKey(c => c.BlacklistedById)  // The FK property (string)
-        .OnDelete(DeleteBehavior.SetNull);      // If admin is deleted, keep the client record
-}
+            // Correct relationship configuration
+            builder.Entity<Client>()
+                .HasOne(c => c.BlacklistedBy)           // Navigation property (User)
+                .WithMany()                             // Admin can blacklist many clients
+                .HasForeignKey(c => c.BlacklistedById)  // The FK property (string)
+                .OnDelete(DeleteBehavior.SetNull);      // If admin is deleted, keep the client record
+
+            // Company relationship configuration
+            builder.Entity<User>()
+                .HasOne(u => u.Company)
+                .WithMany()
+                .HasForeignKey(u => u.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Company Invite relationship
+            builder.Entity<CompanyInvite>()
+                .HasOne(i => i.Company)
+                .WithMany()
+                .HasForeignKey(i => i.CompanyID)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
 }
 }

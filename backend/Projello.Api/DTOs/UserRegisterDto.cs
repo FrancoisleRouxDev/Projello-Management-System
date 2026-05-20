@@ -18,5 +18,13 @@ public class UserRegisterDto
         [MinLength(8)]                    // You can add more password rules here if you want
         public string Password { get; set; } = null!;
         public int RoleID { get; set; }
-    }
+
+        public string? InviteCode { get; set; } // nullable — only needed for Worker signup
+        public string? CompanyName { get; set; }
+
+
+    
+    
+}
+
     
