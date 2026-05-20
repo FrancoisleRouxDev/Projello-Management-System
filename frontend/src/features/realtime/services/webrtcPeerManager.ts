@@ -71,7 +71,11 @@ export class WebRTCPeerManager {
   }
 
   private getPeerConfig(): RTCConfiguration {
-    return { iceServers: this.iceServers, iceCandidatePoolSize: 10 };
+    return {
+      iceServers: this.iceServers,
+      iceCandidatePoolSize: 10,
+      iceTransportPolicy: "all"   // add this line
+    };
   }
 
   async getLocalStream(): Promise<MediaStream> {
