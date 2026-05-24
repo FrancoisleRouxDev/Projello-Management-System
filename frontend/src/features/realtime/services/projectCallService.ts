@@ -60,14 +60,14 @@ export class ProjectCallService {
 
       participants.forEach((pId: string) => {
         if (pId !== myParticipantId && !this.connectedPeers.has(pId)) {
-          console.log("🔗 [DEBUG] New joiner connecting to existing peer as NON-INITIATOR:", pId);
+          console.log("[DEBUG] New joiner connecting to existing peer as NON-INITIATOR:", pId);
           this.connectToNewPeer(pId, false);
         }
       });
     });
 
     this.signalR.on("NewParticipantJoined", (_, newParticipantId) => {
-      console.log("🆕 [DEBUG] NewParticipantJoined received for:", newParticipantId);
+      console.log("[DEBUG] NewParticipantJoined received for:", newParticipantId);
       if (newParticipantId === this.myParticipantId) return;
       this.connectToNewPeer(newParticipantId, true);
     });
@@ -78,7 +78,7 @@ export class ProjectCallService {
     });
 
     this.signalR.on("ReceiveOffer", async (_, __, senderId, offerSdp) => {
-      console.log("📥 [DEBUG] ReceiveOffer arrived from:", senderId);
+      console.log("[DEBUG] ReceiveOffer arrived from:", senderId);
 
       if (senderId === this.myParticipantId) {
         console.log("⚠️ [DEBUG] Offer was from myself, ignoring.");
