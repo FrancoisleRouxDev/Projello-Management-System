@@ -81,26 +81,25 @@ export class ProjectCallService {
       console.log("[DEBUG] ReceiveOffer arrived from:", senderId);
 
       if (senderId === this.myParticipantId) {
-        console.log("⚠️ [DEBUG] Offer was from myself, ignoring.");
+        console.log("[DEBUG] Offer was from myself, ignoring.");
         return;
       }
 
       try {
-        // === NEW: State check to prevent InvalidStateError ===
+        // Only reject if we already have a remote offer (avoid duplicate offers)
         const pc = (this.peerManager as any).peers?.get(senderId);
-        if (pc && (pc.signalingState === 'have-remote-offer' || pc.signalingState === 'stable')) {
-          console.warn(`[DEBUG] Ignoring offer from ${senderId} - wrong state: ${pc.signalingState}`);
+        if (pc && pc.signalingState === 'have-remote-offer') {
+          console.warn(`[DEBUG] Ignoring duplicate offer from ${senderId}`);
           return;
         }
 
         await this.peerManager.acceptOffer(senderId, JSON.parse(offerSdp));
-        console.log("✅ [DEBUG] Offer accepted successfully from:", senderId);
+        console.log("[DEBUG] Offer accepted successfully from:", senderId);
       } catch (e: any) {
-        console.error("❌ [DEBUG] Error accepting offer:", e.message);
+        console.error("[DEBUG] Error accepting offer:", e.message);
       }
     });
 
-    // === UPDATED: Added signaling state check ===
     this.signalR.on("ReceiveAnswer", async (_, __, senderId, answerSdp) => {
       if (senderId === this.myParticipantId) return;
 
@@ -112,9 +111,9 @@ export class ProjectCallService {
         }
 
         await this.peerManager.setRemoteAnswer(senderId, JSON.parse(answerSdp));
-        console.log("✅ [DEBUG] Offer accepted successfully from:", senderId);
+        console.log("[DEBUG] Answer accepted successfully from:", senderId);
       } catch (e: any) {
-        console.error("❌ [DEBUG] Error setting remote answer:", e.message);
+        console.error("[DEBUG] Error setting remote answer:", e.message);
       }
     });
 
@@ -152,16 +151,16 @@ export class ProjectCallService {
 
   private async connectToNewPeer(participantId: string, isInitiator: boolean) {
     if (this.connectedPeers.has(participantId)) {
-      console.log("⚠️ [DEBUG] Already connected to peer:", participantId);
+      console.log("[DEBUG] Already connected to peer:", participantId);
       return;
     }
-    console.log(`🔌 [DEBUG] connectToNewPeer called → ID: ${participantId}, isInitiator: ${isInitiator}`);
+    console.log(`[DEBUG] connectToNewPeer called → ID: ${participantId}, isInitiator: ${isInitiator}`);
     this.connectedPeers.add(participantId);
     await this.peerManager.connectToPeer(participantId, isInitiator);
   }
 
   private sendOffer(participantId: string, sdp: any) {
-    console.log("📤 [DEBUG] Sending offer to participant:", participantId);
+    console.log("[DEBUG] Sending offer to participant:", participantId);
     this.signalR.invoke("SendOffer", this.currentProjectId, participantId, JSON.stringify(sdp));
   }
 
