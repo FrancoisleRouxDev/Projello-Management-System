@@ -9,7 +9,7 @@ type ProjectCallEvents = {
   ReceiveOffer: [string, string, string, string];
   ReceiveAnswer: [string, string, string, string];
   ReceiveIceCandidate: [string, string, string, string, string | null, number | null];
-  NewParticipantJoined: [string, string];   
+  NewParticipantJoined: [string, string];
 };
 
 export class ProjectCallService {
@@ -35,7 +35,6 @@ export class ProjectCallService {
   private setupPeerManagerListeners() {
     this.peerManager.on((event: any) => {
       if (!this.currentProjectId) return;
-
       if (event.type === 'offer') this.sendOffer(event.peerId, event.sdp);
       if (event.type === 'answer') this.sendAnswer(event.peerId, event.sdp);
       if (event.type === 'ice-candidate') this.sendIceCandidate(event.peerId, event.candidate);
@@ -43,28 +42,28 @@ export class ProjectCallService {
   }
 
   private registerSignalRHandlers() {
+    // We no longer initiate from ParticipantJoined to avoid double offers
     this.signalR.on("ParticipantJoined", (_, participantId) => {
       if (participantId === this.myParticipantId) return;
-      this.connectToNewPeer(participantId, true);
+      // Do nothing here — NewParticipantJoined handles initiation from existing side
     });
 
-    // UPDATED: Better handling for late joiners
     this.signalR.on("JoinedProjectCall", (projectId, myParticipantId, participants) => {
       this.currentProjectId = projectId;
       this.myParticipantId = myParticipantId;
 
-      // Connect to everyone already in the call (as non-initiator)
+      // New joiner: connect to existing people as NON-initiator (only receive offers)
       participants.forEach((pId: string) => {
         if (pId !== myParticipantId && !this.connectedPeers.has(pId)) {
-          this.connectToNewPeer(pId, false); // false = we are not the initiator
+          this.connectToNewPeer(pId, false); // false = do NOT create offer
         }
       });
     });
 
-    // NEW: When someone new joins an existing call, existing people initiate
+    // Existing people initiate offer when they see someone new joined
     this.signalR.on("NewParticipantJoined", (_, newParticipantId) => {
       if (newParticipantId === this.myParticipantId) return;
-      this.connectToNewPeer(newParticipantId, true);
+      this.connectToNewPeer(newParticipantId, true); // true = create offer
     });
 
     this.signalR.on("ParticipantLeft", (_, participantId) => {
@@ -73,7 +72,7 @@ export class ProjectCallService {
     });
 
     this.signalR.on("ReceiveOffer", async (_, __, senderId, offerSdp) => {
-      if (senderId === this.myParticipantId || this.connectedPeers.has(senderId)) return;
+      if (senderId === this.myParticipantId) return;   // ← Only check if it's ourselves
 
       try {
         await this.peerManager.acceptOffer(senderId, JSON.parse(offerSdp));
@@ -142,7 +141,6 @@ export class ProjectCallService {
       candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex);
   }
 
-  // new method
   public async getActiveParticipants(projectId: string): Promise<string[]> {
     try {
       return await this.signalR.invoke("GetActiveParticipants", projectId);
