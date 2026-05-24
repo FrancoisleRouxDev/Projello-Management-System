@@ -74,9 +74,10 @@ export class WebRTCPeerManager {
     return {
       iceServers: this.iceServers,
       iceCandidatePoolSize: 10,
-      iceTransportPolicy: "relay"   // ← change to "relay"
+      iceTransportPolicy: "relay"
     };
-}
+  }
+
   async getLocalStream(): Promise<MediaStream> {
     if (this.localStream) {
       console.log('Local stream already exists');
@@ -154,6 +155,7 @@ export class WebRTCPeerManager {
       console.log(`Creating offer for ${peerId}`);
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
+      console.log("🔔 [DEBUG] About to notify 'offer' event for:", peerId);
       this.notify({ type: 'offer', sdp: offer, peerId });
     }
   }
@@ -202,6 +204,7 @@ export class WebRTCPeerManager {
   }
 
   notify(event: PeerConnectionEvent) {
+    console.log("🔔 [DEBUG] notify() called with type:", event.type);
     this.listeners.forEach(l => l(event));
   }
 
@@ -213,6 +216,7 @@ export class WebRTCPeerManager {
     this.peers.forEach(pc => pc.close());
     this.peers.clear();
     this.stopLocalStream();
-    this.listeners = [];
+    // NOTE: We no longer clear listeners here to prevent breaking the service listener
+    // this.listeners = [];
   }
 }
