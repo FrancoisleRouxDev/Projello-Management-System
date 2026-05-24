@@ -1,6 +1,8 @@
-// frontend/src/features/realtime/hooks/useProjectCall.ts
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { ProjectCallService } from '../services/projectCallService';
+
+// === GLOBAL SINGLETON ===
+let globalCallService: ProjectCallService | null = null;
 
 export function useProjectCall(projectId: number | string) {
   const [isJoined, setIsJoined] = useState(false);
@@ -19,9 +21,12 @@ export function useProjectCall(projectId: number | string) {
     return token.startsWith('"') && token.endsWith('"') ? token.slice(1, -1) : token;
   }, []);
 
-  // Create service once
+  // Create service once (global singleton)
   if (!callServiceRef.current) {
-    callServiceRef.current = new ProjectCallService(getAccessToken);
+    if (!globalCallService) {
+      globalCallService = new ProjectCallService(getAccessToken);
+    }
+    callServiceRef.current = globalCallService;
   }
 
   useEffect(() => {
@@ -31,7 +36,7 @@ export function useProjectCall(projectId: number | string) {
     if (!listenerRef.current) {
       listenerRef.current = (event: any) => {
         if (event.type === 'track') {
-          console.log('📹 REMOTE STREAM RECEIVED');
+          console.log('REMOTE STREAM RECEIVED');
           setRemoteStream(event.stream);
         }
         if (event.type === 'connection-state-change') {
@@ -58,7 +63,6 @@ export function useProjectCall(projectId: number | string) {
       await callServiceRef.current.joinCall(projectId.toString());
       setIsJoined(true);
 
-      // Get local stream (now requested early in the service)
       const stream = callServiceRef.current.getPeerManager().getLocalStreamSync();
       if (stream) {
         setLocalStream(stream);
@@ -83,11 +87,16 @@ export function useProjectCall(projectId: number | string) {
     setError(null);
   }, []);
 
+  // === NEW: Check if a call is already active for this project ===
+  const checkActiveParticipants = useCallback(async (): Promise<string[]> => {
+    if (!callServiceRef.current) return [];
+    return await callServiceRef.current.getActiveParticipants(projectId.toString());
+  }, [projectId]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      callServiceRef.current?.disconnect();
-      callServiceRef.current = null;
+      // We keep the global service alive across remounts
     };
   }, []);
 
@@ -100,5 +109,6 @@ export function useProjectCall(projectId: number | string) {
     connectionState,
     isFetching,
     error,
+    checkActiveParticipants,   // use this in CallOverlay
   };
 }

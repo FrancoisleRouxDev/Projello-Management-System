@@ -1,5 +1,4 @@
-// frontend/src/components/CallOverlay.tsx
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useProjectCall } from "../features/realtime/hooks/useProjectCall";
 import "./CallOverlay.css";
 
@@ -27,10 +26,14 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
     connectionState,
     isFetching,
     error,
+    checkActiveParticipants,   // ← NEW
   } = useProjectCall(projectId);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+
+  // NEW: Track how many people are already in the call
+  const [activeParticipants, setActiveParticipants] = useState<string[]>([]);
 
   // After attaching local stream
   useEffect(() => {
@@ -47,6 +50,21 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
       remoteVideoRef.current.play().catch(console.error);
     }
   }, [remoteStream]);
+
+  // NEW: Check if a call is already running when the overlay opens
+  useEffect(() => {
+    if (isOpen && !isJoined && checkActiveParticipants) {
+      const check = async () => {
+        try {
+          const parts = await checkActiveParticipants();
+          setActiveParticipants(parts || []);
+        } catch (e) {
+          setActiveParticipants([]);
+        }
+      };
+      check();
+    }
+  }, [isOpen, isJoined, checkActiveParticipants]);
 
   if (!isOpen) return null;
 
@@ -100,7 +118,12 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
                   className="btn-join"
                   disabled={isFetching}
                 >
-                  {isFetching ? "Connecting..." : "Join Call"}
+                  {isFetching 
+                    ? "Connecting..." 
+                    : activeParticipants.length > 0 
+                      ? `Join Call (${activeParticipants.length} active)` 
+                      : "Start Call"
+                  }
                 </button>
                 <button onClick={onClose} className="btn-cancel">
                   Cancel

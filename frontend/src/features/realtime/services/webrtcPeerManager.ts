@@ -1,4 +1,3 @@
-// frontend/src/features/realtime/services/webrtcPeerManager.ts
 import { API_BASE_URL } from '../../../config';
 
 export type PeerConnectionEvent = 
@@ -8,6 +7,9 @@ export type PeerConnectionEvent =
   | { type: 'offer'; sdp: RTCSessionDescriptionInit; peerId: string }
   | { type: 'answer'; sdp: RTCSessionDescriptionInit; peerId: string };
 
+// === SINGLETON INSTANCE (added) ===
+let peerManagerInstance: WebRTCPeerManager | null = null;
+
 export class WebRTCPeerManager {
   private peers: Map<string, RTCPeerConnection> = new Map();
   private localStream: MediaStream | null = null;
@@ -16,8 +18,17 @@ export class WebRTCPeerManager {
   private iceServers: RTCIceServer[] = [];
   private configLoaded = false;
 
-  constructor() {
+  // Constructor is now private so only getInstance() can create it
+  private constructor() {
     this.loadIceServers();
+  }
+
+  // === NEW: Singleton getter (added) ===
+  public static getInstance(): WebRTCPeerManager {
+    if (!peerManagerInstance) {
+      peerManagerInstance = new WebRTCPeerManager();
+    }
+    return peerManagerInstance;
   }
 
   private async loadIceServers() {
@@ -42,11 +53,11 @@ export class WebRTCPeerManager {
 
       if (this.iceServers.length === 0) throw new Error('No ICE servers received');
 
-      console.log('✅ WebRTC ICE Servers loaded successfully from backend');
+      console.log('WebRTC ICE Servers loaded successfully from backend');
       this.configLoaded = true;
 
     } catch (error) {
-      console.error('❌ Failed to load WebRTC config:', error);
+      console.error('Failed to load WebRTC config:', error);
       this.iceServers = [
         { urls: 'stun:stun.l.google.com:19302' },
         {
@@ -60,31 +71,34 @@ export class WebRTCPeerManager {
   }
 
   private getPeerConfig(): RTCConfiguration {
-    return { iceServers: this.iceServers, iceCandidatePoolSize: 10 };
+    return {
+      iceServers: this.iceServers,
+      iceCandidatePoolSize: 10,
+      iceTransportPolicy: "all"
+    };
   }
 
   async getLocalStream(): Promise<MediaStream> {
     if (this.localStream) {
-      console.log('✅ Local stream already exists');
+      console.log('Local stream already exists');
       return this.localStream;
     }
 
-    console.log('📹 Requesting camera + microphone...');
+    console.log('Requesting camera + microphone...');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true,
       });
       this.localStream = stream;
-      console.log('✅ CAMERA OPENED SUCCESSFULLY');
+      console.log('CAMERA OPENED SUCCESSFULLY');
       return stream;
     } catch (error: any) {
-      console.error('❌ CAMERA ACCESS FAILED:', error.name, error.message);
+      console.error('CAMERA ACCESS FAILED:', error.name, error.message);
       throw error;
     }
   }
 
-  // ←←← RESTORED for your hook
   getLocalStreamSync(): MediaStream | null {
     return this.localStream;
   }
@@ -105,7 +119,7 @@ export class WebRTCPeerManager {
       await this.getLocalStream();
     }
 
-    console.log(`🔗 Creating peer connection for ${peerId}`);
+    console.log(`Creating peer connection for ${peerId}`);
     const pc = new RTCPeerConnection(this.getPeerConfig());
     this.peers.set(peerId, pc);
 
@@ -120,12 +134,12 @@ export class WebRTCPeerManager {
     };
 
     pc.ontrack = (event) => {
-      console.log(`📹 REMOTE VIDEO RECEIVED from ${peerId}`);
+      console.log(`REMOTE VIDEO RECEIVED from ${peerId}`);
       this.notify({ type: 'track', stream: event.streams[0], peerId });
     };
 
     pc.onconnectionstatechange = () => {
-      console.log(`🔄 Connection state for ${peerId} → ${pc.connectionState}`);
+      console.log(`Connection state for ${peerId} → ${pc.connectionState}`);
       this.notify({ type: 'connection-state-change', state: pc.connectionState, peerId });
     };
 
@@ -138,9 +152,10 @@ export class WebRTCPeerManager {
     const pc = await this.ensurePeerConnection(peerId);
 
     if (isInitiator) {
-      console.log(`📤 Creating offer for ${peerId}`);
+      console.log(`Creating offer for ${peerId}`);
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
+      console.log("[DEBUG] About to notify 'offer' event for:", peerId);
       this.notify({ type: 'offer', sdp: offer, peerId });
     }
   }
@@ -189,6 +204,7 @@ export class WebRTCPeerManager {
   }
 
   notify(event: PeerConnectionEvent) {
+    console.log("[DEBUG] notify() called with type:", event.type);
     this.listeners.forEach(l => l(event));
   }
 
@@ -200,6 +216,7 @@ export class WebRTCPeerManager {
     this.peers.forEach(pc => pc.close());
     this.peers.clear();
     this.stopLocalStream();
-    this.listeners = [];
+    // NOTE: We no longer clear listeners here to prevent breaking the service listener
+    // this.listeners = [];
   }
 }

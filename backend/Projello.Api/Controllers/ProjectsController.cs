@@ -205,6 +205,60 @@ namespace Projello.Api.Controllers
             return NoContent();
         }
 
+        [HttpPost("{projectId}/members")]
+        public async Task<IActionResult> AddProjectMember(int projectId, [FromBody] AddProjectMemberDto dto)
+        {
+            var userId = GetCurrentUserId();
+            var role = GetUserRole();
+
+            // Only Owners, Foremen, or Global Admins can add members
+            if (role != "1" && role != "4")
+            {
+                var isForeman = await _context.ProjectMembers
+                    .AnyAsync(m => m.ProjectID == projectId &&
+                                  m.UserID == userId &&
+                                  m.AssignedAs == "Foreman");
+
+                if (!isForeman) return Forbid();
+            }
+
+            // Check if project exists and belongs to same company
+            var project = await _context.Projects
+                .Include(p => p.Client)
+                .FirstOrDefaultAsync(p => p.ProjectID == projectId);
+
+            if (project == null) return NotFound("Project not found");
+
+            var currentUser = await _userManager.FindByIdAsync(userId!);
+            if (currentUser?.CompanyId != null && project.Client?.CompanyID != currentUser.CompanyId)
+                return Forbid();
+
+            // Check if user exists and is in same company
+            var targetUser = await _userManager.FindByIdAsync(dto.UserID);
+            if (targetUser == null) return BadRequest("User not found");
+            if (targetUser.CompanyId != currentUser?.CompanyId)
+                return BadRequest("User must be in the same company");
+
+            // Check if already a member
+            var existing = await _context.ProjectMembers
+                .AnyAsync(m => m.ProjectID == projectId && m.UserID == dto.UserID);
+
+            if (existing) return BadRequest("User is already a member of this project");
+
+            // Add the member
+            var member = new ProjectMember
+            {
+                ProjectID = projectId,
+                UserID = dto.UserID,
+                AssignedAs = dto.AssignedAs ?? "Worker"
+            };
+
+            _context.ProjectMembers.Add(member);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Member added successfully" });
+        }
+
         // --- PRIVATE HELPERS ---
         private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 

@@ -28,7 +28,6 @@ public sealed class ProjectCallHub : Hub
         if (string.IsNullOrEmpty(userId))
             throw new HubException("User not authenticated.");
 
-        // === Authorization: Only project members can join ===
         bool isMember = _dbContext.ProjectMembers
             .Any(m => m.ProjectID == int.Parse(projectId) && m.UserID == userId);
 
@@ -38,25 +37,26 @@ public sealed class ProjectCallHub : Hub
         var groupName = $"project-call:{projectId}";
         var participantId = GetParticipantId();
 
+        Console.WriteLine($"[HUB] >>> JoinProjectCall called by User={userId} | ParticipantId={participantId} | Project={projectId}");
+
         await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
 
-        // Track active call
         var participants = _activeProjectCalls.GetOrAdd(projectId, _ => new HashSet<string>());
         lock (participants)
         {
             participants.Add(participantId);
+            Console.WriteLine($"[HUB] >>> After ADD → Project {projectId} now has {participants.Count} participants: {string.Join(", ", participants)}");
         }
 
-        // Notify others in the project that someone joined
+        // Notify existing participants so they initiate offers to the new person.
+        // The new joiner will only receive offers (frontend logic).
         await Clients.GroupExcept(groupName, Context.ConnectionId)
-            .SendAsync("ParticipantJoined", projectId, participantId);
+            .SendAsync("NewParticipantJoined", projectId, participantId);
 
-        // Send current state to the person who just joined
         await Clients.Caller.SendAsync("JoinedProjectCall", projectId, participantId, participants.ToList());
 
-        Console.WriteLine($"[CallHub] {participantId} joined project call {projectId}");
+        Console.WriteLine($"[HUB] >>> Sent JoinedProjectCall to {participantId} with list of {participants.Count}");
     }
-
     public async Task LeaveProjectCall(string projectId)
     {
         var groupName = $"project-call:{projectId}";
@@ -79,6 +79,7 @@ public sealed class ProjectCallHub : Hub
     }
 
     // Simple direct signaling (more reliable)
+    // Targeted signaling using User (correct way)
     public async Task SendOffer(string projectId, string targetParticipantId, string offerSdp)
     {
         await Clients.Group($"project-call:{projectId}")
@@ -91,12 +92,19 @@ public sealed class ProjectCallHub : Hub
             .SendAsync("ReceiveAnswer", projectId, Context.ConnectionId, GetParticipantId(), answerSdp);
     }
 
-    public async Task SendIceCandidate(string projectId, string targetParticipantId,
-        string candidate, string? sdpMid, int? sdpMLineIndex)
+    public async Task SendIceCandidate(string projectId, string targetParticipantId, string candidate, string? sdpMid, int? sdpMLineIndex)
     {
         await Clients.Group($"project-call:{projectId}")
-            .SendAsync("ReceiveIceCandidate", projectId, Context.ConnectionId,
-                GetParticipantId(), candidate, sdpMid, sdpMLineIndex);
+            .SendAsync("ReceiveIceCandidate", projectId, Context.ConnectionId, GetParticipantId(), candidate, sdpMid, sdpMLineIndex);
+    }
+
+    public Task<List<string>> GetActiveParticipants(string projectId)
+    {
+        if (_activeProjectCalls.TryGetValue(projectId, out var participants))
+        {
+            return Task.FromResult(participants.ToList());
+        }
+        return Task.FromResult(new List<string>());
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
