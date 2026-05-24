@@ -72,12 +72,18 @@ export class ProjectCallService {
     });
 
     this.signalR.on("ReceiveOffer", async (_, __, senderId, offerSdp) => {
-      if (senderId === this.myParticipantId) return;   // ← Only check if it's ourselves
+      console.log("📥 [DEBUG] ReceiveOffer arrived from:", senderId);
+
+      if (senderId === this.myParticipantId) {
+        console.log("⚠️ [DEBUG] Offer was from myself, ignoring.");
+        return;
+      }
 
       try {
         await this.peerManager.acceptOffer(senderId, JSON.parse(offerSdp));
+        console.log("✅ [DEBUG] Offer accepted successfully from:", senderId);
       } catch (e) {
-        console.error("Error accepting offer:", e);
+        console.error("❌ [DEBUG] Error accepting offer:", e);
       }
     });
 
