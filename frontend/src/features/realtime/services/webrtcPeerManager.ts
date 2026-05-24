@@ -74,7 +74,7 @@ export class WebRTCPeerManager {
     return {
       iceServers: this.iceServers,
       iceCandidatePoolSize: 10,
-      iceTransportPolicy: "relay"
+      iceTransportPolicy: "all"
     };
   }
 
@@ -155,7 +155,7 @@ export class WebRTCPeerManager {
       console.log(`Creating offer for ${peerId}`);
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-      console.log("🔔 [DEBUG] About to notify 'offer' event for:", peerId);
+      console.log("[DEBUG] About to notify 'offer' event for:", peerId);
       this.notify({ type: 'offer', sdp: offer, peerId });
     }
   }
@@ -204,7 +204,7 @@ export class WebRTCPeerManager {
   }
 
   notify(event: PeerConnectionEvent) {
-    console.log("🔔 [DEBUG] notify() called with type:", event.type);
+    console.log("[DEBUG] notify() called with type:", event.type);
     this.listeners.forEach(l => l(event));
   }
 
