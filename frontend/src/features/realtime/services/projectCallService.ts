@@ -86,19 +86,35 @@ export class ProjectCallService {
       }
 
       try {
+        // === NEW: State check to prevent InvalidStateError ===
+        const pc = (this.peerManager as any).peers?.get(senderId);
+        if (pc && (pc.signalingState === 'have-remote-offer' || pc.signalingState === 'stable')) {
+          console.warn(`[DEBUG] Ignoring offer from ${senderId} - wrong state: ${pc.signalingState}`);
+          return;
+        }
+
         await this.peerManager.acceptOffer(senderId, JSON.parse(offerSdp));
         console.log("✅ [DEBUG] Offer accepted successfully from:", senderId);
-      } catch (e) {
-        console.error("❌ [DEBUG] Error accepting offer:", e);
+      } catch (e: any) {
+        console.error("❌ [DEBUG] Error accepting offer:", e.message);
       }
     });
 
+    // === UPDATED: Added signaling state check ===
     this.signalR.on("ReceiveAnswer", async (_, __, senderId, answerSdp) => {
       if (senderId === this.myParticipantId) return;
+
       try {
+        const pc = (this.peerManager as any).peers?.get(senderId);
+        if (pc && pc.signalingState !== 'have-local-offer') {
+          console.warn(`[DEBUG] Ignoring answer from ${senderId} - wrong state: ${pc.signalingState}`);
+          return;
+        }
+
         await this.peerManager.setRemoteAnswer(senderId, JSON.parse(answerSdp));
-      } catch (e) {
-        console.error("Error setting remote answer:", e);
+        console.log("✅ [DEBUG] Offer accepted successfully from:", senderId);
+      } catch (e: any) {
+        console.error("❌ [DEBUG] Error setting remote answer:", e.message);
       }
     });
 
