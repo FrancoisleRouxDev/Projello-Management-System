@@ -42,28 +42,31 @@ export class ProjectCallService {
   }
 
   private registerSignalRHandlers() {
-    // We no longer initiate from ParticipantJoined to avoid double offers
     this.signalR.on("ParticipantJoined", (_, participantId) => {
       if (participantId === this.myParticipantId) return;
       // Do nothing here — NewParticipantJoined handles initiation from existing side
     });
 
     this.signalR.on("JoinedProjectCall", (projectId, myParticipantId, participants) => {
+      console.log("✅ [DEBUG] JoinedProjectCall received");
+      console.log("   → My Participant ID:", myParticipantId);
+      console.log("   → Existing participants:", participants);
+
       this.currentProjectId = projectId;
       this.myParticipantId = myParticipantId;
 
-      // New joiner: connect to existing people as NON-initiator (only receive offers)
       participants.forEach((pId: string) => {
         if (pId !== myParticipantId && !this.connectedPeers.has(pId)) {
-          this.connectToNewPeer(pId, false); // false = do NOT create offer
+          console.log("🔗 [DEBUG] New joiner connecting to existing peer as NON-INITIATOR:", pId);
+          this.connectToNewPeer(pId, false);
         }
       });
     });
 
-    // Existing people initiate offer when they see someone new joined
     this.signalR.on("NewParticipantJoined", (_, newParticipantId) => {
+      console.log("🆕 [DEBUG] NewParticipantJoined received for:", newParticipantId);
       if (newParticipantId === this.myParticipantId) return;
-      this.connectToNewPeer(newParticipantId, true); // true = create offer
+      this.connectToNewPeer(newParticipantId, true);
     });
 
     this.signalR.on("ParticipantLeft", (_, participantId) => {
@@ -129,12 +132,17 @@ export class ProjectCallService {
   }
 
   private async connectToNewPeer(participantId: string, isInitiator: boolean) {
-    if (this.connectedPeers.has(participantId)) return;
+    if (this.connectedPeers.has(participantId)) {
+      console.log("⚠️ [DEBUG] Already connected to peer:", participantId);
+      return;
+    }
+    console.log(`🔌 [DEBUG] connectToNewPeer called → ID: ${participantId}, isInitiator: ${isInitiator}`);
     this.connectedPeers.add(participantId);
     await this.peerManager.connectToPeer(participantId, isInitiator);
   }
 
   private sendOffer(participantId: string, sdp: any) {
+    console.log("📤 [DEBUG] Sending offer to participant:", participantId);
     this.signalR.invoke("SendOffer", this.currentProjectId, participantId, JSON.stringify(sdp));
   }
 
