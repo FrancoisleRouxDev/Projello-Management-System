@@ -34,7 +34,10 @@ export class ProjectCallService {
 
   private setupPeerManagerListeners() {
     this.peerManager.on((event: any) => {
+      console.log("📡 [DEBUG] PeerManager event received:", event.type, "currentProjectId:", this.currentProjectId);
+
       if (!this.currentProjectId) return;
+
       if (event.type === 'offer') this.sendOffer(event.peerId, event.sdp);
       if (event.type === 'answer') this.sendAnswer(event.peerId, event.sdp);
       if (event.type === 'ice-candidate') this.sendIceCandidate(event.peerId, event.candidate);
