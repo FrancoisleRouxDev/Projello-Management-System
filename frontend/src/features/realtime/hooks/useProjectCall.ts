@@ -1,8 +1,7 @@
-// frontend/src/features/realtime/hooks/useProjectCall.ts
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { ProjectCallService } from '../services/projectCallService';
 
-// === GLOBAL SINGLETON (added) ===
+// === GLOBAL SINGLETON ===
 let globalCallService: ProjectCallService | null = null;
 
 export function useProjectCall(projectId: number | string) {
@@ -22,7 +21,7 @@ export function useProjectCall(projectId: number | string) {
     return token.startsWith('"') && token.endsWith('"') ? token.slice(1, -1) : token;
   }, []);
 
-  // Create service once (now using global singleton)
+  // Create service once (global singleton)
   if (!callServiceRef.current) {
     if (!globalCallService) {
       globalCallService = new ProjectCallService(getAccessToken);
@@ -64,7 +63,6 @@ export function useProjectCall(projectId: number | string) {
       await callServiceRef.current.joinCall(projectId.toString());
       setIsJoined(true);
 
-      // Get local stream (now requested early in the service)
       const stream = callServiceRef.current.getPeerManager().getLocalStreamSync();
       if (stream) {
         setLocalStream(stream);
@@ -89,12 +87,16 @@ export function useProjectCall(projectId: number | string) {
     setError(null);
   }, []);
 
+  // === NEW: Check if a call is already active for this project ===
+  const checkActiveParticipants = useCallback(async (): Promise<string[]> => {
+    if (!callServiceRef.current) return [];
+    return await callServiceRef.current.getActiveParticipants(projectId.toString());
+  }, [projectId]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // NOTE: We no longer null the global service here so it survives remounts
-      // callServiceRef.current?.disconnect();
-      // callServiceRef.current = null;
+      // We keep the global service alive across remounts
     };
   }, []);
 
@@ -107,5 +109,6 @@ export function useProjectCall(projectId: number | string) {
     connectionState,
     isFetching,
     error,
+    checkActiveParticipants,   // use this in CallOverlay
   };
 }

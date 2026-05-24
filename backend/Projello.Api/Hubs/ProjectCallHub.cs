@@ -49,6 +49,9 @@ public sealed class ProjectCallHub : Hub
         }
 
         await Clients.GroupExcept(groupName, Context.ConnectionId)
+    .SendAsync("NewParticipantJoined", projectId, participantId);
+
+        await Clients.GroupExcept(groupName, Context.ConnectionId)
             .SendAsync("ParticipantJoined", projectId, participantId);
 
         await Clients.Caller.SendAsync("JoinedProjectCall", projectId, participantId, participants.ToList());
@@ -94,6 +97,15 @@ public sealed class ProjectCallHub : Hub
     {
         await Clients.Group($"project-call:{projectId}")
             .SendAsync("ReceiveIceCandidate", projectId, Context.ConnectionId, GetParticipantId(), candidate, sdpMid, sdpMLineIndex);
+    }
+
+    public Task<List<string>> GetActiveParticipants(string projectId)
+    {
+        if (_activeProjectCalls.TryGetValue(projectId, out var participants))
+        {
+            return Task.FromResult(participants.ToList());
+        }
+        return Task.FromResult(new List<string>());
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)

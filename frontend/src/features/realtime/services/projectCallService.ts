@@ -9,6 +9,7 @@ type ProjectCallEvents = {
   ReceiveOffer: [string, string, string, string];
   ReceiveAnswer: [string, string, string, string];
   ReceiveIceCandidate: [string, string, string, string, string | null, number | null];
+  NewParticipantJoined: [string, string];   
 };
 
 export class ProjectCallService {
@@ -47,11 +48,24 @@ export class ProjectCallService {
       this.connectToNewPeer(participantId, true);
     });
 
+    // UPDATED: Better handling for late joiners
     this.signalR.on("JoinedProjectCall", (projectId, myParticipantId, participants) => {
-    this.currentProjectId = projectId;
-    this.myParticipantId = myParticipantId;
-    // Do NOT initiate offers here. Only existing people should initiate.
-});
+      this.currentProjectId = projectId;
+      this.myParticipantId = myParticipantId;
+
+      // Connect to everyone already in the call (as non-initiator)
+      participants.forEach((pId: string) => {
+        if (pId !== myParticipantId && !this.connectedPeers.has(pId)) {
+          this.connectToNewPeer(pId, false); // false = we are not the initiator
+        }
+      });
+    });
+
+    // NEW: When someone new joins an existing call, existing people initiate
+    this.signalR.on("NewParticipantJoined", (_, newParticipantId) => {
+      if (newParticipantId === this.myParticipantId) return;
+      this.connectToNewPeer(newParticipantId, true);
+    });
 
     this.signalR.on("ParticipantLeft", (_, participantId) => {
       this.connectedPeers.delete(participantId);
@@ -126,6 +140,15 @@ export class ProjectCallService {
   private sendIceCandidate(participantId: string, candidate: any) {
     this.signalR.invoke("SendIceCandidate", this.currentProjectId, participantId,
       candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex);
+  }
+
+  // new method
+  public async getActiveParticipants(projectId: string): Promise<string[]> {
+    try {
+      return await this.signalR.invoke("GetActiveParticipants", projectId);
+    } catch {
+      return [];
+    }
   }
 
   public getPeerManager() {
