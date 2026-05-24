@@ -74,8 +74,22 @@ export class ProjectCallService {
 
     this.signalR.on("NewParticipantJoined", (_, newParticipantId) => {
       console.log("[DEBUG] NewParticipantJoined received for:", newParticipantId);
+
       if (newParticipantId === this.myParticipantId) return;
-      this.connectToNewPeer(newParticipantId, true);
+
+      // Only initiate if we're not already connected or connecting
+      if (this.connectedPeers.has(newParticipantId) || this.connectingPeers.has(newParticipantId)) {
+        console.log("[DEBUG] Skipping offer initiation to", newParticipantId, "(already connected or connecting)");
+        return;
+      }
+
+      // Small delay to reduce race conditions when multiple people join at the same time
+      setTimeout(() => {
+        // Double-check before initiating (in case state changed during the delay)
+        if (!this.connectedPeers.has(newParticipantId) && !this.connectingPeers.has(newParticipantId)) {
+          this.connectToNewPeer(newParticipantId, true);
+        }
+      }, 400); // 400ms delay
     });
 
     this.signalR.on("ParticipantLeft", (_, participantId) => {
@@ -105,14 +119,21 @@ export class ProjectCallService {
 
     this.signalR.on("ReceiveAnswer", async (_, __, senderId, answerSdp) => {
       if (senderId === this.myParticipantId) return;
-      try {
-        await this.peerManager.setRemoteAnswer(senderId, JSON.parse(answerSdp));
-        console.log("✅ [DEBUG] Offer accepted successfully from:", senderId);
 
-        // Flush any queued ICE candidates
+      try {
+        const pc = (this.peerManager as any).peers?.get(senderId);
+
+        // Only accept answer if we're expecting one
+        if (!pc || pc.signalingState !== 'have-local-offer') {
+          console.warn(`[DEBUG] Ignoring answer from ${senderId} (state: ${pc?.signalingState || 'unknown'})`);
+          return;
+        }
+
+        await this.peerManager.setRemoteAnswer(senderId, JSON.parse(answerSdp));
+        console.log("[DEBUG] Answer accepted successfully from:", senderId);
         this.flushPendingIceCandidates(senderId);
       } catch (e: any) {
-        console.error("Error setting remote answer:", e.message);
+        console.error("[DEBUG] Error setting remote answer:", e.message);
       }
     });
 
