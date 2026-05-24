@@ -74,7 +74,7 @@ export class WebRTCPeerManager {
     return {
       iceServers: this.iceServers,
       iceCandidatePoolSize: 10,
-      iceTransportPolicy: "relay"
+      iceTransportPolicy: "all"
     };
   }
 
