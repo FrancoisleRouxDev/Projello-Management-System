@@ -9,6 +9,7 @@ type ProjectCallEvents = {
   ReceiveOffer: [string, string, string, string];
   ReceiveAnswer: [string, string, string, string];
   ReceiveIceCandidate: [string, string, string, string, string | null, number | null];
+  NewParticipantJoined: [string, string];
 };
 
 export class ProjectCallService {
@@ -33,6 +34,8 @@ export class ProjectCallService {
 
   private setupPeerManagerListeners() {
     this.peerManager.on((event: any) => {
+      console.log("📡 [DEBUG] PeerManager event received:", event.type, "currentProjectId:", this.currentProjectId);
+
       if (!this.currentProjectId) return;
 
       if (event.type === 'offer') this.sendOffer(event.peerId, event.sdp);
@@ -44,14 +47,30 @@ export class ProjectCallService {
   private registerSignalRHandlers() {
     this.signalR.on("ParticipantJoined", (_, participantId) => {
       if (participantId === this.myParticipantId) return;
-      this.connectToNewPeer(participantId, true);
+      // Do nothing here — NewParticipantJoined handles initiation from existing side
     });
 
     this.signalR.on("JoinedProjectCall", (projectId, myParticipantId, participants) => {
-    this.currentProjectId = projectId;
-    this.myParticipantId = myParticipantId;
-    // Do NOT initiate offers here. Only existing people should initiate.
-});
+      console.log("✅ [DEBUG] JoinedProjectCall received");
+      console.log("   → My Participant ID:", myParticipantId);
+      console.log("   → Existing participants:", participants);
+
+      this.currentProjectId = projectId;
+      this.myParticipantId = myParticipantId;
+
+      participants.forEach((pId: string) => {
+        if (pId !== myParticipantId && !this.connectedPeers.has(pId)) {
+          console.log("🔗 [DEBUG] New joiner connecting to existing peer as NON-INITIATOR:", pId);
+          this.connectToNewPeer(pId, false);
+        }
+      });
+    });
+
+    this.signalR.on("NewParticipantJoined", (_, newParticipantId) => {
+      console.log("🆕 [DEBUG] NewParticipantJoined received for:", newParticipantId);
+      if (newParticipantId === this.myParticipantId) return;
+      this.connectToNewPeer(newParticipantId, true);
+    });
 
     this.signalR.on("ParticipantLeft", (_, participantId) => {
       this.connectedPeers.delete(participantId);
@@ -59,12 +78,18 @@ export class ProjectCallService {
     });
 
     this.signalR.on("ReceiveOffer", async (_, __, senderId, offerSdp) => {
-      if (senderId === this.myParticipantId || this.connectedPeers.has(senderId)) return;
+      console.log("📥 [DEBUG] ReceiveOffer arrived from:", senderId);
+
+      if (senderId === this.myParticipantId) {
+        console.log("⚠️ [DEBUG] Offer was from myself, ignoring.");
+        return;
+      }
 
       try {
         await this.peerManager.acceptOffer(senderId, JSON.parse(offerSdp));
+        console.log("✅ [DEBUG] Offer accepted successfully from:", senderId);
       } catch (e) {
-        console.error("Error accepting offer:", e);
+        console.error("❌ [DEBUG] Error accepting offer:", e);
       }
     });
 
@@ -110,12 +135,17 @@ export class ProjectCallService {
   }
 
   private async connectToNewPeer(participantId: string, isInitiator: boolean) {
-    if (this.connectedPeers.has(participantId)) return;
+    if (this.connectedPeers.has(participantId)) {
+      console.log("⚠️ [DEBUG] Already connected to peer:", participantId);
+      return;
+    }
+    console.log(`🔌 [DEBUG] connectToNewPeer called → ID: ${participantId}, isInitiator: ${isInitiator}`);
     this.connectedPeers.add(participantId);
     await this.peerManager.connectToPeer(participantId, isInitiator);
   }
 
   private sendOffer(participantId: string, sdp: any) {
+    console.log("📤 [DEBUG] Sending offer to participant:", participantId);
     this.signalR.invoke("SendOffer", this.currentProjectId, participantId, JSON.stringify(sdp));
   }
 
@@ -126,6 +156,14 @@ export class ProjectCallService {
   private sendIceCandidate(participantId: string, candidate: any) {
     this.signalR.invoke("SendIceCandidate", this.currentProjectId, participantId,
       candidate.candidate, candidate.sdpMid, candidate.sdpMLineIndex);
+  }
+
+  public async getActiveParticipants(projectId: string): Promise<string[]> {
+    try {
+      return await this.signalR.invoke("GetActiveParticipants", projectId);
+    } catch {
+      return [];
+    }
   }
 
   public getPeerManager() {
