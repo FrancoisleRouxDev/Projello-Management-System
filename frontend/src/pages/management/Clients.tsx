@@ -10,6 +10,8 @@ import { AddButton } from "../../components/AddButton";
 import { API_BASE_URL } from "../../config";
 import ClientAddModal from "../../components/ClientAddModal";
 import { ProjectAddModal } from "../../components/ProjectAddModal";
+import {Wallet, AlertTriangle, Users, ShieldAlert} from "lucide-react";
+
 
 type ClientSummary = {
     totalRevenue: number | null;
@@ -348,10 +350,29 @@ export default function ClientsPage() {
     return (
         <div className="clients-page">
             <div className="clients-page__stats">
-                <StatCard value={formatCurrency(summary.totalRevenue)} label="Total Revenue" tone="success" />
-                <StatCard value={formatCurrency(summary.outstanding)} label="Outstanding" tone="warning" />
-                <StatCard value={String(summary.activeClients)} label="Active Clients" tone="success" />
-                <StatCard value={String(summary.blacklistClients)} label="Blacklisted" tone="danger" />
+                <StatCard //Revenue card, this is a placeholder until we have the actual revenue data from the backend. For now, it will just show "N/A"
+                    value={formatCurrency(summary.totalRevenue)} 
+                    label="Total Revenue" 
+                    tone="success"
+                    icon={<Wallet size={30} strokeWidth={2.2} color="#16a34a" />} 
+                />
+                <StatCard //Outstanding card, this is a placeholder until we have the actual outstanding data from the backend. For now, it will just show "N/A"
+                    value={formatCurrency(summary.outstanding)} 
+                    label="Outstanding" tone="warning" 
+                    icon={<AlertTriangle size={30} strokeWidth={2.2} color="#f59e0b" />} 
+                />
+                <StatCard //Active clients count, this will show the number of active clients based on the summary data from the backend
+                    value={String(summary.activeClients)} 
+                    label="Active Clients" 
+                    tone="success" 
+                    icon={<Users size={30} strokeWidth={2.2} color="#0ea5e9" />} 
+                />
+                <StatCard //Blacklisted clients count, this will show the number of blacklisted clients based on the summary data from the backend
+                    value={String(summary.blacklistClients)} 
+                    label="Blacklisted" 
+                    tone="danger" 
+                icon={<ShieldAlert size={30} strokeWidth={2.2} color="#ef4444" />} 
+                />
             </div>
 
             <div className="clients-page__controls">
