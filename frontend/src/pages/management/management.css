@@ -1,3 +1,7 @@
+*{
+    color: var(--text-dark);
+}
+
 .management-page {
     display: flex;
     flex-direction: column;
@@ -11,6 +15,7 @@
     padding: 40px 0 0 0;
     flex: 1;
     overflow-y: auto;
+    margin-top: 0 !important;
 }
 
 .management-page__content h2 {
@@ -18,7 +23,7 @@
     font-size: 32px;
     line-height: 1.15;
     font-weight: 700;
-    color: #101828;
+    color: var(--text-dark);
 }
 
 .management-page__content p,
@@ -31,8 +36,8 @@
 /* Heading box used on the projects view. Matches table width and styling */
 .management-page__heading-box {
     width: 100%;
-    background: #ffffff;
-    border-radius: 14px;
+    background: var(--secondary-background-item, #f7f7f3);
+    border-radius: 20px;
     padding: 16px 24px;
     box-sizing: border-box;
     margin-bottom: 16px;
@@ -40,6 +45,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+    box-shadow: 0 2px 4px 0 var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1)) inset;
+    border: 1px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
 }
 
 .management-page__heading-box h2 {
@@ -47,5 +54,5 @@
     font-size: 28px;
     line-height: 1.15;
     font-weight: 700;
-    color: #101828;
+    color: var(--text-dark);
 }

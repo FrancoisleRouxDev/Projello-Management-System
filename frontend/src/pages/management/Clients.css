@@ -28,8 +28,8 @@
 	flex-direction: column;
 	gap: 6px;
 	width: 100%;
-	background: #ffffff;
-	border-radius: 14px;
+	background: var(--secondary-background, #f7f7f3);
+	border-radius: 20px;
 	padding: 16px 24px;
 	box-sizing: border-box;
 }
@@ -43,7 +43,7 @@
 
 .clients-page__title {
 	margin: 0;
-	color: #0a0a0a;
+	color: var(--text-dark);
 	font-size: 24px;
 	font-weight: 600;
 	line-height: 32px;
@@ -51,7 +51,7 @@
 
 .clients-page__subtitle {
 	margin: 0;
-	color: #6b7280;
+	color: var(--accent-2-40_Opacity);
 	font-size: 14px;
 	line-height: 20px;
 }
@@ -86,7 +86,7 @@
 .action-modal {
     background: #ffffff;
     border: 1px solid #e5e7eb;
-    border-radius: 14px;
+    border-radius: 20px;
     padding: 0;
     min-width: 320px;
     max-width: 420px;
@@ -186,7 +186,7 @@
 .action-modal__btn {
     width: 100%;
     padding: 14px 20px;
-    border-radius: 10px;
+    border-radius: 20px;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
@@ -275,7 +275,7 @@
     width: 100%;
     background: #f9fafb;
     border: 1px solid #e5e7eb;
-    border-radius: 10px;
+    border-radius: 20px;
     color: #0a0a0a;
     font-size: 0.95rem;
     padding: 14px 16px;

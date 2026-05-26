@@ -46,9 +46,9 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-page">
-      <div className="pageHeader">
+      {/* <div className="pageHeader">
         <h3>Active Jellos</h3>
-      </div>
+      </div> */}
 
       <div className="filterBar">
         <div className="searchBar">

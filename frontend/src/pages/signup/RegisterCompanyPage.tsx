@@ -118,13 +118,15 @@ export default function RegisterCompanyPage({ onSwitchToLogin }: RegisterCompany
                 {successMsg}
               </p>
             )}
-
+            
+            <div className="signinText">
             <p className="signup-login-text">
               Already have an account?{" "}
               <span className="signup-link" onClick={onSwitchToLogin}>
                 Log In
               </span>
             </p>
+            </div>
 
             <div className="signup-button-row">
               <button
