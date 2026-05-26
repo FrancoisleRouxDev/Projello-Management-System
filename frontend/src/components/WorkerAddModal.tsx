@@ -63,7 +63,17 @@ export const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       maskClosable={!loading}
       className="entity-modal entity-modal--worker"
       width={680}
-      title="Add New Worker"
+      title={
+        <div className="entity-modal__title-row">
+          <div className="entity-modal__title-icon" aria-hidden="true">
+            <UserPlus size={18} strokeWidth={2.2} />
+          </div>
+          <div>
+            <div className="entity-modal__title">Add New Worker</div>
+            <div className="entity-modal__subtitle">Create a new team member</div>
+          </div>
+        </div>
+      }
       footer={
         <div className="entity-modal__footer">
           <Button onClick={handleClose} disabled={loading}>

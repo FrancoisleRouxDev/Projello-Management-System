@@ -85,7 +85,17 @@ export default function ClientAddModal({ open, onClose, onClientAdded }: ClientA
       maskClosable={!loading}
       className="entity-modal entity-modal--client"
       width={680}
-      title="Add New Client"
+      title={
+        <div className="entity-modal__title-row">
+          <div className="entity-modal__title-icon" aria-hidden="true">
+            <PlusCircle size={18} strokeWidth={2.2} />
+          </div>
+          <div>
+            <div className="entity-modal__title">Add New Client</div>
+            <div className="entity-modal__subtitle">Create a new client record</div>
+          </div>
+        </div>
+      }
       footer={
         <div className="entity-modal__footer">
           <Button onClick={handleClose} disabled={loading}>
