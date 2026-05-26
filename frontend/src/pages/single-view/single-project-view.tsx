@@ -1,5 +1,4 @@
-// frontend/src/pages/single-view/single-project-view.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "./single-project-view.css";
 import CallOverlay from "../../components/CallOverlay";
@@ -7,7 +6,7 @@ import { useProjectMember } from "../../features/realtime/hooks/useProjectMember
 import { API_BASE_URL } from "../../config";
 import AddProjectMemberModal from "../../components/AddProjectMemberModal";   
 
-type ProjectReadDto = {
+type ProjectDetails= {
   projectID: number;
   name: string;
   description: string;
@@ -20,35 +19,86 @@ type ProjectReadDto = {
   photoTiles?: string[];
 };
 
-function RecentSitePhotosSection({ project }: { project: ProjectReadDto }) {
-  const photoTiles = project.photoTiles ?? [];
+type SiteImageUpdate = {
+  id: number;
+  projectId: number;
+  userId: string;
+  caption: string | null;
+  imageUrl: string;
+  createdAt: string;
+};
+
+function RecentSitePhotosSection({ 
+  updates, 
+  onAddPhoto, 
+  isUploading 
+}: { 
+  updates: SiteImageUpdate[]; 
+  onAddPhoto: () => void; 
+  isUploading: boolean;
+}) {
+  const recentImages = updates.slice(0, 6);
 
   return (
     <section className="single-project-view__photo-section">
       <div className="single-project-view__panel-header-row">
         <h3 className="single-project-view__panel-title">Recent Site Photos</h3>
-        <button type="button" className="single-project-view__view-all-button">
+        <button 
+          type="button" 
+          className="single-project-view__view-all-button"
+          onClick={() => console.log("Navigate to Gallery")}
+        >
           View All →
         </button>
       </div>
 
-      <div className="single-project-view__photo-grid">
-        <button type="button" className="single-project-view__photo-tile single-project-view__photo-tile--add">
+      <div style={{
+        display: "flex",
+        gap: "12px",
+        overflowX: "auto",
+        paddingBottom: "12px",
+        scrollbarWidth: "thin"
+      }}>
+        {/* Add Photo Button - Now Functional */}
+        <button 
+          type="button" 
+          className="single-project-view__photo-tile single-project-view__photo-tile--add"
+          style={{ minWidth: "140px", height: "110px", flexShrink: 0 }}
+          onClick={onAddPhoto}
+          disabled={isUploading}
+        >
           <span className="single-project-view__photo-plus">+</span>
-          <span className="single-project-view__photo-label">Add Photo</span>
+          <span className="single-project-view__photo-label">
+            {isUploading ? "Uploading..." : "Add Photo"}
+          </span>
         </button>
 
-        {photoTiles.length > 0 ? (
-          photoTiles.slice(0, 3).map((tile, index) => (
+        {/* Images from Database */}
+        {recentImages.length > 0 ? (
+          recentImages.map((update) => (
             <div
-              key={index}
+              key={update.id}
               className="single-project-view__photo-tile"
-              style={{ backgroundImage: `url(${tile})`, backgroundSize: "cover", backgroundPosition: "center" }}
+              style={{ 
+                backgroundImage: `url(${update.imageUrl})`, 
+                backgroundSize: "cover", 
+                backgroundPosition: "center",
+                minWidth: "160px",
+                height: "110px",
+                flexShrink: 0,
+                borderRadius: "10px",
+                cursor: "pointer"
+              }}
+              onClick={() => console.log("Clicked image:", update)}
             />
           ))
         ) : (
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="single-project-view__photo-tile single-project-view__photo-tile--placeholder" />
+          Array.from({ length: 4 }).map((_, i) => (
+            <div 
+              key={i} 
+              className="single-project-view__photo-tile single-project-view__photo-tile--placeholder" 
+              style={{ minWidth: "160px", height: "110px", flexShrink: 0 }}
+            />
           ))
         )}
       </div>
@@ -60,7 +110,7 @@ export default function SingleProjectViewPage() {
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
 
-  const [project, setProject] = useState<ProjectReadDto | null>(null);
+  const [project, setProject] = useState<ProjectDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCallOverlay, setShowCallOverlay] = useState(false);
@@ -71,6 +121,14 @@ export default function SingleProjectViewPage() {
 
   // Correct logic from old version
   const { members: teamMembers, loading: membersLoading } = useProjectMember(projectId || "");
+
+
+  //Site Update State
+  const [siteUpdates, setSiteUpdates] = useState<SiteImageUpdate[]>([]);
+  const [updatesLoading, setUpdatesLoading] = useState(false);
+
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get current user role
   useEffect(() => {
@@ -115,7 +173,7 @@ export default function SingleProjectViewPage() {
           throw new Error(`Status ${res.status}: ${res.statusText}`);
         }
 
-        const data: ProjectReadDto = await res.json();
+        const data: ProjectDetails = await res.json();
         setProject(data);
       } catch (err) {
         console.error("Failed to fetch project:", err);
@@ -127,6 +185,77 @@ export default function SingleProjectViewPage() {
 
     fetchProject();
   }, [projectId]);
+
+
+  // Fetch Site Updates
+  const fetchSiteUpdates = async () => {
+    if (!projectId) return;
+
+    setUpdatesLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/api/projects/${projectId}/updates`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch updates");
+
+      const data: SiteImageUpdate[] = await res.json();
+      setSiteUpdates(data);
+      console.log("Site Updates fetched:", data);
+    } catch (err) {
+      console.error("Error fetching site updates:", err);
+    } finally {
+      setUpdatesLoading(false);
+    }
+  };
+
+  // Fetch updates when project loads
+  useEffect(() => {
+    if (projectId) {
+      fetchSiteUpdates();
+    }
+  }, [projectId]);
+
+
+  //Upload Functions
+  const handleAddPhoto = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !projectId) return;
+
+    setIsUploading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const formData = new FormData();
+      formData.append("Image", file);
+      formData.append("Caption", "");
+
+      const res = await fetch(`${API_BASE_URL}/api/projects/${projectId}/updates`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Failed to upload image");
+      }
+
+      await fetchSiteUpdates();
+      alert("Photo uploaded successfully!");
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      alert("Failed to upload photo: " + err.message);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const handleStartVoiceCall = () => {
     setShowCallOverlay(true);
@@ -223,7 +352,21 @@ export default function SingleProjectViewPage() {
         </div>
       </div>
 
-      <RecentSitePhotosSection project={project} />
+      {/* Pass upload handlers to the component */}
+      <RecentSitePhotosSection 
+        updates={siteUpdates} 
+        onAddPhoto={handleAddPhoto}
+        isUploading={isUploading}
+      />
+
+      {/* Hidden file input for upload */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        accept="image/*"
+        onChange={handleFileChange}
+      />
 
       {/* Team Members Section + Add Button */}
       <div className="single-project-view__panel">
