@@ -66,20 +66,6 @@ export default function ClientAddModal({ open, onClose, onClientAdded }: ClientA
         throw new Error(errorData.message || "Failed to create client");
       }
 
-    //   // Success
-    //   onClientAdded(); // Refresh the list in parent
-    //   onClose();
-
-    //   // Reset form
-    //   setName("");
-    //   setContactEmail("");
-    //   setContactPhone("");
-    //   setNotes("");
-    // } catch (err: any) {
-    //   setError(err.message || "Something went wrong");
-    // } finally {
-    //   setLoading(false);
-    // }
     await onClientAdded(); // Refresh the list in parent
     resetForm();
     onClose();
@@ -89,83 +75,6 @@ export default function ClientAddModal({ open, onClose, onClientAdded }: ClientA
       setLoading(false);
     }
   };
-
-  // return (
-  //   <div className="client-add-modal">
-  //     <div className="client-add-modal__content">
-  //       <h2>Add New Client</h2>
-
-  //      <form className="client-add-modal__form" onSubmit={handleSubmit}>
-  //         <div className="client-add-modal__form-group">
-  //           <label className="client-add-modal__label client-add-modal__label--required">
-  //             Client Name
-  //           </label>
-  //           <input
-  //             type="text"
-  //             placeholder="Client Name *"
-  //             value={name}
-  //             onChange={(e) => setName(e.target.value)}
-  //             required
-  //             className="client-add-modal__input"
-  //           />
-  //         </div>
-
-  //         <div className="client-add-modal__form-group">
-  //           <label className="client-add-modal__label">Contact Email</label>
-  //           <input
-  //             type="email"
-  //             placeholder="Contact Email"
-  //             value={contactEmail}
-  //             onChange={(e) => setContactEmail(e.target.value)}
-  //             className="client-add-modal__input"
-  //           />
-  //         </div>
-
-  //         <div className="client-add-modal__form-group">
-  //           <label className="client-add-modal__label">Contact Phone</label>
-  //           <input
-  //             type="text"
-  //             placeholder="Contact Phone"
-  //             value={contactPhone}
-  //             onChange={(e) => setContactPhone(e.target.value)}
-  //             className="client-add-modal__input"
-  //           />
-  //         </div>
-
-  //         <div className="client-add-modal__form-group">
-  //           <label className="client-add-modal__label">Notes</label>
-  //           <textarea
-  //             placeholder="Notes"
-  //             value={notes}
-  //             onChange={(e) => setNotes(e.target.value)}
-  //             rows={3}
-  //             className="client-add-modal__textarea"
-  //           />
-  //         </div>
-
-  //         {error && <p className="client-add-modal__error">{error}</p>}
-
-  //         <div className="client-add-modal__button-row">
-  //           <button
-  //             type="button"
-  //             onClick={handleClose}
-  //             disabled={loading}
-  //             className="client-add-modal__cancel-button"
-  //           >
-  //             Cancel
-  //           </button>
-  //           <button
-  //             type="submit"
-  //             disabled={loading}
-  //             className="client-add-modal__submit-button"
-  //           >
-  //             {loading ? "Creating..." : "Create Client"}
-  //           </button>
-  //         </div>
-  //       </form>
-  //     </div>
-  //   </div>
-  // );
 
    return (
     <Modal
@@ -182,7 +91,7 @@ export default function ClientAddModal({ open, onClose, onClientAdded }: ClientA
           <Button onClick={handleClose} disabled={loading}>
             Cancel
           </Button>
-          <Button type="primary" htmlType="submit" loading={loading}>
+          <Button type="primary" onClick={handleSubmit as any} loading={loading}>
             {loading ? "Creating..." : "Create Client"}
           </Button>
         </div>
