@@ -5,6 +5,7 @@ import CallOverlay from "../../components/CallOverlay";
 import { useProjectMember } from "../../features/realtime/hooks/useProjectMember";
 import { API_BASE_URL } from "../../config";
 import AddProjectMemberModal from "../../components/AddProjectMemberModal";   
+import DiscussionTab from "./DiscussionTab";
 
 type ProjectDetails= {
   projectID: number;
@@ -122,13 +123,14 @@ export default function SingleProjectViewPage() {
   // Correct logic from old version
   const { members: teamMembers, loading: membersLoading } = useProjectMember(projectId || "");
 
-
   //Site Update State
   const [siteUpdates, setSiteUpdates] = useState<SiteImageUpdate[]>([]);
   const [updatesLoading, setUpdatesLoading] = useState(false);
 
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [activeTab, setActiveTab] = useState<"overview" | "discussion" | "gallery">("overview");
 
   // Get current user role
   useEffect(() => {
@@ -186,7 +188,6 @@ export default function SingleProjectViewPage() {
     fetchProject();
   }, [projectId]);
 
-
   // Fetch Site Updates
   const fetchSiteUpdates = async () => {
     if (!projectId) return;
@@ -216,7 +217,6 @@ export default function SingleProjectViewPage() {
       fetchSiteUpdates();
     }
   }, [projectId]);
-
 
   //Upload Functions
   const handleAddPhoto = () => {
@@ -306,11 +306,30 @@ export default function SingleProjectViewPage() {
           </button>
         </div>
 
+    {/*UPDATED TABS*/}
         <div className="single-project-view__tabs">
-          <button className="single-project-view__tab single-project-view__tab--active">Overview</button>
-          <button className="single-project-view__tab">Discussion</button>
-          <button className="single-project-view__tab">Gallery</button>
+          <button 
+            className={`single-project-view__tab ${activeTab === "overview" ? "single-project-view__tab--active" : ""}`}
+            onClick={() => setActiveTab("overview")}
+          >
+            Overview
+          </button>
+          
+          <button 
+            className={`single-project-view__tab ${activeTab === "discussion" ? "single-project-view__tab--active" : ""}`}
+            onClick={() => setActiveTab("discussion")}
+          >
+            Discussion
+          </button>
+          
+          <button 
+            className={`single-project-view__tab ${activeTab === "gallery" ? "single-project-view__tab--active" : ""}`}
+            onClick={() => setActiveTab("gallery")}
+          >
+            Gallery
+          </button>
         </div>
+        {/*Updated Tabs */}
       </div>
 
       {/* Stats */}
@@ -337,27 +356,41 @@ export default function SingleProjectViewPage() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="single-project-view__main-grid">
-        <div className="single-project-view__panel">
-          <h3 className="single-project-view__panel-title">Description</h3>
-          <p className="single-project-view__project-description">
-            {project.description || "No description provided."}
-          </p>
-        </div>
+      {/*TAB CONTENT */}
+      {activeTab === "overview" && (
+        <>
+          <div className="single-project-view__main-grid">
+            <div className="single-project-view__panel">
+              <h3 className="single-project-view__panel-title">Description</h3>
+              <p className="single-project-view__project-description">
+                {project.description || "No description provided."}
+              </p>
+            </div>
 
-        <div className="single-project-view__panel">
-          <h3 className="single-project-view__panel-title">Milestones</h3>
-          <p>Milestone data coming soon...</p>
-        </div>
-      </div>
+            <div className="single-project-view__panel">
+              <h3 className="single-project-view__panel-title">Milestones</h3>
+              <p>Milestone data coming soon...</p>
+            </div>
+          </div>
 
-      {/* Pass upload handlers to the component */}
-      <RecentSitePhotosSection 
-        updates={siteUpdates} 
-        onAddPhoto={handleAddPhoto}
-        isUploading={isUploading}
-      />
+          <RecentSitePhotosSection 
+            updates={siteUpdates} 
+            onAddPhoto={handleAddPhoto}
+            isUploading={isUploading}
+          />
+        </>
+      )}
+
+      {activeTab === "discussion" && (
+        <DiscussionTab projectId={parseInt(projectId || "0")} />
+      )}
+
+      {activeTab === "gallery" && (
+        <div style={{ padding: 40, textAlign: "center" }}>
+          <p>Gallery coming soon...</p>
+        </div>
+      )}
+      {/* Tab Content */}
 
       {/* Hidden file input for upload */}
       <input
