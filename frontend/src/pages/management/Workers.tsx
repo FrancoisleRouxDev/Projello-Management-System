@@ -8,6 +8,7 @@ import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
 import { API_BASE_URL } from "../../config";
 import { AddButton } from "../../components/AddButton";
 import { WorkerAddModal } from "../../components/WorkerAddModal";
+import { Users, UserCheck, HardHat, BadgeCheck } from "lucide-react";
 
 interface UserDisplay {
   id: string;
@@ -208,10 +209,30 @@ export default function WorkersPage() {
       <div className="workers-page">
         {/* Stats */}
         <div className="workers-page__stats">
-          <StatCard value={String(onlineWorkers)} label="Online Workers" tone="success" />
-          <StatCard value={String(foremen)} label="Foremen" tone="warning" />
-          <StatCard value={String(visibleWorkersCount)} label="Workers" tone="neutral" />
-          <StatCard value={String(totalWorkers)} label="Total Team" tone="neutral" />
+          <StatCard 
+            value={String(onlineWorkers)} 
+            label="Online Workers" 
+            tone="success"
+            icon={<UserCheck size={30} strokeWidth={2.2} color="#16a34a" />} 
+          />
+          <StatCard 
+            value={String(foremen)} 
+            label="Foremen" 
+            tone="warning" 
+            icon={<BadgeCheck size={30} strokeWidth={2.2} color="#f59e0b" />}
+          />
+          <StatCard 
+            value={String(visibleWorkersCount)} 
+            label="Workers" 
+            tone="neutral" 
+            icon={<HardHat size={30} strokeWidth={2.2} color="#64748b" />}
+            />
+          <StatCard 
+            value={String(totalWorkers)} 
+            label="Total Team" 
+            tone="neutral" 
+            icon={<Users size={30} strokeWidth={2.2} color="#2563eb" />}
+          />
         </div>
 
         {/* Controls */}
