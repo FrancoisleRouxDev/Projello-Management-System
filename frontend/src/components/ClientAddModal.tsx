@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { Button, Modal } from "antd";
 import { API_BASE_URL } from "../config";
 import "./WorkerClientAddModal.css";
+import { PlusCircle } from "lucide-react";
 
 interface ClientAddModalProps {
   open: boolean;
@@ -16,7 +18,21 @@ export default function ClientAddModal({ open, onClose, onClientAdded }: ClientA
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  if (!open) return null;
+  const resetForm = () => {
+    setName("");
+    setContactEmail("");
+    setContactPhone("");
+    setNotes("");
+    setError("");
+  };
+
+  const handleClose = () => {
+    if (loading) return; // Prevent closing while loading
+    resetForm();
+    onClose();
+  };
+
+  // if (!open) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +47,6 @@ export default function ClientAddModal({ open, onClose, onClientAdded }: ClientA
 
     try {
       const token = localStorage.getItem("token");
-
       const response = await fetch(`${API_BASE_URL}/api/clients`, {
         method: "POST",
         headers: {
@@ -51,15 +66,9 @@ export default function ClientAddModal({ open, onClose, onClientAdded }: ClientA
         throw new Error(errorData.message || "Failed to create client");
       }
 
-      // Success
-      onClientAdded(); // Refresh the list in parent
-      onClose();
-
-      // Reset form
-      setName("");
-      setContactEmail("");
-      setContactPhone("");
-      setNotes("");
+    await onClientAdded(); // Refresh the list in parent
+    resetForm();
+    onClose();
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -67,80 +76,86 @@ export default function ClientAddModal({ open, onClose, onClientAdded }: ClientA
     }
   };
 
-  return (
-    <div className="client-add-modal">
-      <div className="client-add-modal__content">
-        <h2>Add New Client</h2>
-
-       <form className="client-add-modal__form" onSubmit={handleSubmit}>
-          <div className="client-add-modal__form-group">
-            <label className="client-add-modal__label client-add-modal__label--required">
-              Client Name
-            </label>
-            <input
-              type="text"
-              placeholder="Client Name *"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="client-add-modal__input"
-            />
+   return (
+    <Modal
+      open={open}
+      onCancel={handleClose}
+      centered
+      destroyOnClose
+      maskClosable={!loading}
+      className="entity-modal entity-modal--client"
+      width={680}
+      title={
+        <div className="entity-modal__title-row">
+          <div className="entity-modal__title-icon" aria-hidden="true">
+            <PlusCircle size={18} strokeWidth={2.2} />
           </div>
-
-          <div className="client-add-modal__form-group">
-            <label className="client-add-modal__label">Contact Email</label>
-            <input
-              type="email"
-              placeholder="Contact Email"
-              value={contactEmail}
-              onChange={(e) => setContactEmail(e.target.value)}
-              className="client-add-modal__input"
-            />
+          <div>
+            <div className="entity-modal__title">Add New Client</div>
+            <div className="entity-modal__subtitle">Create a new client record</div>
           </div>
+        </div>
+      }
+      footer={
+        <div className="entity-modal__footer">
+          <Button onClick={handleClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button type="primary" onClick={handleSubmit as any} loading={loading}>
+            {loading ? "Creating..." : "Create Client"}
+          </Button>
+        </div>
+      }
+    >
+      <form className="entity-modal__form" onSubmit={handleSubmit}>
+        <div className="entity-modal__form-group">
+          <label className="entity-modal__label entity-modal__label--required">Client Name</label>
+          <input
+            type="text"
+            placeholder="Client Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="entity-modal__input"
+            required
+          />
+        </div>
 
-          <div className="client-add-modal__form-group">
-            <label className="client-add-modal__label">Contact Phone</label>
-            <input
-              type="text"
-              placeholder="Contact Phone"
-              value={contactPhone}
-              onChange={(e) => setContactPhone(e.target.value)}
-              className="client-add-modal__input"
-            />
-          </div>
+        <div className="entity-modal__form-group">
+          <label className="entity-modal__label">Contact Email</label>
+          <input
+            type="email"
+            placeholder="Contact Email"
+            value={contactEmail}
+            onChange={(e) => setContactEmail(e.target.value)}
+            className="entity-modal__input"
+          />
+        </div>
 
-          <div className="client-add-modal__form-group">
-            <label className="client-add-modal__label">Notes</label>
-            <textarea
-              placeholder="Notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              className="client-add-modal__textarea"
-            />
-          </div>
+        <div className="entity-modal__form-group">
+          <label className="entity-modal__label">Contact Phone</label>
+          <input
+            type="text"
+            placeholder="Contact Phone"
+            value={contactPhone}
+            onChange={(e) => setContactPhone(e.target.value)}
+            className="entity-modal__input"
+          />
+        </div>
 
-          {error && <p className="client-add-modal__error">{error}</p>}
+        <div className="entity-modal__form-group">
+          <label className="entity-modal__label">Notes</label>
+          <textarea
+            placeholder="Notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={4}
+            className="entity-modal__textarea"
+          />
+        </div>
 
-          <div className="client-add-modal__button-row">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="client-add-modal__cancel-button"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="client-add-modal__submit-button"
-            >
-              {loading ? "Creating..." : "Create Client"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {error && <p className="entity-modal__error">{error}</p>}
+
+      </form>
+    </Modal>
   );
 }

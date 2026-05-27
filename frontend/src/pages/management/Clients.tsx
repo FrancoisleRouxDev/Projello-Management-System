@@ -348,10 +348,53 @@ export default function ClientsPage() {
     return (
         <div className="clients-page">
             <div className="clients-page__stats">
-                <StatCard value={formatCurrency(summary.totalRevenue)} label="Total Revenue" tone="success" />
-                <StatCard value={formatCurrency(summary.outstanding)} label="Outstanding" tone="warning" />
-                <StatCard value={String(summary.activeClients)} label="Active Clients" tone="success" />
-                <StatCard value={String(summary.blacklistClients)} label="Blacklisted" tone="danger" />
+                {/* Total Revenue */}
+                <StatCard
+                    value={formatCurrency(summary.totalRevenue)}
+                    label="Total Revenue"
+                    tone="success"
+                    icon={
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="#16a34a">
+                            <path d="M21 7.5a.75.75 0 0 0-.75-.75H3.75A.75.75 0 0 0 3 7.5v9a.75.75 0 0 0 .75.75h16.5a.75.75 0 0 0 .75-.75v-9ZM12 12.75a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1-.75-.75Z" />
+                        </svg>
+                    }
+                />
+
+                {/* Outstanding - Using the exact icon you wanted */}
+                <StatCard
+                    value={formatCurrency(summary.outstanding)}
+                    label="Outstanding"
+                    tone="warning"
+                    icon={
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 28 28" fill="#f59e0b">
+                            <path d="M13.27 24.367a2.5 2.5 0 0 0-.222 1.61C7.755 25.71 4 23.226 4 19.714V19a3 3 0 0 1 3-3h10.46zM14 2a6 6 0 1 1 0 12a6 6 0 0 1 0-12m5.164 12.828l-5.002 9.992c-.501 1 .222 2.18 1.336 2.18h10.004c1.114 0 1.837-1.18 1.336-2.18l-5.002-9.992c-.552-1.104-2.12-1.104-2.672 0M21 17.5v5a.5.5 0 0 1-1 0v-5a.5.5 0 0 1 1 0m-.5 7.5a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1" />
+                        </svg>
+                    }
+                />
+
+                {/* Active Clients */}
+                <StatCard
+                    value={String(summary.activeClients)}
+                    label="Active Clients"
+                    tone="success"
+                    icon={
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="#0ea5e9">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                        </svg>
+                    }
+                />
+
+                {/* Blacklisted */}
+                <StatCard
+                    value={String(summary.blacklistClients)}
+                    label="Blacklisted"
+                    tone="danger"
+                    icon={
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="#ef4444">
+                            <path d="M12 2L1 21h22L12 2zm0 3.99L19.53 19H4.47L12 5.99zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z" />
+                        </svg>
+                    }
+                />
             </div>
 
             <div className="clients-page__controls">
