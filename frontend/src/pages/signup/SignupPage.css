@@ -91,7 +91,7 @@ body {
   color: #666;
 }
 .signup-link {
-  color: #c8a84b;
+  color: var(--accent-3);
   cursor: pointer;
   text-decoration: none;
   font-weight: 600;

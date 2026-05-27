@@ -1,10 +1,10 @@
 .management-client-table {
   width: 100%;
-  border: 1px solid #e7e9eb;
-  border-radius: 12px;
+  border: 1px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
+  border-radius: 20px;
   overflow: hidden;
-  background: #fff;
-  box-shadow: none;
+  background: var(--secondary-background-item, #f7f7f3);
+  /* box-shadow: 0 2px 4px 0 var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1)); */
 }
 
 /* Header container */
@@ -18,19 +18,22 @@
   display: grid;
   grid-template-columns: minmax(220px, 1.8fr) repeat(3, minmax(110px, 1fr)) minmax(120px, 1fr) 64px;
   align-items: center;
-  gap: 12px;
-  padding: 16px 18px;
 }
 
-/* Data rows */
+.management-client-table__header {
+  padding: 18px 28px;
+  background: var(--secondary-background-item, #f7f7f3);
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .management-client-table__row {
-  display: grid;
-  grid-template-columns: minmax(220px, 1.8fr) repeat(3, minmax(110px, 1fr)) minmax(120px, 1fr) 64px;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 18px;
-  border-top: 1px solid #f0f2f3;
-  background: transparent;
+  padding: 20px 28px;
+  border-top: 1px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
+  /* box-shadow: 0 2px 4px 0 var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1)) inset; */
 }
 
 .management-client-table__row--clickable {
@@ -39,17 +42,7 @@
 }
 
 .management-client-table__row--clickable:hover {
-  background: #fbfcfd;
-}
-
-/* Header cells */
-.management-client-table__header-row .management-client-table__cell {
-  color: #495569;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  min-width: 0;
+  background-color: var(--accent-2-5_Opacity, rgba(40, 51, 43, 0.02));
 }
 
 /* Data cells */
@@ -86,11 +79,12 @@
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: #eef2f6;
-  color: #0f1724;
-  font-size: 14px;
-  font-weight: 700;
+  background: #e5e7eb40;
+  color: var(--text-dark);
+  font-size: 16px;
+  font-weight: 600;
   flex: 0 0 auto;
+  border: 1px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
 }
 
 .management-client-table__identity-copy {
@@ -99,37 +93,34 @@
 }
 
 .management-client-table__name {
-  color: #0b1220;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 22px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  white-space: nowrap;
+  color: var(--text-dark);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 26px;
 }
 
 .management-client-table__company {
-  color: #6b7280;
-  font-size: 13px;
-  line-height: 18px;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-/* Numeric values */
-.management-client-table__value {
-  color: #0b1220;
+  color: var(--accent-1-text);
   font-size: 16px;
   font-weight: 700;
   line-height: 22px;
-  text-overflow: ellipsis;
-  overflow: hidden;
+}
+
+.management-client-table__value {
+  color: var(--text-dark);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 26px;
+}
+
+.management-client-table__value--warning {
+  color: var(--warning-yellow);
 }
 
 .management-client-table__subvalue {
-  color: #6b7280;
-  font-size: 12px;
-  line-height: 16px;
+  color: var(--accent-2-40_Opacity);
+  font-size: 16px;
+  line-height: 22px;
 }
 
 /* Badges */
@@ -145,22 +136,26 @@
 
 .management-client-table__badge--success {
   background: #dcfce7;
-  color: #05612a;
+  box-shadow: 0 0px 4px 0 var(--success-green_20);
+  color: #016630;
 }
 
 .management-client-table__badge--warning {
-  background: #fff4e6;
-  color: #9b3d00;
+  background: #ffedd4;
+  box-shadow: 0 0px 4px 0 var(--warning-yellow_20);
+  color: var(--warning-yellow);
 }
 
 .management-client-table__badge--danger {
-  background: #ffedf0;
-  color: #b91c1c;
+  background: #f3e0e0;
+  box-shadow: 0 0px 4px 0 var(--error-red_20);
+  color: var(--error-red);
 }
 
 .management-client-table__badge--neutral {
-  background: #eef2f3;
-  color: #334155;
+  background: #cccccc40;
+  /* box-shadow: 0 0px 4px 0 var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1)); */
+  color: var(--text-dark);
 }
 
 /* Action button */
