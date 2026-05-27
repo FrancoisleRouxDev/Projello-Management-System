@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { API_BASE_URL } from '../../config';
 
 interface Setup2FAProps {
   userEmail: string;
@@ -16,7 +17,7 @@ export default function Setup2FA({ userEmail }: Setup2FAProps) {
     setError('');
     
     try {
-      const response = await fetch('http://localhost:5049/api/Auth/generate-2fa-secret', {
+      const response = await fetch(`${API_BASE_URL}/api/Auth/generate-2fa-secret`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: userEmail }) // Pass the logged-in user's email

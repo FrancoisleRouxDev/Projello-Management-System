@@ -6,10 +6,10 @@
   "main": ".webpack/main",
   "private": true,
   "scripts": {
-    "start": "electron-forge start",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
+    "start": "cross-env NODE_ENV=development electron-forge start",
+    "package": "cross-env NODE_ENV=production electron-forge package",
+    "make": "cross-env NODE_ENV=production electron-forge make",
+    "publish": "cross-env NODE_ENV=production electron-forge publish",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "keywords": [],
@@ -29,12 +29,16 @@
     "@electron-forge/plugin-webpack": "^7.11.1",
     "@electron/fuses": "^1.8.0",
     "@svgr/webpack": "^8.1.0",
+    "@types/node": "^25.6.2",
     "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "@vercel/webpack-asset-relocator-loader": "^1.7.3",
+    "cross-env": "^10.1.0",
     "css-loader": "^6.11.0",
-    "electron": "40.8.0",
+    "dotenv": "^17.4.2",
+    "electron": "^40.9.3",
     "eslint": "^8.57.1",
     "eslint-plugin-import": "^2.32.0",
     "file-loader": "^6.2.0",
@@ -45,9 +49,14 @@
     "typescript": "~4.5.4"
   },
   "dependencies": {
+    "@dicebear/collection": "^9.4.2",
+    "@dicebear/core": "^9.4.2",
+    "@microsoft/signalr": "^10.0.0",
     "antd": "^6.3.6",
     "electron-squirrel-startup": "^1.0.1",
+    "lucide-react": "^1.14.0",
     "qrcode.react": "^4.2.0",
+    "react-icons": "^5.6.0",
     "react-router-dom": "^7.13.1"
   }
 }

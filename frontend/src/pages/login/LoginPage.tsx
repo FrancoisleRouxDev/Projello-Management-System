@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Logo from "../../assets/Frame 160.svg";
 import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from '../../config';
 
 // Import the Godzilla roar audio file for the success sound effect
 const godzillaRoar = require("../../assets/zilla-1.mp3").default; 
@@ -9,10 +10,10 @@ const godzillaRoar = require("../../assets/zilla-1.mp3").default;
 // Define the expected properties: function to switch views and function to handle successful login
 interface LoginPageProps {
   onSwitchToSignUp: () => void;
+  onSwitchToRegisterCompany?: () => void;   // ← Add this line
   onLoginSuccess: () => void;
 }
-
-export default function LoginPage({ onSwitchToSignUp, onLoginSuccess }: LoginPageProps) {
+export default function LoginPage({ onSwitchToSignUp, onSwitchToRegisterCompany, onLoginSuccess }: LoginPageProps) {
   // State for email input
   const [email, setEmail] = useState("");
   // State for password input
@@ -36,7 +37,7 @@ export default function LoginPage({ onSwitchToSignUp, onLoginSuccess }: LoginPag
 
     try {
       // Send POST request to the backend login API with email and password
-      const response = await fetch("http://localhost:5049/api/Auth/login", {
+   const response = await fetch(`${API_BASE_URL}/api/Auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -119,12 +120,27 @@ export default function LoginPage({ onSwitchToSignUp, onLoginSuccess }: LoginPag
             {successMsg && <p className="login-success-text" style={{ color: 'green', fontWeight: 'bold' }}>{successMsg}</p>}
             
             {/* Text with a clickable link that triggers the parent's switch-to-signup function */}
+            <div className="signinText">
             <p className="login-signup-text">
               I don't have an Account,{" "}
               <span className="login-link" onClick={onSwitchToSignUp}>
                 Sign Up
               </span>
             </p>
+
+            {onSwitchToRegisterCompany && (
+              <p className="login-signup-text" style={{ marginTop: "4px" }}>
+                Want to create a company?{" "}
+                <span
+                  className="login-link"
+                  onClick={onSwitchToRegisterCompany}
+                  style={{ fontWeight: 700 }}
+                >
+                  Register Company
+                </span>
+              </p>
+            )}
+            </div>
             
             <div className="login-button-row">
               {/* Cancel button: clears all form inputs and error states without submitting */}

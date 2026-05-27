@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CustomModal from "./CustomModal";
 import { Button } from "antd";
 import "./ProjectAddModal.css";
@@ -7,6 +7,8 @@ interface ProjectAddModalProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: ProjectFormData) => void;
+  clientId?: string;      // optional - passed from action menu
+  clientName?: string;    // prefill when opened from client row
 }
 
 interface ProjectFormData {
@@ -20,17 +22,29 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
   open,
   onClose,
   onSubmit,
+  clientName,
 }) => {
   const [formData, setFormData] = useState<ProjectFormData>({
     name: "",
     description: "",
-    clientName: "",
+    clientName: clientName || "",
     dueDate: "",
   });
 
+  // Prefill client name when modal is opened from the 3-dots action menu
+  useEffect(() => {
+    if (open && clientName) {
+      setFormData(prev => ({ ...prev, clientName }));
+    }
+  }, [open, clientName]);
+
   const handleSubmit = () => {
-    if (!formData.name.trim() || !formData.clientName.trim()) {
-      alert("Please fill in project name and client name");
+    if (!formData.name.trim()) {
+      alert("Project name is required");
+      return;
+    }
+    if (!formData.clientName.trim()) {
+      alert("Client name is required");
       return;
     }
     onSubmit(formData);
@@ -70,6 +84,7 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
             placeholder="Enter project name"
           />
         </div>
+
         <div className="project-add-modal__form-group">
           <label className="project-add-modal__label project-add-modal__label--required">
             Client Name
@@ -82,12 +97,12 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
               setFormData({ ...formData, clientName: e.target.value })
             }
             placeholder="Enter client name"
+            disabled={!!clientName}   // disabled when prefilled from action menu
           />
         </div>
+
         <div className="project-add-modal__form-group">
-          <label className="project-add-modal__label">
-            Description
-          </label>
+          <label className="project-add-modal__label">Description</label>
           <textarea
             className="project-add-modal__textarea"
             value={formData.description}
@@ -98,10 +113,9 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
             rows={4}
           />
         </div>
+
         <div className="project-add-modal__form-group">
-          <label className="project-add-modal__label">
-            Due Date
-          </label>
+          <label className="project-add-modal__label">Due Date</label>
           <input
             type="date"
             className="project-add-modal__input"

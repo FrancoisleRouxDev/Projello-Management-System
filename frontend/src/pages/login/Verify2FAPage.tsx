@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Logo from "../../assets/Frame 160.svg";
 import "./LoginPage.css"; // Reusing your login styling to keep it consistent
+import { API_BASE_URL } from "../../config";
 
 const godzillaRoar = require("../../assets/zilla-1.mp3").default;
 interface Verify2FAPageProps {
@@ -38,7 +39,7 @@ export default function Verify2FAPage({ onLoginSuccess }: Verify2FAPageProps) {
 
     try {
       // Send POST request to the backend to verify the 2FA code
-      const response = await fetch("http://localhost:5049/api/Auth/verify-2fa", {
+      const response = await fetch(`${API_BASE_URL}/api/Auth/verify-2fa`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code }),

@@ -1,118 +1,138 @@
 import React, { useState } from "react";
-import CustomModal from "./CustomModal";
-import { Button } from "antd";
-import "./ClientAddModal.css";
+import { API_BASE_URL } from "../config";
 
 interface ClientAddModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: ClientFormData) => void;
+  onClientAdded: () => void; // Refresh the list after adding
 }
 
-interface ClientFormData {
-  name: string;
-  company: string;
-  email: string;
-  phone?: string;
-}
+export default function ClientAddModal({ open, onClose, onClientAdded }: ClientAddModalProps) {
+  const [name, setName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-export const ClientAddModal: React.FC<ClientAddModalProps> = ({
-  open,
-  onClose,
-  onSubmit,
-}) => {
-  const [formData, setFormData] = useState<ClientFormData>({
-    name: "",
-    company: "",
-    email: "",
-    phone: "",
-  });
+  if (!open) return null;
 
-  const handleSubmit = () => {
-    if (!formData.name.trim() || !formData.company.trim() || !formData.email.trim()) {
-      alert("Please fill in name, company, and email");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!name.trim()) {
+      setError("Client name is required.");
       return;
     }
-    onSubmit(formData);
-    setFormData({ name: "", company: "", email: "", phone: "" });
-    onClose();
-  };
 
-  const handleCancel = () => {
-    setFormData({ name: "", company: "", email: "", phone: "" });
-    onClose();
+    setLoading(true);
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`${API_BASE_URL}/api/clients`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          contactEmail: contactEmail.trim() || null,
+          contactPhone: contactPhone.trim() || null,
+          notes: notes.trim() || null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create client");
+      }
+
+      // Success
+      onClientAdded(); // Refresh the list in parent
+      onClose();
+
+      // Reset form
+      setName("");
+      setContactEmail("");
+      setContactPhone("");
+      setNotes("");
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <CustomModal
-      open={open}
-      onCancel={handleCancel}
-      title="Add New Client"
-      footer={[
-        <Button key="cancel" onClick={handleCancel}>
-          Cancel
-        </Button>,
-        <Button key="submit" type="primary" onClick={handleSubmit}>
-          Add Client
-        </Button>,
-      ]}
-    >
-      <div className="client-add-modal__form">
-        <div className="client-add-modal__form-group">
-          <label className="client-add-modal__label client-add-modal__label--required">
-            Name
-          </label>
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+      backgroundColor: "rgba(0,0,0,0.5)", display: "flex",
+      alignItems: "center", justifyContent: "center", zIndex: 1000
+    }}>
+      <div style={{
+        background: "white", padding: "30px", borderRadius: "12px",
+        width: "450px", maxWidth: "90%"
+      }}>
+        <h2 style={{ marginTop: 0 }}>Add New Client</h2>
+
+        <form onSubmit={handleSubmit}>
           <input
             type="text"
-            className="client-add-modal__input"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="Enter client name"
+            placeholder="Client Name *"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            style={{ width: "100%", padding: "10px", marginBottom: "12px" }}
           />
-        </div>
-        <div className="client-add-modal__form-group">
-          <label className="client-add-modal__label client-add-modal__label--required">
-            Company
-          </label>
-          <input
-            type="text"
-            className="client-add-modal__input"
-            value={formData.company}
-            onChange={(e) =>
-              setFormData({ ...formData, company: e.target.value })
-            }
-            placeholder="Enter company name"
-          />
-        </div>
-        <div className="client-add-modal__form-group">
-          <label className="client-add-modal__label client-add-modal__label--required">
-            Email
-          </label>
+
           <input
             type="email"
-            className="client-add-modal__input"
-            value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
-            placeholder="Enter email address"
+            placeholder="Contact Email"
+            value={contactEmail}
+            onChange={(e) => setContactEmail(e.target.value)}
+            style={{ width: "100%", padding: "10px", marginBottom: "12px" }}
           />
-        </div>
-        <div className="client-add-modal__form-group">
-          <label className="client-add-modal__label">
-            Phone
-          </label>
+
           <input
-            type="tel"
-            className="client-add-modal__input"
-            value={formData.phone}
-            onChange={(e) =>
-              setFormData({ ...formData, phone: e.target.value })
-            }
-            placeholder="Enter phone number"
+            type="text"
+            placeholder="Contact Phone"
+            value={contactPhone}
+            onChange={(e) => setContactPhone(e.target.value)}
+            style={{ width: "100%", padding: "10px", marginBottom: "12px" }}
           />
-        </div>
+
+          <textarea
+            placeholder="Notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            style={{ width: "100%", padding: "10px", marginBottom: "12px" }}
+          />
+
+          {error && <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>}
+
+          <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              style={{ padding: "10px 20px" }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{ padding: "10px 20px", background: "#3b82f6", color: "white", border: "none" }}
+            >
+              {loading ? "Creating..." : "Create Client"}
+            </button>
+          </div>
+        </form>
       </div>
-    </CustomModal>
+    </div>
   );
-};
+}

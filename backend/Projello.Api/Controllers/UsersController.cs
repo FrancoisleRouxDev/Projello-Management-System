@@ -29,9 +29,25 @@ namespace Projello.Api.Controllers
         public async Task<ActionResult<IEnumerable<UserDisplayDto>>> GetUsers([FromQuery] string? search)
         {
             var role = GetUserRole();
-            if (role != "1" && role != "2") return Forbid();
+            if (role != "1" && role != "2" && role != "4") return Forbid();
+
+            var currentUserId = GetCurrentUserId();
+            var currentUser = await _userManager.FindByIdAsync(currentUserId!);
 
             var query = _userManager.Users.AsQueryable();
+
+            // === IMPORTANT: Only show users from the same company ===
+            if (role != "1") // Not a global Admin
+            {
+                if (currentUser?.CompanyId != null)
+                {
+                    query = query.Where(u => u.CompanyId == currentUser.CompanyId);
+                }
+                else
+                {
+                    return Ok(new List<UserDisplayDto>()); // No company = see nothing
+                }
+            }
 
             if (!string.IsNullOrWhiteSpace(search))
             {
@@ -45,7 +61,7 @@ namespace Projello.Api.Controllers
                     FullName = u.FullName,
                     Email = u.Email!,
                     RoleID = u.RoleID,
-                    IsTwoFactorEnabled = u.IsTwoFactorEnabled
+                    IsTwoFactorEnabled = u.IsTwoFactorEnabled,
                 })
                 .ToListAsync();
 
@@ -64,7 +80,8 @@ namespace Projello.Api.Controllers
 
             var projects = await _context.ProjectMembers
                 .Where(pm => pm.UserID == id)
-                .Select(pm => new UserProjectDto {
+                .Select(pm => new UserProjectDto
+                {
                     ProjectID = pm.ProjectID,
                     Name = pm.Project.Name,
                     RoleInProject = pm.AssignedAs
@@ -72,20 +89,24 @@ namespace Projello.Api.Controllers
 
             var tasks = await _context.Tasks
                 .Where(t => t.AssignedToUserID == id)
-                .Select(t => new UserTaskDto {
+                .Select(t => new UserTaskDto
+                {
                     TaskID = t.TaskID,
                     Title = t.Title,
                     Status = t.Status.ToString(),
                     DueDate = t.DueDate
                 }).ToListAsync();
 
-            return Ok(new UserProfileDto {
+            return Ok(new UserProfileDto
+            {
                 Id = user.Id,
                 FullName = user.FullName,
                 Email = user.Email!,
                 RoleID = user.RoleID,
                 Projects = projects,
-                AssignedTasks = tasks
+                AssignedTasks = tasks,
+                AvatarSeed = user.AvatarSeed,
+                AvatarBackground = user.AvatarBackground
             });
         }
 
@@ -120,6 +141,8 @@ namespace Projello.Api.Controllers
             user.FullName = model.FullName;
             user.Email = model.Email;
             user.UserName = model.Email;
+            user.AvatarSeed = model.AvatarSeed;
+            user.AvatarBackground = model.AvatarBackground;
 
             var result = await _userManager.UpdateAsync(user);
             return result.Succeeded ? NoContent() : BadRequest(result.Errors);
@@ -175,7 +198,7 @@ namespace Projello.Api.Controllers
         }
 
         // --- HELPERS ---
-        private bool IsAdmin() => GetUserRole() == "1";
+        private bool IsAdmin() => GetUserRole() == "1" || GetUserRole() == "4";
         private string? GetUserRole() => User.FindFirst("RoleID")?.Value;
         private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
     }

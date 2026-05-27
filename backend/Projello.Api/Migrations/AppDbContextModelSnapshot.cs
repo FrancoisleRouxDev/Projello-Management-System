@@ -232,6 +232,9 @@ namespace Projello.Api.Migrations
                     b.Property<string>("BlacklistedById")
                         .HasColumnType("text");
 
+                    b.Property<int>("CompanyID")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ContactEmail")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
@@ -260,7 +263,77 @@ namespace Projello.Api.Migrations
 
                     b.HasIndex("BlacklistedById");
 
+                    b.HasIndex("CompanyID");
+
                     b.ToTable("Clients");
+                });
+
+            modelBuilder.Entity("Projello.Api.Models.Company", b =>
+                {
+                    b.Property<int>("CompanyID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CompanyID"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("OwnerUserId")
+                        .HasColumnType("text");
+
+                    b.HasKey("CompanyID");
+
+                    b.ToTable("Companies");
+                });
+
+            modelBuilder.Entity("Projello.Api.Models.CompanyInvite", b =>
+                {
+                    b.Property<int>("InviteID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("InviteID"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("CompanyID")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UsedByUserId")
+                        .HasColumnType("text");
+
+                    b.HasKey("InviteID");
+
+                    b.HasIndex("CompanyID");
+
+                    b.ToTable("CompanyInvites");
                 });
 
             modelBuilder.Entity("Projello.Api.Models.Milestone", b =>
@@ -506,6 +579,20 @@ namespace Projello.Api.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("integer");
 
+                    b.Property<string>("AvatarBackground")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AvatarSeed")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("CompanyID")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("CompanyId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("text");
@@ -568,6 +655,11 @@ namespace Projello.Api.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompanyID")
+                        .IsUnique();
+
+                    b.HasIndex("CompanyId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -664,7 +756,26 @@ namespace Projello.Api.Migrations
                         .HasForeignKey("BlacklistedById")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Projello.Api.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("BlacklistedBy");
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("Projello.Api.Models.CompanyInvite", b =>
+                {
+                    b.HasOne("Projello.Api.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("Projello.Api.Models.Milestone", b =>
@@ -769,9 +880,28 @@ namespace Projello.Api.Migrations
                     b.Navigation("Milestone");
                 });
 
+            modelBuilder.Entity("Projello.Api.Models.User", b =>
+                {
+                    b.HasOne("Projello.Api.Models.Company", null)
+                        .WithOne("Owner")
+                        .HasForeignKey("Projello.Api.Models.User", "CompanyID");
+
+                    b.HasOne("Projello.Api.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("Projello.Api.Models.Client", b =>
                 {
                     b.Navigation("Projects");
+                });
+
+            modelBuilder.Entity("Projello.Api.Models.Company", b =>
+                {
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("Projello.Api.Models.Milestone", b =>
