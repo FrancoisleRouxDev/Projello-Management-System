@@ -8,7 +8,6 @@
     width: 100%;
     margin: 0;
     font-family: "Roboto", sans-serif;
-    overflow-x: hidden;
 }
 
 .management-page__content {
@@ -55,4 +54,10 @@
     line-height: 1.15;
     font-weight: 700;
     color: var(--text-dark);
+}
+
+.management-client-table_body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 }
