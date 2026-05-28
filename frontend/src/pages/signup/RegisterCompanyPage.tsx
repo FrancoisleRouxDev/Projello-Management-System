@@ -90,13 +90,6 @@ export default function RegisterCompanyPage({ onSwitchToLogin }: RegisterCompany
 
           <form onSubmit={handleRegisterCompany}>
 
-            {/* This is the new location for the owner tag for the moment */}
-            <div style={{marginBottom: 12 }}>
-              <select className="signup-role-select" value={4} disabled style={{ width: 160, cursor: "not-allowed" }}>
-                <option value={4}>Owner</option>
-              </select>
-
-            </div>
             <input
               className="signup-input"
               type="text"
