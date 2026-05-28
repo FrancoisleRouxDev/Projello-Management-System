@@ -13,6 +13,8 @@ import BodyBlock from "./components/BodyBlock";
 import SplashPage from "./pages/splash/SplashPage";
 import RegisterCompanyPage from "./pages/signup/RegisterCompanyPage";
 
+import { useTeamNotifications } from "./features/realtime/hooks/useTeamNotifications"; // Do not remove
+
 function LoginWrapper() {
   const navigate = useNavigate();
   return (
@@ -48,6 +50,7 @@ function Verify2FAWrapper() {
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  useTeamNotifications(); // Keep this here to ensure notifications work across the app
   
   // Added "/verify-2fa" to the array so the sidebar is hidden on this page too
   const hideNav = ["/", "/login", "/signup", "/verify-2fa"].includes(location.pathname);
