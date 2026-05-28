@@ -301,6 +301,8 @@
 
 .single-project-view__photo-tile--placeholder {
   background: linear-gradient(135deg, #dbe7cf 0%, #a8c2df 100%);
+  background-position: center;
+  background-size: cover;
 }
 
 .single-project-view__photo-section {
@@ -311,6 +313,42 @@
   border: 1px solid rgba(31, 41, 55, 0.08);
   border-radius: 10px;
   padding: 16px;
+}
+
+.single-project-view__rename-link {
+  background: transparent;
+  border: none;
+  color: var(--accent-3);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 12px;
+}
+
+.team-member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+  gap: 12px;
+}
+
+.team-member-row__remove-btn {
+  opacity: 0;
+  pointer-events: none;
+  border: none;
+  background: transparent;
+  color: #c62828;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+}
+
+.team-member-row:hover .team-member-row__remove-btn {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 @media (max-width: 1200px) {

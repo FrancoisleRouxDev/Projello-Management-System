@@ -43,13 +43,23 @@ export function useProjectMember(projectId: string | number) {
         console.log("🔍 Members field (capital M)?", projectData.Members);
 
         // Try different possible property names
-        const memberList = projectData.members || 
-                          projectData.Members || 
-                          projectData.projectMembers || 
-                          projectData.ProjectMembers || 
-                          [];
+        const memberList = projectData.members ||
+                   projectData.Members ||
+                   projectData.projectMembers ||
+                   projectData.ProjectMembers ||
+                   [];
 
-        setMembers(memberList);
+        // Normalize common id/name fields so callers can rely on `UserID`, `FullName`, `AssignedAs`
+        const normalized = (memberList as any[]).map(m => ({
+          // pick a canonical id from possible variants
+          UserID: m.UserID ?? m.userID ?? m.userId ?? m.id ?? m.user?.id ?? "",
+          FullName: m.FullName ?? m.fullName ?? m.user?.fullName ?? m.user?.full_name ?? "",
+          AssignedAs: m.AssignedAs ?? m.assignedAs ?? m.Assigned_as ?? "Worker",
+          // include original object so other props remain available
+          ...m
+        }));
+
+        setMembers(normalized);
 
       } catch (err) {
         console.error("Error fetching project members:", err);

@@ -23,10 +23,14 @@ namespace Projello.Api.Data
 
         public DbSet<CompanyInvite> CompanyInvites { get; set; } = null!;
 
+        public DbSet<ProjectUpdate> ProjectUpdates { get; set; } = null!;
+        public DbSet<UpdateReaction> UpdateReactions { get; set; } = null!;
+        public DbSet<UpdateComment> UpdateComments { get; set; } = null!;
 
 
-//Section below is extra rule for the database, This one is so no client can be blacklisted by default, they have to be manually blacklisted by an admin.
-     protected override void OnModelCreating(ModelBuilder builder)
+
+        //Section below is extra rule for the database, This one is so no client can be blacklisted by default, they have to be manually blacklisted by an admin.
+        protected override void OnModelCreating(ModelBuilder builder)
 {
     base.OnModelCreating(builder);
 
