@@ -7,6 +7,9 @@ import { API_BASE_URL } from "../../config";
 import AddProjectMemberModal from "../../components/AddProjectMemberModal";   
 import DiscussionTab from "./DiscussionTab";
 
+import { message as antdMessage, Modal } from "antd";
+import CustomModal from "../../components/CustomModal";
+
 type ProjectDetails= {
   projectID: number;
   name: string;
@@ -131,6 +134,59 @@ export default function SingleProjectViewPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState<"overview" | "discussion" | "gallery">("overview");
+
+  //Rename project function
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const [renameSaving, setRenameSaving] = useState(false);
+
+  const openRenameModal = () => {
+    setRenameValue(project?.name || "");
+    setShowRenameModal(true);
+  };
+
+  const handleRenameProject = async () => {
+    if (!project) return;
+
+    const trimmedName = renameValue.trim();
+    if (!trimmedName) {
+      antdMessage.error("Project name is required.");
+      return;
+    }
+
+    setRenameSaving(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/api/projects/${project.projectID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          name: trimmedName,
+          description: project.description,
+          clientID: project.clientID,
+          startDate: project.startDate,
+          dueDate: project.dueDate,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to rename project.");
+      }
+
+      setProject((prev) => (prev ? { ...prev, name: trimmedName } : prev));
+      antdMessage.success("Project renamed successfully.");
+      setShowRenameModal(false);
+    } catch (err: any) {
+      antdMessage.error(err.message || "Failed to rename project.");
+    } finally {
+      setRenameSaving(false);
+    }
+  };
 
   // Get current user role
   useEffect(() => {
@@ -265,6 +321,38 @@ export default function SingleProjectViewPage() {
     setShowCallOverlay(false);
   };
 
+  const handleRemoveMember = (member: any) => {
+    Modal.confirm({
+      title: "Remove member?",
+      content: `Are you sure you want to remove ${member.FullName || member.fullName || "this user"} from the project?`,
+      okText: "Remove",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await fetch(
+            `${API_BASE_URL}/api/projects/${project?.projectID}/members/${member.UserID}`,
+            {
+              method: "DELETE",
+              headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            }
+          );
+
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || "Failed to remove member.");
+          }
+
+          antdMessage.success("Member removed from project.");
+          window.location.reload();
+        } catch (err: any) {
+          antdMessage.error(err.message || "Failed to remove member.");
+        }
+      },
+    });
+  };
+
   if (loading) {
     return <div className="single-project-view__state single-project-view__state--loading">Loading project...</div>;
   }
@@ -284,8 +372,8 @@ export default function SingleProjectViewPage() {
       <div className="single-project-view__header">
         <div className="single-project-view__header-top-row">
           <div className="single-project-view__breadcrumb-row">
-            <button 
-              onClick={() => navigate(-1)} 
+            <button
+              onClick={() => navigate(-1)}
               className="single-project-view__back-button"
             >
               ←
@@ -293,11 +381,20 @@ export default function SingleProjectViewPage() {
             <h1 className="single-project-view__project-name">{project.name}</h1>
             <span className="single-project-view__separator">/</span>
             <span className="single-project-view__client-name">{project.clientName}</span>
+
+            {[4].includes(currentUserRole) && (
+              <button
+                type="button"
+                onClick={openRenameModal}
+                className="single-project-view__rename-link"
+              >
+                Rename Project
+              </button>
+            )}
           </div>
 
-          {/* Call Button on the far right */}
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="single-project-view__call-button"
             onClick={handleStartVoiceCall}
           >
@@ -405,17 +502,19 @@ export default function SingleProjectViewPage() {
       <div className="single-project-view__panel">
         <div className="single-project-view__panel-header-row">
           <h3 className="single-project-view__panel-title">Team Members ({teamMembers.length})</h3>
-          
-          {/* Only Owners (4) and Admins (1) can add members */}
-          {[1, 4].includes(currentUserRole) && (
-            <button 
-              onClick={() => setShowAddMemberModal(true)}
-              className="single-project-view__view-all-button"
-              style={{ color: "#0a0a0a", fontWeight: "600" }}
-            >
-              + Add Member
-            </button>
-          )}
+
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+
+            {[1, 4].includes(currentUserRole) && (
+              <button
+                onClick={() => setShowAddMemberModal(true)}
+                className="single-project-view__view-all-button"
+                style={{ color: "#0a0a0a", fontWeight: "600" }}
+              >
+                + Add Member
+              </button>
+            )}
+          </div>
         </div>
 
         {teamMembers.length === 0 ? (
@@ -423,8 +522,23 @@ export default function SingleProjectViewPage() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {teamMembers.map((m: any) => (
-              <div key={m.UserID} style={{ padding: "8px", background: "#f8fafc", borderRadius: "8px" }}>
-                {m.FullName || m.fullName} — <strong>{m.AssignedAs || m.assignedAs}</strong>
+              <div
+                key={m.UserID}
+                className="team-member-row"
+              >
+                <div className="team-member-row__info">
+                  {m.FullName || m.fullName} — <strong>{m.AssignedAs || m.assignedAs}</strong>
+                </div>
+
+                {[1, 4].includes(currentUserRole) && (
+                  <button
+                    type="button"
+                    className="team-member-row__remove-btn"
+                    onClick={() => handleRemoveMember(m)}
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -452,6 +566,46 @@ export default function SingleProjectViewPage() {
           console.log("Member added - list should refresh");
         }}
       />
+      {/* Rename Modal */}
+      {showRenameModal && (
+        <CustomModal
+          open={showRenameModal}
+          onCancel={() => setShowRenameModal(false)}
+          title="Rename Project"
+          footer={[
+            <button
+              key="cancel"
+              type="button"
+              className="single-project-view__view-all-button"
+              onClick={() => setShowRenameModal(false)}
+            >
+              Cancel
+            </button>,
+            <button
+              key="save"
+              type="button"
+              className="single-project-view__call-button"
+              onClick={handleRenameProject}
+              disabled={renameSaving}
+            >
+              {renameSaving ? "Saving..." : "Save Name"}
+            </button>,
+          ]}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <label style={{ fontWeight: 600, color: "var(--text-dark)" }}>
+              Project Name
+            </label>
+            <input
+              type="text"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              className="project-add-modal__input"
+              placeholder="Enter new project name"
+            />
+          </div>
+        </CustomModal>
+      )}
     </div>
   );
 }

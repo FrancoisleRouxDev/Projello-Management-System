@@ -18,13 +18,16 @@ namespace Projello.Api.Controllers
     {
         private readonly AppDbContext _context;
         private readonly UserManager<User> _userManager;   // ← ADDED
-        private readonly TeamNotificationHub _teamNotificationHub;   // ← Do not remove
+        private readonly IHubContext<TeamNotificationHub> _teamNotificationHub;   // ← Do not remove
 
-        public ProjectsController(AppDbContext context, UserManager<User> userManager, TeamNotificationHub teamNotificationHub)   // ← CHANGED
+        public ProjectsController(
+            AppDbContext context,
+            UserManager<User> userManager,
+            IHubContext<TeamNotificationHub> teamNotificationHub)
         {
             _context = context;
-            _userManager = userManager;   // ← ADDED
-            _teamNotificationHub = teamNotificationHub;   // ← ADDED
+            _userManager = userManager;
+            _teamNotificationHub = teamNotificationHub;
         }
 
         // --- READ ALL (GET: api/projects) ---
@@ -89,6 +92,13 @@ namespace Projello.Api.Controllers
                     return Forbid();
 
                 if (role != "4" && !project.Members.Any(m => m.UserID == userId))
+                    return Forbid();
+            }
+
+            if (GetUserRole() == "4")
+            {
+                var currentUser = await _userManager.FindByIdAsync(userId!);
+                if (currentUser?.CompanyId == null || project.Client?.CompanyID != currentUser.CompanyId)
                     return Forbid();
             }
 
@@ -157,24 +167,60 @@ namespace Projello.Api.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProject(int id, [FromBody] ProjectUpdateDto dto)
         {
-            var project = await _context.Projects.FindAsync(id);
+            var project = await _context.Projects
+                .Include(p => p.Client)
+                .FirstOrDefaultAsync(p => p.ProjectID == id);
             if (project == null) return NotFound();
 
-            bool isForeman = await _context.ProjectMembers
-                .AnyAsync(m => m.ProjectID == id && m.UserID == GetCurrentUserId() && m.AssignedAs == "Foreman");
+            var role = GetUserRole();
+            var userId = GetCurrentUserId();
 
-            if (GetUserRole() != "1" && !isForeman) return Forbid();
+            var isForeman = await _context.ProjectMembers
+                .AnyAsync(m => m.ProjectID == id && m.UserID == userId && m.AssignedAs == "Foreman");
+
+            if (role == "4")
+            {
+                var currentUser = await _userManager.FindByIdAsync(userId!);
+                if (currentUser?.CompanyId == null || project.Client?.CompanyID != currentUser.CompanyId)
+                    return Forbid();
+            }
+            else if (role != "1" && !isForeman)
+            {
+                return Forbid();
+            }
 
             project.Name = dto.Name;
             project.Description = dto.Description;
             project.ClientID = dto.ClientID;
-
             project.StartDate = dto.StartDate.HasValue ? DateOnly.FromDateTime(dto.StartDate.Value) : null;
             project.DueDate = dto.DueDate.HasValue ? DateOnly.FromDateTime(dto.DueDate.Value) : null;
 
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        // Old project update endpoint
+        // [HttpPut("{id}")]
+        // public async Task<IActionResult> UpdateProject(int id, [FromBody] ProjectUpdateDto dto)
+        // {
+        //     var project = await _context.Projects.FindAsync(id);
+        //     if (project == null) return NotFound();
+
+        //     bool isForeman = await _context.ProjectMembers
+        //         .AnyAsync(m => m.ProjectID == id && m.UserID == GetCurrentUserId() && m.AssignedAs == "Foreman");
+
+        //     if (GetUserRole() != "1" && !isForeman) return Forbid();
+
+        //     project.Name = dto.Name;
+        //     project.Description = dto.Description;
+        //     project.ClientID = dto.ClientID;
+
+        //     project.StartDate = dto.StartDate.HasValue ? DateOnly.FromDateTime(dto.StartDate.Value) : null;
+        //     project.DueDate = dto.DueDate.HasValue ? DateOnly.FromDateTime(dto.DueDate.Value) : null;
+
+        //     await _context.SaveChangesAsync();
+        //     return NoContent();
+        // }
 
         // --- UPDATE STATUS ONLY ---
         [HttpPut("{id}/status")]
@@ -281,6 +327,35 @@ namespace Projello.Api.Controllers
             return Ok(new { message = "Member added successfully" });
             
         }
+
+        // --- REMOVE MEMBER ---
+        [HttpDelete("{projectId}/members/{userId}")]
+        public async Task<IActionResult> RemoveProjectMember(int projectId, string userId)
+        {
+            var role = GetUserRole();
+            var currentUserId = GetCurrentUserId();
+
+            if (role != "1" && role != "4")
+            {
+                var isForeman = await _context.ProjectMembers.AnyAsync(m =>
+                    m.ProjectID == projectId &&
+                    m.UserID == currentUserId &&
+                    m.AssignedAs == "Foreman");
+
+                if (!isForeman) return Forbid();
+            }
+
+            var member = await _context.ProjectMembers.FirstOrDefaultAsync(m =>
+                m.ProjectID == projectId && m.UserID == userId);
+
+            if (member == null) return NotFound("Member not found.");
+
+            _context.ProjectMembers.Remove(member);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
 
         // --- PRIVATE HELPERS ---
         private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
