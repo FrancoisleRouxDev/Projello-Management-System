@@ -7,8 +7,24 @@ using Projello.Api.Data;
 using Projello.Api.Models;
 using Projello.Api.Hubs;
 using System.Text;
+using CloudinaryDotNet;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Cloudinary configuration
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("CloudinarySettings"));
+
+builder.Services.AddSingleton(sp =>
+{
+    var settings = sp.GetRequiredService<IOptions<CloudinarySettings>>().Value;
+    var account = new Account(
+        settings.CloudName,
+        settings.ApiKey,
+        settings.ApiSecret);
+    return new Cloudinary(account);
+});
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -147,5 +163,6 @@ app.Use(async (context, next) =>
 
 app.UseAuthorization();
 app.MapControllers();
-app.MapHub<ProjectCallHub>("/callhub"); 
+app.MapHub<ProjectCallHub>("/callhub");
+app.MapHub<TeamNotificationHub>("/teamnotificationHub");
 app.Run();

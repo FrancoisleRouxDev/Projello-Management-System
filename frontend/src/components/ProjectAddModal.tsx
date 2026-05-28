@@ -61,6 +61,16 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
     <CustomModal
       open={open}
       onCancel={handleCancel}
+      // title={
+      //   <div className="entity-modal__title-row">
+      //     <div className="entity-modal__title-icon" aria-hidden="true">
+      //     </div>
+      //     <div>
+      //       <div className="entity-modal__title">Add New Project</div>
+      //       <div className="entity-modal__subtitle">Create a new project record</div>
+      //     </div>
+      //   </div>
+      // }
       title="Add New Project"
       footer={[
         <Button key="cancel" onClick={handleCancel}>
@@ -115,14 +125,18 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
         </div>
 
         <div className="project-add-modal__form-group">
-          <label className="project-add-modal__label">Due Date</label>
+          <label className="project-add-modal__label" htmlFor="project-due-date">Due Date</label>
           <input
+            id="project-due-date"
             type="date"
             className="project-add-modal__input"
             value={formData.dueDate}
             onChange={(e) =>
               setFormData({ ...formData, dueDate: e.target.value })
             }
+            title="Due date"
+            placeholder="Select due date"
+            aria-label="Due date"
           />
         </div>
       </div>

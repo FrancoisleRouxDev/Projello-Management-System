@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Projello.Api.Data;
 using Projello.Api.DTOs;
 using Projello.Api.Models;
+using System.Data;
 using System.Security.Claims;
 
 namespace Projello.Api.Controllers
@@ -175,5 +176,39 @@ namespace Projello.Api.Controllers
         // helpers
         private string? GetCurrentUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
         private string? GetUserRole() => User.FindFirst("RoleID")?.Value;
+    
+// Testing this method, that why its to the left and not aligned with the rest of the code
+//GET: api/clients/summary
+[HttpGet("summary")]
+public async Task<ActionResult<ClientSummaryDto>> GetClientSummary()
+{
+    var role = GetUserRole();
+    var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
+
+    var query = _context.Clients.AsQueryable();
+
+    // Keep scoping aligned with existing GetClients behavior
+    if (role != "1" && currentUser?.CompanyId != null)
+    {
+        query = query.Where(c => c.CompanyID == currentUser.CompanyId);
     }
+
+    var blacklistedClients = await query.CountAsync(c => c.IsBlacklisted);
+    var activeClients = await query.CountAsync(c => !c.IsBlacklisted);
+
+    var summary = new ClientSummaryDto
+    {
+        // Keep null until a verified finance source is available
+        TotalRevenue = null,
+        Outstanding = null,
+        ActiveClients = activeClients,
+        BlacklistClients = blacklistedClients
+    };
+
+    return Ok(summary);
 }
+    
+    }
+    
+}
+

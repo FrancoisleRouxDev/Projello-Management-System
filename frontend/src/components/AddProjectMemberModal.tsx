@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "../config";
+import { message as antdMessage } from "antd";
 
 interface AddProjectMemberModalProps {
   open: boolean;
@@ -60,13 +61,15 @@ export default function AddProjectMemberModal({
         }),
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
 
-      alert("Member added successfully!");
+      antdMessage.success("Worker added to the project.");
       onMemberAdded?.();
       onClose();
     } catch (err: any) {
-      alert("Failed to add member: " + err.message);
+      antdMessage.error("Failed to add member: " + err.message);
     } finally {
       setSubmitting(false);
     }
