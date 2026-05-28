@@ -331,8 +331,24 @@ export default function SingleProjectViewPage() {
       onOk: async () => {
         try {
           const token = localStorage.getItem("token");
+
+          // tolerant lookup for member id
+          const targetId =
+            member.UserID ??
+            member.userID ??
+            member.userId ??
+            member.id ??
+            member.user?.id ??
+            member.user?.userId ??
+            null;
+
+          if (!targetId) {
+            antdMessage.error("Unable to determine member ID.");
+            return;
+          }
+
           const res = await fetch(
-            `${API_BASE_URL}/api/projects/${project?.projectID}/members/${member.UserID}`,
+            `${API_BASE_URL}/api/projects/${project?.projectID}/members/${targetId}`,
             {
               method: "DELETE",
               headers: token ? { Authorization: `Bearer ${token}` } : undefined,
