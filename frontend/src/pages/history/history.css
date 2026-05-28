@@ -35,7 +35,7 @@ body {
   align-items: center;
   border-bottom: 2px solid var(--border-color);
   padding-bottom: 1.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -84,6 +84,88 @@ body {
   opacity: 0.6;
 }
 
+/* --- Navigation Tab Interface Wrapper --- */
+.history-tabs-nav {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.tab-toggle-btn {
+  background: transparent;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-light-gray);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.tab-toggle-btn:hover {
+  background: rgba(45, 74, 62, 0.08);
+  color: var(--deep-green-accent);
+}
+
+.tab-toggle-btn.tab-active {
+  background: var(--deep-green-accent);
+  color: #ffffff;
+}
+
+/* --- Real-time Dynamic Searching and Category Filters --- */
+.history-control-filter-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  flex: 1;
+  min-width: 280px;
+}
+
+.filter-search-box {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--card-bg);
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.filter-search-box:focus {
+  border-color: var(--deep-green-accent);
+}
+
+.dropdown-filter-wrapper {
+  min-width: 200px;
+}
+
+.filter-dropdown-select {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  cursor: pointer;
+  outline: none;
+}
+
+.filter-dropdown-select:focus {
+  border-color: var(--deep-green-accent);
+}
+
 /* --- Alert Messages & Interface Feedback States --- */
 .history-error-alert {
   background-color: #fce8e6;
@@ -106,6 +188,20 @@ body {
   color: var(--text-light-gray);
   font-size: 1.05rem;
   font-weight: 500;
+}
+
+.spinner-element {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--deep-green-accent);
+  border-radius: 50%;
+  margin: 0 auto 1rem auto;
+  animation: spinHistoryAnimation 0.8s linear infinite;
+}
+
+@keyframes spinHistoryAnimation {
+  to { transform: rotate(360deg); }
 }
 
 /* --- Timeline Stream Layout --- */
@@ -236,11 +332,15 @@ body {
   border: 1px solid var(--border-color);
   padding: 0.2rem 0.6rem;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.35rem;
   user-select: none;
+}
+
+.reaction-symbol {
+  font-size: 1rem;
 }
 
 .reaction-count {
@@ -276,4 +376,68 @@ body {
 
 .emoji-picker-btn:active {
   transform: scale(0.95);
+}
+
+/* --- TAB 2: COMPLETED PROJECTS ARCHIVE LAYOUT ENGINE --- */
+.archive-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.archive-project-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.archive-card-status-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #2e7d32;
+  background: #e8f5e9;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  align-self: flex-start;
+  margin-bottom: 1rem;
+  letter-spacing: 0.03em;
+}
+
+.archive-project-title {
+  color: var(--deep-green-accent);
+  margin: 0 0 0.25rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.archive-client-label {
+  font-size: 0.85rem;
+  color: var(--text-light-gray);
+  display: block;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.archive-project-desc {
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  line-height: 1.5;
+  margin: 0 0 1.5rem 0;
+  flex: 1;
+}
+
+.archive-project-meta-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-light-gray);
+  border-top: 1px dashed var(--border-color);
+  padding-top: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
