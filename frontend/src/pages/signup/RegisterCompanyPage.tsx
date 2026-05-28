@@ -17,10 +17,26 @@ export default function RegisterCompanyPage({ onSwitchToLogin }: RegisterCompany
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
+  //Validates the password against the rules and returns an error message if it fails
+  function validatePasswordRules(pw: string): string | null {
+    if (pw.length < 8) return "Password must be at least 8 characters.";
+    if (!/[A-Z]/.test(pw)) return "Password must include at least one uppercase letter.";
+    if (!/[a-z]/.test(pw)) return "Password must include at least one lowercase letter.";
+    if (!/[0-9]/.test(pw)) return "Password must include at least one number.";
+    if (!/[!@#$%^&*(),.?\":{}|<>]/.test(pw)) return "Password must include at least one special character (e.g. !@#$%^&*).";
+    return null;
+  }
   const handleRegisterCompany = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccessMsg("");
+
+    //Client-side password validation before sending to server
+    const pwdErr = validatePasswordRules(password);
+    if (pwdErr) {
+      setError(pwdErr);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
@@ -41,6 +57,13 @@ export default function RegisterCompanyPage({ onSwitchToLogin }: RegisterCompany
           companyName,
         }),
       });
+
+
+     if (!response.ok) {
+        setError("Failed to register company. Please try again.");
+      setLoading(false);
+      return;
+    }
 
       if (!response.ok) {
         setError("Failed to register company. Please try again.");
