@@ -75,9 +75,30 @@ body {
   text-align: center;
   font-size: 13px;
   color: #666;
+  margin-bottom: 10px;
+  margin-top: 10px;
 }
+
+.signinText{
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 7px;
+  background: #00000005;
+  border-radius: 25px;
+  margin-bottom: 16px;
+  box-shadow: inset 0px 1px 2px 0px #00000020;
+  min-height: 48px;
+  justify-content: center;
+  align-items: center;
+}
+
+.signup-role-select{
+  margin-bottom: 16px;
+}
+
 .login-link {
-  color: #c8a84b;
+  color: var(--accent-3);
   cursor: pointer;
   text-decoration: none;
   font-weight: 600;

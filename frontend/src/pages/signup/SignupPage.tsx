@@ -124,12 +124,14 @@ export default function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
             {error && <p style={{ color: "red" }}>{error}</p>}
             {successMsg && <p style={{ color: "green", fontWeight: "bold" }}>{successMsg}</p>}
 
+            <div className="signinText">
             <p className="login-signup-text">
               Already have an account?{" "}
               <span className="login-link" onClick={onSwitchToLogin}>
                 Log In
               </span>
             </p>
+            </div>
 
             <div className="login-button-row">
               <button

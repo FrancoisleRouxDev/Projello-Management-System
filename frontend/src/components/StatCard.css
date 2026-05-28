@@ -1,9 +1,9 @@
 .stat-card {
   min-width: 0;
   padding: 24px;
-  background: #f7f7f3;
-  border-radius: 12px;
-  border: 1px solid rgba(40, 51, 43, 0.1);
+  background: var(--secondary-background-item, #f7f7f3);
+  border-radius: 20px;
+  border: 1px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -20,9 +20,9 @@
   height: 36px;
   display: grid;
   place-items: center;
-  border-radius: 10px;
+  border-radius: 20px;
   background: var(--stat-card-icon-bg, #f0fdf4);
-  color: var(--stat-card-icon-fg, #00a63e);
+  /* color: var(--stat-card-icon-fg, #ff0000); */
   flex: 0 0 auto;
 }
 
@@ -33,7 +33,7 @@
 }
 
 .stat-card__value {
-  color: #0a0a0a;
+  color: var(--text-dark);
   font-size: 24px;
   font-family: "Roboto", sans-serif;
   font-weight: 600;
@@ -41,7 +41,7 @@
 }
 
 .stat-card__label {
-  color: #4a5565;
+  color: var(--accent-2-40_Opacity);
   font-size: 14px;
   font-family: "Roboto", sans-serif;
   font-weight: 400;

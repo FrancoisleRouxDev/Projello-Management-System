@@ -11,7 +11,7 @@ const W = 680;
 const H = 680;
 const CX = W / 2;
 const CY = H / 2 - 40;
-const BEAR_SIZE = 500;
+const BEAR_SIZE = 350;
 
 // GRID is the size of each "cell" in the dot grid — think of the canvas as a 10x10px tile map
 // CHARS is just a big string of random characters that flash inside the cells during the animation (matrix-ish vibes)
@@ -326,7 +326,7 @@ export default function SplashPage() {
       const labelAlpha = Math.min(1, Math.max(0, (expandT - 0.5) / 0.5));
 
       const ringY = labelY + 80;
-      const ringR = 40;
+      const ringR = 28;
       const ringRot = (elapsed / 1000) * 1.6; // ring slowly rotates the whole time
 
       // faint full circle in the background (the "track" of the progress ring)
@@ -375,5 +375,6 @@ export default function SplashPage() {
         className="splash-brand-logo"
       />
     </div>
+
   );
 }  //Just a nice to have , splash screens are usually to load info for a app behind the scenes, so this is a fun thing to add incase its ever needed.

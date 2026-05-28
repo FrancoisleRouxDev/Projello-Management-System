@@ -120,6 +120,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToRegisterCompany,
             {successMsg && <p className="login-success-text" style={{ color: 'green', fontWeight: 'bold' }}>{successMsg}</p>}
             
             {/* Text with a clickable link that triggers the parent's switch-to-signup function */}
+            <div className="signinText">
             <p className="login-signup-text">
               I don't have an Account,{" "}
               <span className="login-link" onClick={onSwitchToSignUp}>
@@ -139,6 +140,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToRegisterCompany,
                 </span>
               </p>
             )}
+            </div>
             
             <div className="login-button-row">
               {/* Cancel button: clears all form inputs and error states without submitting */}

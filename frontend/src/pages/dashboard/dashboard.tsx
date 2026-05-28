@@ -46,9 +46,9 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-page">
-      <div className="pageHeader">
+      {/* <div className="pageHeader">
         <h3>Active Jellos</h3>
-      </div>
+      </div> */}
 
       <div className="filterBar">
         <div className="searchBar">
@@ -137,7 +137,7 @@ export default function DashboardPage() {
               <JelloItem
                 key={project.projectID || project.ProjectID}
                 name={project.name || project.Name}
-                clientName={project.client?.name || project.Client?.Name || "Unknown Client"}
+                clientName={project.clientName || project.ClientName || "Unknown Client"}
                 date={project.startDate || project.StartDate || ""}
                 progressPercent={project.milestones ? Math.round((project.milestones.filter((m:any) => m.status === "Completed").length / project.milestones.length) * 100) : 0}
                 milestonesLabel={project.milestones ? `${project.milestones.filter((m:any) => m.status === "Completed").length} / ${project.milestones.length} Milestones Reached` : "0 / 0 Milestones Reached"}
