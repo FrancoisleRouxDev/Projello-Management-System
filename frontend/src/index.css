@@ -88,6 +88,14 @@
   --secondary-background-item: #f7f7f3;
   --white: #ffffff;
   --black: #000000;
+  //angie - die is joune
+  --sage-green-bg: #f4f6f4;
+  --deep-green-accent: #2d4a3e;
+  --text-light-gray: #5c6b63;
+  --border-color: #d1dad5;
+  --card-bg: #ffffff;
+  --warning-red: #d9534f;
+  --bright-yellow: #f0ad4e;
 }
 
 [data-theme="dark"] {
@@ -113,6 +121,14 @@
   --secondary-background-item: #334239;
   --white: #ffffff;
   --black: #000000;
+  //angie - die is joune
+  --sage-green-bg: #353835;
+  --deep-green-accent: #8cab9e;
+  --text-light-gray: #a5c2b3;
+  --border-color: #3b413e;
+  --card-bg: #000000;
+  --warning-red: #d9534f;
+  --bright-yellow: #f0ad4e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -151,6 +167,7 @@ h6 {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+  /* color: var(--text-dark) !important; */
 }
 h1 {
   font-size: 2.5rem;

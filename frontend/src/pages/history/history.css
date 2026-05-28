@@ -7,17 +7,6 @@ body {
     width: 100vw;
 }
 
-:root {
-  --sage-green-bg: #f4f6f4;
-  --deep-green-accent: #2d4a3e;
-  --text-dark: #1b2621;
-  --text-light-gray: #5c6b63;
-  --border-color: #d1dad5;
-  --card-bg: #ffffff;
-  --warning-red: #d9534f;
-  --bright-yellow: #f0ad4e;
-}
-
 /* --- Layout Wrapper Component Container --- */
 .history-page-container {
   padding: 2rem;
