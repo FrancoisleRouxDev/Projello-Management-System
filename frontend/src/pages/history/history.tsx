@@ -169,13 +169,13 @@ export default function HistoryPage() {
           className={`tab-toggle-btn ${activeTab === "stream" ? "tab-active" : ""}`}
           onClick={() => { setActiveTab("stream"); setSearchQuery(""); }}
         >
-          ⏱️ Active Check-In Stream ({updates.length})
+          Active Check-In Stream ({updates.length})
         </button>
         <button 
           className={`tab-toggle-btn ${activeTab === "archive" ? "tab-active" : ""}`}
           onClick={() => { setActiveTab("archive"); setSearchQuery(""); }}
         >
-          🗄️ Completed Projects Archive ({completedProjects.length})
+          Completed Projects Archive ({completedProjects.length})
         </button>
       </div>
 
@@ -298,7 +298,7 @@ export default function HistoryPage() {
           <div className="archive-grid-layout">
             {filteredArchive.map((project) => (
               <div key={project.projectID} className="archive-project-card">
-                <div className="archive-card-status-badge">✓ ARCHIVED SECURELY</div>
+                <div className="archive-card-status-badge">ARCHIVED SECURELY</div>
                 <h3 className="archive-project-title">{project.name}</h3>
                 <span className="archive-client-label">Client Account: {project.clientName || "Internal Account"}</span>
                 <p className="archive-project-desc">{project.description || "No project text summary provided upon closing initialization."}</p>
