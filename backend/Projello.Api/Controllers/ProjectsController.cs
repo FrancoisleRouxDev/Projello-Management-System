@@ -6,6 +6,8 @@ using Projello.Api.Models;
 using Projello.Api.DTOs;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;   // ← ADDED
+using Microsoft.AspNetCore.SignalR; // ← Do not remove
+using Projello.Api.Hubs; // ← Do not remove
 
 namespace Projello.Api.Controllers
 {
@@ -16,11 +18,13 @@ namespace Projello.Api.Controllers
     {
         private readonly AppDbContext _context;
         private readonly UserManager<User> _userManager;   // ← ADDED
+        private readonly TeamNotificationHub _teamNotificationHub;   // ← Do not remove
 
-        public ProjectsController(AppDbContext context, UserManager<User> userManager)   // ← CHANGED
+        public ProjectsController(AppDbContext context, UserManager<User> userManager, TeamNotificationHub teamNotificationHub)   // ← CHANGED
         {
             _context = context;
             _userManager = userManager;   // ← ADDED
+            _teamNotificationHub = teamNotificationHub;   // ← ADDED
         }
 
         // --- READ ALL (GET: api/projects) ---
@@ -256,7 +260,26 @@ namespace Projello.Api.Controllers
             _context.ProjectMembers.Add(member);
             await _context.SaveChangesAsync();
 
+            var joinedBy = await _userManager.FindByIdAsync(userId!);
+
+            var notification = new
+            {
+                projectId,
+                projectName = project.Name,
+                memberName = targetUser.FullName,
+                assignedAs = member.AssignedAs ?? "Worker",
+                message = $"{targetUser.FullName} joined {project.Name} as {member.AssignedAs ?? "Worker"}."
+            };
+
+            if (joinedBy != null)
+            {
+                await _teamNotificationHub.Clients.User(userId!).SendAsync("WorkerJoinedProject", notification);
+            }
+
+            await _teamNotificationHub.Clients.User(dto.UserID).SendAsync("WorkerJoinedProject", notification);
+
             return Ok(new { message = "Member added successfully" });
+            
         }
 
         // --- PRIVATE HELPERS ---

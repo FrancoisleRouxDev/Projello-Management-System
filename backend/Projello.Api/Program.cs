@@ -163,5 +163,6 @@ app.Use(async (context, next) =>
 
 app.UseAuthorization();
 app.MapControllers();
-app.MapHub<ProjectCallHub>("/callhub"); 
+app.MapHub<ProjectCallHub>("/callhub");
+app.MapHub<TeamNotificationHub>("/teamnotificationHub");
 app.Run();
