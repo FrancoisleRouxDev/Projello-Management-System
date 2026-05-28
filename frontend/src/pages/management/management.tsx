@@ -28,13 +28,14 @@ export default function ManagementPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [clients, setClients] = useState<{ clientID: number; name: string }[]>([]);
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const headers: HeadersInit = { "Content-Type": "application/json" };
-        if (token) headers["Authorization"] = `Bearer ${token}`;
+  let isMounted = true; // To prevent state updates on unmounted component
+   const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers: HeadersInit = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
 
         const response = await fetch(`${API_BASE_URL}/api/projects`, {
           method: "GET",
@@ -56,7 +57,34 @@ export default function ManagementPage() {
       }
     };
 
-    fetchProjects();
+  const fetchClients = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/clients`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || res.statusText || "Failed to load clients");
+      }
+      const data = await res.json();
+      const mapped = (data ?? []).map((c: any) => ({ clientID: c.clientID ?? c.ClientID ?? c.ClientId, name: c.name ?? c.Name ?? "" }));
+      setClients(mapped);
+    } catch (err: any) {
+      console.warn("Could not load clients for selector:", err);
+      setClients([]);
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    setError(null);
+    (async () => {
+      if (!mounted) return;
+      await Promise.all([fetchProjects(), fetchClients()]);
+    })();
+    return () => { mounted = false; };
   }, []);
 
   // Map Project data to ManagementClientRow for table display

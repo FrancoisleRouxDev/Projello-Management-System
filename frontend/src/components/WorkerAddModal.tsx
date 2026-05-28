@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import CustomModal from "./CustomModal";
-import { Button, Select } from "antd";
-import "./WorkerAddModal.css";
+import { Button, Modal, Select } from "antd";
+import { UserPlus } from "lucide-react";
+import "./WorkerClientAddModal.css";
 
 interface WorkerAddModalProps {
   open: boolean;
@@ -27,71 +27,91 @@ export const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
     roleID: 3,
     phone: "",
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
+  const resetForm = () => {
+    setFormData({ fullName: "", email: "", roleID: 3, phone: "" });
+  };
+
+  const handleClose = () => {
+    if (loading) return;
+    resetForm();
+    onClose();
+  };
+
+  const handleSubmit = async () => {
     if (!formData.fullName.trim() || !formData.email.trim()) {
       alert("Please fill in name and email");
       return;
     }
-    onSubmit(formData);
-    setFormData({ fullName: "", email: "", roleID: 3, phone: "" });
-    onClose();
-  };
 
-  const handleCancel = () => {
-    setFormData({ fullName: "", email: "", roleID: 3, phone: "" });
-    onClose();
+    setLoading(true);
+    try {
+      await onSubmit(formData);
+      resetForm();
+      onClose();
+    } finally {
+      setLoading(false);
+    }
   };
-
   return (
-    <CustomModal
+    <Modal
       open={open}
-      onCancel={handleCancel}
-      title="Add New Worker"
-      footer={[
-        <Button key="cancel" onClick={handleCancel}>
-          Cancel
-        </Button>,
-        <Button key="submit" type="primary" onClick={handleSubmit}>
-          Add Worker
-        </Button>,
-      ]}
+      onCancel={handleClose}
+      centered
+      destroyOnClose
+      maskClosable={!loading}
+      className="entity-modal entity-modal--worker"
+      width={680}
+      title={
+        <div className="entity-modal__title-row">
+          <div className="entity-modal__title-icon" aria-hidden="true">
+            <UserPlus size={18} strokeWidth={2.2} />
+          </div>
+          <div>
+            <div className="entity-modal__title">Add New Worker</div>
+            <div className="entity-modal__subtitle">Create a new team member</div>
+          </div>
+        </div>
+      }
+      footer={
+        <div className="entity-modal__footer">
+          <Button onClick={handleClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button type="primary" onClick={handleSubmit} loading={loading}>
+            Add Worker
+          </Button>
+        </div>
+      }
     >
-      <div className="worker-add-modal__form">
-        <div className="worker-add-modal__form-group">
-          <label className="worker-add-modal__label worker-add-modal__label--required">
-            Full Name
-          </label>
+      <div className="entity-modal__form">
+        <div className="entity-modal__form-group">
+          <label className="entity-modal__label entity-modal__label--required">Full Name</label>
           <input
             type="text"
-            className="worker-add-modal__input"
+            className="entity-modal__input"
             value={formData.fullName}
-            onChange={(e) =>
-              setFormData({ ...formData, fullName: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
             placeholder="Enter full name"
           />
         </div>
-        <div className="worker-add-modal__form-group">
-          <label className="worker-add-modal__label worker-add-modal__label--required">
-            Email
-          </label>
+
+        <div className="entity-modal__form-group">
+          <label className="entity-modal__label entity-modal__label--required">Email</label>
           <input
             type="email"
-            className="worker-add-modal__input"
+            className="entity-modal__input"
             value={formData.email}
-            onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             placeholder="Enter email address"
           />
         </div>
-        <div className="worker-add-modal__form-group">
-          <label className="worker-add-modal__label">
-            Role
-          </label>
+
+        <div className="entity-modal__form-group">
+          <label className="entity-modal__label">Role</label>
           <Select
-            className="worker-add-modal__select"
+            className="entity-modal__select"
             value={formData.roleID}
             onChange={(value) => setFormData({ ...formData, roleID: value })}
             options={[
@@ -100,21 +120,18 @@ export const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
             ]}
           />
         </div>
-        <div className="worker-add-modal__form-group">
-          <label className="worker-add-modal__label">
-            Phone
-          </label>
+
+        <div className="entity-modal__form-group">
+          <label className="entity-modal__label">Phone</label>
           <input
             type="tel"
-            className="worker-add-modal__input"
+            className="entity-modal__input"
             value={formData.phone}
-            onChange={(e) =>
-              setFormData({ ...formData, phone: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             placeholder="Enter phone number"
           />
         </div>
       </div>
-    </CustomModal>
+    </Modal>
   );
 };
