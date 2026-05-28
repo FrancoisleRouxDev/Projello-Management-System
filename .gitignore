@@ -39,3 +39,7 @@ node_modules/react-dom/cjs/react-dom-profiling.profiling.js
 *.json
 *.json
 *.exe
+*.lscache
+*.exe
+backend/Projello.Api/bin/Debug/net10.0/Projello.Api.exe
+backend/Projello.Api/bin/Debug/net10.0/Projello.Api.exe
