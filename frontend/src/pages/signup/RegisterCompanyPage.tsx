@@ -66,6 +66,14 @@ export default function RegisterCompanyPage({ onSwitchToLogin }: RegisterCompany
           <h1 className="signup-title">Register Company</h1>
 
           <form onSubmit={handleRegisterCompany}>
+
+            {/* This is the new location for the owner tag for the moment */}
+            <div style={{marginBottom: 12 }}>
+              <select className="signup-role-select" value={4} disabled style={{ width: 160, cursor: "not-allowed" }}>
+                <option value={4}>Owner</option>
+              </select>
+
+            </div>
             <input
               className="signup-input"
               type="text"
@@ -108,9 +116,12 @@ export default function RegisterCompanyPage({ onSwitchToLogin }: RegisterCompany
               required
             />
 
-            <select className="signup-role-select" value={4} disabled>
+
+             {/* Commenting this out for the time being since its hardcoded.
+             1st change suggestion form William */}
+            {/* <select className="signup-role-select" value={4} disabled>
               <option value={4}>Owner</option>
-            </select>
+            </select> */}
 
             {error && <p className="signup-error-text" style={{ color: 'red' }}>{error}</p>}
             {successMsg && (
