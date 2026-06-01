@@ -225,16 +225,15 @@ namespace Projello.Api.Controllers
 
             if (isInitialSetupWorkflow)
             {
-                // FIXED: Added ?? "" fallback to eliminate CS8600 nullability conversion warning
                 base32Secret = await _userManager.GetAuthenticationTokenAsync(user, "Projello2FA", "UnverifiedSecretKey") ?? "";
                 if (string.IsNullOrEmpty(base32Secret))
                 {
-                    return BadRequest(new { Message = "No active unverified 2FA setup session detected. Please initiate setup configuration first." });
+                    // Atomic Gate Protection: If another device already verified, this session key is empty!
+                    return BadRequest(new { Message = "This QR code setup session has expired or has already been used by another device." });
                 }
             }
             else
             {
-                // FIXED: Added ?? "" fallback to eliminate CS8600 nullability conversion warning
                 base32Secret = user.TwoFactorSecret ?? "";
             }
 
@@ -248,7 +247,7 @@ namespace Projello.Api.Controllers
             {
                 if (isInitialSetupWorkflow)
                 {
-                    // Promoted verified configuration state parameters permanently
+                    // 1. Promote verified configuration state parameters permanently
                     user.TwoFactorSecret = base32Secret;
                     user.IsTwoFactorEnabled = true;
                     
@@ -258,8 +257,8 @@ namespace Projello.Api.Controllers
                         return BadRequest(new { Message = "Failed to commit security parameters to context server footprint." });
                     }
 
-                    // Flush unverified token space immediately. 
-                    // This renders the displayed setup barcode useless and prevents scanning it more than once.
+                    // 2. ATOMIC SECURITY ACTION: Flush unverified token space immediately. 
+                    // This renders the displayed setup barcode completely useless for any subsequent scanning attempts.
                     await _userManager.RemoveAuthenticationTokenAsync(user, "Projello2FA", "UnverifiedSecretKey");
                 }
 

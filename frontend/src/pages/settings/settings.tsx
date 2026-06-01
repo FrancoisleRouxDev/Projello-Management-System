@@ -61,7 +61,7 @@ export default function SettingsPage() {
       if (!token) return;
 
       try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        const res = await fetch(`${API_BASE_URL}/api/Auth/me`, {
           headers: { 
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -84,7 +84,6 @@ export default function SettingsPage() {
 
   const hasCustomAvatar = !!avatarSeed && !!avatarBg;
   
-  // Fixed: backgroundColor must be an array
   const avatarSvg = hasCustomAvatar
     ? createAvatar(botttsNeutral, { 
         seed: avatarSeed, 
@@ -109,8 +108,13 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetch2FAStatus = async () => {
       if (!userEmail) return;
+      const token = localStorage.getItem("token");
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/2fa-status?email=${encodeURIComponent(userEmail)}`);
+        const response = await fetch(`${API_BASE_URL}/api/Auth/2fa-status?email=${encodeURIComponent(userEmail)}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
         if (response.ok) {
           const data = await response.json();
           setIs2FAEnabled(data.is2FAEnabled);
@@ -141,9 +145,13 @@ export default function SettingsPage() {
     } else {
       setLoading(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/generate-2fa-secret`, { 
+        const token = localStorage.getItem("token"); // Extract token to fix 401 Unauthorized errors
+        const response = await fetch(`${API_BASE_URL}/api/Auth/generate-2fa-secret`, { 
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ email: userEmail })
         });
 
@@ -168,9 +176,13 @@ export default function SettingsPage() {
     setLoading(true);
     setMessage("");
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/verify-2fa`, { 
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/api/Auth/verify-2fa`, { 
         method: 'POST', 
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ email: userEmail, code: verificationCode }) 
       });
       
@@ -197,7 +209,7 @@ export default function SettingsPage() {
         <span className="settings-user">{userEmail && `Signed in as: ${userEmail}`}</span>
       </div>
 
-             {/* Profile Card */}
+      {/* Profile Card */}
       <div className="settings-card" style={{ marginBottom: 24 }}>
         <h3 className="settings-card-title">Profile</h3>
         <div className="settings-card-content" style={{ flexDirection: "row", alignItems: "center", gap: 32 }}>
@@ -280,7 +292,7 @@ export default function SettingsPage() {
                     dangerouslySetInnerHTML={{
                       __html: createAvatar(botttsNeutral, { 
                         seed, 
-                        backgroundColor: [`#${modalBg}`]   // ← Fixed here
+                        backgroundColor: [`#${modalBg}`]
                       }).toString()
                     }}
                   />
