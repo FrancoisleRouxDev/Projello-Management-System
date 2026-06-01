@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import "./settings.css";
 import CustomModal from "../../components/CustomModal";
 import CustomSwitch from "../../components/CustomSwitch";
+import { QRCodeSVG } from 'qrcode.react'; // Secured: Local rendering instead of external network leak
 
 import { message as antdMessage } from "antd";
 import { API_BASE_URL } from "../../config";
@@ -99,10 +100,9 @@ export default function SettingsPage() {
 
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [authenticatorUri, setAuthenticatorUri] = useState(""); // Secured: Keep local raw data string only
   const [verificationCode, setVerificationCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
 
   // Fetch 2FA status
   useEffect(() => {
@@ -133,19 +133,25 @@ export default function SettingsPage() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
+  // Secured: Unified reset logic to prevent state footprint pollution
+  const handleCloseSetup = () => {
+    setShowSetup(false);
+    setAuthenticatorUri("");
+    setVerificationCode("");
+  };
+
   const handleToggle2FA = async () => {
-    setMessage("");
     if (!userEmail) {
-      setMessage("Error: User email not found in session. Please log in again.");
+      antdMessage.error("Error: User email not found in session. Please log in again.");
       return;
     }
 
     if (is2FAEnabled) {
-      setMessage("Disabling 2FA requires additional backend endpoints. Contact Admin.");
+      antdMessage.warning("Disabling 2FA requires password verification. Contact Admin.");
     } else {
       setLoading(true);
       try {
-        const token = localStorage.getItem("token"); // Extract token to fix 401 Unauthorized errors
+        const token = localStorage.getItem("token");
         const response = await fetch(`${API_BASE_URL}/api/Auth/generate-2fa-secret`, { 
           method: 'POST',
           headers: { 
@@ -157,15 +163,14 @@ export default function SettingsPage() {
 
         if (response.ok) {
           const data = await response.json();
-          const encodedUri = encodeURIComponent(data.authenticatorUri);
-          setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUri}`);
+          setAuthenticatorUri(data.authenticatorUri);
           setShowSetup(true);
         } else {
-          const errorData = await response.json();
-          setMessage(errorData.message || "Failed to generate 2FA secret.");
+          const errorData = await response.json().catch(() => ({}));
+          antdMessage.error(errorData.message || "Failed to generate 2FA secret.");
         }
       } catch (error) {
-        setMessage("Network error. Make sure your ASP.NET Core API is running.");
+        antdMessage.error("Network error. Make sure your application API is running.");
       } finally {
         setLoading(false);
       }
@@ -174,7 +179,6 @@ export default function SettingsPage() {
 
   const handleVerifyCode = async () => {
     setLoading(true);
-    setMessage("");
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`${API_BASE_URL}/api/Auth/verify-2fa`, { 
@@ -188,15 +192,18 @@ export default function SettingsPage() {
       
       if (response.ok) {
         setIs2FAEnabled(true);
-        setShowSetup(false);
-        setVerificationCode("");
-        setMessage("Success! Two-Step Verification is enabled.");
+        handleCloseSetup();
+        antdMessage.success("Success! Two-Step Verification is enabled.");
       } else {
-        const errorData = await response.json();
-        setMessage(errorData.message || "Invalid verification code.");
+        const errorData = await response.json().catch(() => ({}));
+        
+        // CRITICAL SECURITY FLUSH: Instantly clear client elements to match Backend Penalty Lockdown
+        handleCloseSetup(); 
+        antdMessage.error(errorData.message || "Invalid setup code. Session neutralized for safety.");
       }
     } catch (error) {
-      setMessage("Network error. Could not verify code.");
+      handleCloseSetup();
+      antdMessage.error("Network verification failure. Setup sequence reset.");
     } finally {
       setLoading(false);
     }
@@ -348,8 +355,6 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {message && <div className="settings-message">{message}</div>}
-
       <div className="settings-cards">
         <div className="settings-card">
           <h3 className="settings-card-title">Appearance</h3>
@@ -383,40 +388,50 @@ export default function SettingsPage() {
 
             <CustomModal
               open={showSetup}
-              onCancel={() => { setShowSetup(false); setMessage(""); }}
+              onCancel={handleCloseSetup}
               title="Configure Authenticator"
               footer={null}
             >
               <ol className="setup-list">
-                <li>Download an authenticator app (like Google Authenticator or Authy) on your phone.</li>
+                <li>Download an authenticator app (like Google Authenticator or 1Password) on your phone.</li>
                 <li>Scan the QR code below:</li>
               </ol>
+              
+              {/* Secured Local Generation: QR drawn inside the canvas memory grid safely */}
               <div className="qr-container" style={{ textAlign: "center", margin: "16px 0" }}>
-                {qrCodeUrl ? <img src={qrCodeUrl} alt="2FA QR Code" /> : "Loading QR code..."}
+                {authenticatorUri ? (
+                  <div style={{ padding: '16px', backgroundColor: 'white', display: 'inline-block', borderRadius: '8px', border: '1px solid #eee' }}>
+                    <QRCodeSVG value={authenticatorUri} size={200} level="H" fgColor="#2c3e35" />
+                  </div>
+                ) : (
+                  <p style={{ color: '#888' }}>Initializing secure parameters...</p>
+                )}
               </div>
+              
               <p>3. Enter the 6-digit code generated by the app to verify.</p>
-              <div className="input-group">
+              <div className="input-group" style={{ display: 'flex', alignItems: 'center', marginTop: '12px' }}>
                 <input
                   className="code-input"
                   type="text"
-                  placeholder="000 000"
+                  placeholder="000000"
                   value={verificationCode}
                   onChange={e => setVerificationCode(e.target.value.replace(/\D/g, ''))}
                   maxLength={6}
-                  style={{ marginRight: 8 }}
+                  style={{ marginRight: 8, padding: '10px', textAlign: 'center', letterSpacing: '2px', fontSize: '16px', borderRadius: '4px', border: '1px solid #ccc' }}
                 />
                 <button
                   className="btn-primary"
                   onClick={handleVerifyCode}
-                  disabled={loading || verificationCode.length < 6}
+                  disabled={loading || verificationCode.length !== 6}
+                  style={{ padding: '10px 15px', cursor: 'pointer' }}
                 >
-                  Verify & Save
+                  {loading ? 'Verifying...' : 'Verify & Save'}
                 </button>
                 <button
                   className="btn-secondary"
-                  onClick={() => { setShowSetup(false); setMessage(""); }}
+                  onClick={handleCloseSetup}
                   disabled={loading}
-                  style={{ marginLeft: 8 }}
+                  style={{ marginLeft: 8, padding: '10px 15px', cursor: 'pointer' }}
                 >
                   Cancel
                 </button>

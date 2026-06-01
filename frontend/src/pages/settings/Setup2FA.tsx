@@ -72,11 +72,21 @@ export default function Setup2FA({ userEmail }: Setup2FAProps) {
         setSuccessMessage('✓ Two-Factor Authentication is now successfully activated on your account profile!');
         setAuthenticatorUri(''); // Clear intermediate state parameters to reset/close UI view footprint
         setSecretKey('');
+        setVerificationCode('');
       } else {
-        setError(data.message || 'Invalid verification code. Please try again.');
+        // CRITICAL SECURITY FLUSH: The backend dropped a penalty lockdown.
+        // Instantly wipe all parameters from local RAM to prevent physical overlook exploitation.
+        setError(data.message || 'Invalid verification code. Setup session neutralized for safety.');
+        setAuthenticatorUri(''); 
+        setSecretKey('');
+        setVerificationCode('');
       }
     } catch (err) {
-      setError('Network verification error.');
+      // Flush on unexpected client/network exceptions as well to keep the state secure
+      setError('Network verification error. Setup workflow reset.');
+      setAuthenticatorUri('');
+      setSecretKey('');
+      setVerificationCode('');
     } finally {
       setVerifying(false);
     }
@@ -89,12 +99,13 @@ export default function Setup2FA({ userEmail }: Setup2FAProps) {
       <p>Enable Two-Factor Authentication using an app like Google Authenticator or Authy.</p>
 
       {successMessage && <p style={{ color: 'green', marginTop: '10px', fontWeight: 'bold' }}>{successMessage}</p>}
+      {error && <p style={{ color: 'red', marginTop: '10px', fontWeight: 'bold' }}>{error}</p>}
 
       {!authenticatorUri ? (
         <button 
           onClick={handleGenerate2FA} 
           disabled={loading}
-          style={{ padding: '10px 15px', backgroundColor: '#7C9082', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          style={{ padding: '10px 15px', backgroundColor: '#7C9082', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '10px' }}
         >
           {loading ? 'Generating...' : 'Setup 2FA Now'}
         </button>
@@ -102,12 +113,12 @@ export default function Setup2FA({ userEmail }: Setup2FAProps) {
         <div style={{ marginTop: '20px', textAlign: 'center' }}>
           <p style={{ fontWeight: 'bold' }}>1. Scan this QR Code with your Authenticator App</p>
           
-          <div style={{ padding: '20px', backgroundColor: 'white', display: 'inline-block', borderRadius: '8px' }}>
+          <div style={{ padding: '20px', backgroundColor: 'white', display: 'inline-block', borderRadius: '8px', marginTop: '10px', marginBottom: '10px', border: '1px solid #eee' }}>
              <QRCodeSVG value={authenticatorUri} size={200} level="H" fgColor="#2c3e35" />
           </div>
 
           <p style={{ marginTop: '20px', fontWeight: 'bold' }}>2. Or enter this setup key manually:</p>
-          <code style={{ padding: '10px', backgroundColor: '#eee', letterSpacing: '2px', display: 'block' }}>
+          <code style={{ padding: '10px', backgroundColor: '#eee', letterSpacing: '2px', display: 'block', margin: '10px 0', fontFamily: 'monospace' }}>
             {secretKey}
           </code>
           
@@ -131,7 +142,6 @@ export default function Setup2FA({ userEmail }: Setup2FAProps) {
           </form>
         </div>
       )}
-      {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
     </div>
   );
 }

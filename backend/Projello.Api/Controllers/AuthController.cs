@@ -229,7 +229,7 @@ namespace Projello.Api.Controllers
                 if (string.IsNullOrEmpty(base32Secret))
                 {
                     // Atomic Gate Protection: If another device already verified, this session key is empty!
-                    return BadRequest(new { Message = "This QR code setup session has expired or has already been used by another device." });
+                    return BadRequest(new { Message = "This setup session is dead or has already been consumed. Please generate a new QR code." });
                 }
             }
             else
@@ -238,10 +238,12 @@ namespace Projello.Api.Controllers
             }
 
             if (string.IsNullOrEmpty(base32Secret))
-                return BadRequest(new { Message = "2FA is not configured or setup session has expired." });
+                return BadRequest(new { Message = "2FA configuration parameters missing." });
 
             var totp = new Totp(Base32Encoding.ToBytes(base32Secret));
-            bool isValid = totp.VerifyTotp(model.Code, out long timeStepMatched);
+            
+            // FIXED: Enforce valid OtpNet evaluation syntax using the correct named parameter 'future'
+            bool isValid = totp.VerifyTotp(model.Code, out long timeStepMatched, new VerificationWindow(previous: 1, future: 1));
 
             if (isValid)
             {
@@ -254,7 +256,7 @@ namespace Projello.Api.Controllers
                     var identityUpdateResult = await _userManager.UpdateAsync(user);
                     if (!identityUpdateResult.Succeeded)
                     {
-                        return BadRequest(new { Message = "Failed to commit security parameters to context server footprint." });
+                        return BadRequest(new { Message = "Failed to update profile configurations." });
                     }
 
                     // 2. ATOMIC SECURITY ACTION: Flush unverified token space immediately. 
@@ -264,6 +266,14 @@ namespace Projello.Api.Controllers
 
                 var token = GenerateJwtToken(user);
                 return Ok(new { Token = token, User = user.FullName });
+            }
+
+            // PENALTY LOCKDOWN: If anyone attempts to send an invalid code during the setup state,
+            // we assume a registration hijacking attempt happened. We immediately kill the unverified key keyway.
+            if (isInitialSetupWorkflow)
+            {
+                await _userManager.RemoveAuthenticationTokenAsync(user, "Projello2FA", "UnverifiedSecretKey");
+                return BadRequest(new { Message = "Verification failed. Setup session neutralized for safety. Please generate a new code." });
             }
 
             return BadRequest(new { Message = "Invalid verification code." });
