@@ -99,6 +99,16 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
     }
   }, [isOpen, isJoined]);
 
+
+  useEffect(() => {
+    const handleAutoJoin = () => {
+      joinCall();
+    };
+
+    window.addEventListener("auto-join-call", handleAutoJoin);
+    return () => window.removeEventListener("auto-join-call", handleAutoJoin);
+  }, [joinCall]);
+
   // ADDED: Handle ringing selected members then joining
  const handleStartOrRing = async () => {
   outgoingRingtone.currentTime = 0;

@@ -64,7 +64,7 @@ export function useIncomingCallNotifications() {
 
               setTimeout(() => {
                 window.dispatchEvent(new CustomEvent("open-project-call", {
-                  detail: { projectId: callData.projectId }
+                  detail: { projectId: callData.projectId,autoJoin: true }
                 }));
               }, 400);
             },

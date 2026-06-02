@@ -142,7 +142,7 @@ export default function SingleProjectViewPage() {
   const [renameValue, setRenameValue] = useState("");
   const [renameSaving, setRenameSaving] = useState(false);
 
-  const { incomingCall } = useIncomingCallNotifications();
+ // const { incomingCall } = useIncomingCallNotifications();
 
   const openRenameModal = () => {
     setRenameValue(project?.name || "");
@@ -213,14 +213,19 @@ export default function SingleProjectViewPage() {
     const handleOpenCall = (event: any) => {
       if (event.detail.projectId === projectId) {
         setShowCallOverlay(true);
+
+        // Auto join the call if coming from incoming call accept
+        if (event.detail.autoJoin) {
+          // Small delay so CallOverlay has time to mount
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("auto-join-call"));
+          }, 300);
+        }
       }
     };
 
     window.addEventListener("open-project-call", handleOpenCall);
-
-    return () => {
-      window.removeEventListener("open-project-call", handleOpenCall);
-    };
+    return () => window.removeEventListener("open-project-call", handleOpenCall);
   }, [projectId]);
 
   useEffect(() => { 
