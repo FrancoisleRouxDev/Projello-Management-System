@@ -242,7 +242,14 @@ export class ProjectCallService {
 
   // ==================== NEW METHOD ====================
   public async ringUsers(projectId: string, targetUserIds: string[]): Promise<void> {
+    // Make sure SignalR is connected before trying to send the ring command
+    if (this.signalR.state !== "Connected") {
+      console.log("[DEBUG] Starting SignalR connection before ringing...");
+      await this.signalR.start();
+    }
+
     await this.signalR.invoke("RingUsers", projectId, targetUserIds);
+    console.log("[DEBUG] RingUsers sent successfully to:", targetUserIds);
   }
 
   public getPeerManager() {

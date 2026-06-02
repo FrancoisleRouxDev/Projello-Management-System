@@ -79,12 +79,16 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
   }, [isOpen, isJoined, checkActiveParticipants]);
 
   // ADDED: Handle ringing selected members then joining
-  const handleStartOrRing = async () => {
+ const handleStartOrRing = async () => {
+  try {
     if (selectedUserIds.length > 0 && ringUsers) {
-      await ringUsers(selectedUserIds);
+      await ringUsers(selectedUserIds);   // Ring selected members first
     }
-    await joinCall();
-  };
+    await joinCall();                     // Then join the call room
+  } catch (err: any) {
+    console.error("Failed to ring or start call:", err);
+  }
+};
 
   if (!isOpen) return null;
 
