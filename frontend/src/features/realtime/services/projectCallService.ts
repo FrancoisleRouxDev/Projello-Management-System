@@ -10,6 +10,7 @@ type ProjectCallEvents = {
   ReceiveAnswer: [string, string, string, string];
   ReceiveIceCandidate: [string, string, string, string, string | null, number | null];
   NewParticipantJoined: [string, string];
+  IncomingProjectCall: [string, string, string]; // ← ADDED
 };
 
 export class ProjectCallService {
@@ -49,7 +50,6 @@ export class ProjectCallService {
   }
 
   
-
   private registerSignalRHandlers() {
     this.signalR.on("ParticipantJoined", (_, participantId) => {
       if (participantId === this.myParticipantId) return;
@@ -238,6 +238,11 @@ export class ProjectCallService {
     } catch {
       return [];
     }
+  }
+
+  // ==================== NEW METHOD ====================
+  public async ringUsers(projectId: string, targetUserIds: string[]): Promise<void> {
+    await this.signalR.invoke("RingUsers", projectId, targetUserIds);
   }
 
   public getPeerManager() {

@@ -20,6 +20,7 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
   const {
     joinCall,
     leaveCall,
+    ringUsers,                    // ← ADDED
     isJoined,
     localStream,
     remoteStream,
@@ -34,6 +35,17 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
 
   // NEW: Track how many people are already in the call
   const [activeParticipants, setActiveParticipants] = useState<string[]>([]);
+
+  // ADDED: Selected members for ringing
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+
+  const toggleMember = (userId: string) => {
+    setSelectedUserIds((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
+    );
+  };
 
   // After attaching local stream
   useEffect(() => {
@@ -66,6 +78,14 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
     }
   }, [isOpen, isJoined, checkActiveParticipants]);
 
+  // ADDED: Handle ringing selected members then joining
+  const handleStartOrRing = async () => {
+    if (selectedUserIds.length > 0 && ringUsers) {
+      await ringUsers(selectedUserIds);
+    }
+    await joinCall();
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -90,22 +110,36 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
                 <h3>Team Members ({members.length})</h3>
                 <div className="user-list">
                   {members.length > 0 ? (
-                    members.map((member) => (
-                      <div key={member.UserID || member.id} className="user-item">
-                        <div className="avatar">
-                          {(member.FullName || member.name || "?").charAt(0)}
+                    members.map((member) => {
+                      const userId = member.UserID || member.id || member.userId;
+                      const name = member.FullName || member.fullName || member.Name || "Unknown User";
+
+                      return (
+                        <div 
+                          key={userId} 
+                          className="user-item" 
+                          onClick={() => toggleMember(userId)}
+                        >
+                          <div className="avatar">
+                            {(member.FullName || member.name || "?").charAt(0)}
+                          </div>
+                          <div className="user-info">
+                            <span className="user-name">
+                              {member.FullName || member.fullName || member.Name || "Unknown User"}
+                            </span>
+                            {member.AssignedAs && (
+                              <span className="user-role">{member.AssignedAs}</span>
+                            )}
+                          </div>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedUserIds.includes(userId)}
+                            onChange={() => toggleMember(userId)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
                         </div>
-                        <div className="user-info">
-                          <span className="user-name">
-                            {member.FullName || member.fullName || member.Name || "Unknown User"}
-                          </span>
-                          {member.AssignedAs && (
-                            <span className="user-role">{member.AssignedAs}</span>
-                          )}
-                        </div>
-                        <input type="checkbox" defaultChecked className="user-checkbox" />
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <p>No team members found.</p>
                   )}
@@ -114,15 +148,17 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
 
               <div className="pre-call-actions">
                 <button
-                  onClick={joinCall}
+                  onClick={handleStartOrRing}           // ← CHANGED
                   className="btn-join"
                   disabled={isFetching}
                 >
                   {isFetching 
                     ? "Connecting..." 
-                    : activeParticipants.length > 0 
-                      ? `Join Call (${activeParticipants.length} active)` 
-                      : "Start Call"
+                    : selectedUserIds.length > 0 
+                      ? `Ring ${selectedUserIds.length} & Join Call` 
+                      : activeParticipants.length > 0 
+                        ? `Join Call (${activeParticipants.length} active)` 
+                        : "Start Call"
                   }
                 </button>
                 <button onClick={onClose} className="btn-cancel">
