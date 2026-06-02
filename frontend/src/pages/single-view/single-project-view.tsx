@@ -209,13 +209,19 @@ export default function SingleProjectViewPage() {
 
   // Listen for incoming call accept event
 
- 
-
   useEffect(() => {
-    if (incomingCall && incomingCall.projectId === projectId) {
-      setShowCallOverlay(true);
-    }
-  }, [incomingCall, projectId]);
+    const handleOpenCall = (event: any) => {
+      if (event.detail.projectId === projectId) {
+        setShowCallOverlay(true);
+      }
+    };
+
+    window.addEventListener("open-project-call", handleOpenCall);
+
+    return () => {
+      window.removeEventListener("open-project-call", handleOpenCall);
+    };
+  }, [projectId]);
 
   useEffect(() => { 
     const fetchProject = async () => {

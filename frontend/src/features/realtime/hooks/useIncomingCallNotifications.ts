@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { createSignalRClient } from "../services/signalrClient";
 import { message as antdMessage, Modal } from "antd";
+import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../../config";
+
+
+import ringtoneSrc from "../../../assets/notifcations/mixkit-waiting-ringtone-1354.wav";
+
+const ringtone = new Audio(ringtoneSrc);
+ringtone.loop = true;
 
 type IncomingCallPayload = {
   projectId: string;
@@ -21,6 +28,7 @@ const callNotificationClient = createSignalRClient<{
 });
 
 export function useIncomingCallNotifications() {
+  const navigate = useNavigate();
   const [incomingCall, setIncomingCall] = useState<IncomingCallPayload | null>(null);
 
   useEffect(() => {
@@ -36,16 +44,33 @@ export function useIncomingCallNotifications() {
         unsubscribe = callNotificationClient.on("IncomingProjectCall", (projectId, callerUserId, callerName) => {
           setIncomingCall({ projectId, callerUserId, callerName });
 
+          // Play ringtone
+          ringtone.currentTime = 0;
+          ringtone.play().catch(console.error);
+
           Modal.confirm({
             title: "Incoming Call",
             content: `${callerName} is calling you`,
             okText: "Accept",
             cancelText: "Decline",
             onOk: () => {
+              ringtone.pause();
+              ringtone.currentTime = 0;
+
+              const callData = { projectId, callerUserId, callerName };
               setIncomingCall(null);
-              antdMessage.success(`Joining call with ${callerName}...`);
+
+              navigate(`/single-view/${projectId}`);
+
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent("open-project-call", {
+                  detail: { projectId: callData.projectId }
+                }));
+              }, 400);
             },
             onCancel: () => {
+              ringtone.pause();
+              ringtone.currentTime = 0;
               setIncomingCall(null);
             },
           });
@@ -57,8 +82,10 @@ export function useIncomingCallNotifications() {
 
     void start();
 
-    return () => unsubscribe?.();
-  }, []);
+    return () => {
+      unsubscribe?.();
+    };
+  }, [navigate]);
 
   return { incomingCall };
 }

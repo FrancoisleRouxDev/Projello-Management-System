@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useProjectCall } from "../features/realtime/hooks/useProjectCall";
 import "./CallOverlay.css";
+import outgoingRingtoneSrc from "../assets/notifcations/mixkit-waiting-ringtone-1354.wav";
+
+const outgoingRingtone = new Audio(outgoingRingtoneSrc);
+outgoingRingtone.loop = true;
 
 interface CallOverlayProps {
   isOpen: boolean;
@@ -78,14 +82,35 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
     }
   }, [isOpen, isJoined, checkActiveParticipants]);
 
+
+  useEffect(() => {
+    if (isJoined) {
+      outgoingRingtone.pause();
+      outgoingRingtone.currentTime = 0;
+    }
+  }, [isJoined]);
+
+
+  // Stop outgoing ringtone when call is connected
+  useEffect(() => {
+    if (!isOpen && !isJoined) {
+      outgoingRingtone.pause();
+      outgoingRingtone.currentTime = 0;
+    }
+  }, [isOpen, isJoined]);
+
   // ADDED: Handle ringing selected members then joining
  const handleStartOrRing = async () => {
+  outgoingRingtone.currentTime = 0;
+  outgoingRingtone.play().catch(console.error);
   try {
     if (selectedUserIds.length > 0 && ringUsers) {
       await ringUsers(selectedUserIds);   // Ring selected members first
     }
     await joinCall();                     // Then join the call room
   } catch (err: any) {
+    outgoingRingtone.pause();
+    outgoingRingtone.currentTime = 0;
     console.error("Failed to ring or start call:", err);
   }
 };
