@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createSignalRClient } from "../services/signalrClient";
 import { message as antdMessage, Modal } from "antd";
+import { API_BASE_URL } from "../../../config";
 
 type IncomingCallPayload = {
   projectId: string;
@@ -11,7 +12,7 @@ type IncomingCallPayload = {
 const callNotificationClient = createSignalRClient<{
   IncomingProjectCall: [string, string, string];
 }>({
-  hubUrl: "/callhub",
+  hubUrl: `${API_BASE_URL}/callhub`,
   getAccessToken: () => {
     const token = localStorage.getItem("token");
     if (!token) return null;
