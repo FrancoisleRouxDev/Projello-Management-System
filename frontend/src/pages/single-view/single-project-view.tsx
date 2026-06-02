@@ -10,6 +10,8 @@ import DiscussionTab from "./DiscussionTab";
 import { message as antdMessage, Modal } from "antd";
 import CustomModal from "../../components/CustomModal";
 
+import { useIncomingCallNotifications } from "../../features/realtime/hooks/useIncomingCallNotifications";
+
 type ProjectDetails= {
   projectID: number;
   name: string;
@@ -140,6 +142,8 @@ export default function SingleProjectViewPage() {
   const [renameValue, setRenameValue] = useState("");
   const [renameSaving, setRenameSaving] = useState(false);
 
+  const { incomingCall } = useIncomingCallNotifications();
+
   const openRenameModal = () => {
     setRenameValue(project?.name || "");
     setShowRenameModal(true);
@@ -201,6 +205,17 @@ export default function SingleProjectViewPage() {
       }
     }
   }, []);
+
+
+  // Listen for incoming call accept event
+
+ 
+
+  useEffect(() => {
+    if (incomingCall && incomingCall.projectId === projectId) {
+      setShowCallOverlay(true);
+    }
+  }, [incomingCall, projectId]);
 
   useEffect(() => { 
     const fetchProject = async () => {

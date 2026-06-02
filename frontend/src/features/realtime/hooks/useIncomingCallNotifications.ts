@@ -25,7 +25,6 @@ export function useIncomingCallNotifications() {
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
-    let cancelled = false;
 
     const start = async () => {
       const token = localStorage.getItem("token");
@@ -45,7 +44,6 @@ export function useIncomingCallNotifications() {
             onOk: () => {
               setIncomingCall(null);
               antdMessage.success(`Joining call with ${callerName}...`);
-              // Later you can trigger opening CallOverlay here
             },
             onCancel: () => {
               setIncomingCall(null);
@@ -53,18 +51,13 @@ export function useIncomingCallNotifications() {
           });
         });
       } catch (err) {
-        if (!cancelled) {
-          console.error("Incoming call listener failed:", err);
-        }
+        console.error("Incoming call listener failed:", err);
       }
     };
 
     void start();
 
-    return () => {
-      cancelled = true;
-      unsubscribe?.();
-    };
+    return () => unsubscribe?.();
   }, []);
 
   return { incomingCall };
