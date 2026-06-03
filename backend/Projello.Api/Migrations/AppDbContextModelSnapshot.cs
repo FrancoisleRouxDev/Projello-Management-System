@@ -356,6 +356,9 @@ namespace Projello.Api.Migrations
                     b.Property<DateOnly?>("DueDate")
                         .HasColumnType("date");
 
+                    b.Property<int>("Progress")
+                        .HasColumnType("integer");
+
                     b.Property<int>("ProjectID")
                         .HasColumnType("integer");
 

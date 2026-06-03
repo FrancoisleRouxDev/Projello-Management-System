@@ -81,6 +81,23 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
     }
   };
 
+  // NEW: Refresh without showing full loading screen (prevents page "refresh" feeling)
+  const refreshPosts = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/api/projects/${projectId}/updates`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+
+      if (!res.ok) throw new Error("Failed to refresh");
+
+      const data: DiscussionPost[] = await res.json();
+      setPosts(data);
+    } catch (err: any) {
+      console.error("Refresh failed:", err);
+    }
+  };
+
   useEffect(() => {
     if (projectId) {
       fetchPosts();
@@ -117,7 +134,7 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
 
       if (!res.ok) throw new Error("Failed to save reaction");
 
-      await fetchPosts();
+      await refreshPosts(); //Changed to prevent full page refresh
     } catch (err: any) {
       setError(err.message || "Failed to add reaction");
     } finally {
@@ -146,7 +163,7 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
       if (!res.ok) throw new Error("Failed to save comment");
 
       setCommentDrafts((current) => ({ ...current, [updateId]: "" }));
-      await fetchPosts();
+      await refreshPosts(); // Changed to prevent full page refresh
     } catch (err: any) {
       setError(err.message || "Failed to add comment");
     } finally {
@@ -185,7 +202,7 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
       setNewPostCaption("");
       setImageFileInput(null);
       setImagePreviewUrl(null);
-      await fetchPosts();
+      await refreshPosts(); //Changed to prevent full page refresh
     } catch (err: any) {
       setError(err.message || "Failed to post update");
     } finally {
@@ -248,7 +265,7 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
 
       <section style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         {posts.map(post => {
-          // === Safe access to reactions (fixed) ===
+          //Safe access to reactions
           const safeReactions = post.reactions ?? [];
           const reactionCounts = safeReactions.reduce<Record<string, number>>((acc, r) => {
             acc[r.emoji] = (acc[r.emoji] || 0) + 1;

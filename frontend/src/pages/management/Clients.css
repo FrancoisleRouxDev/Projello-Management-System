@@ -22,7 +22,7 @@
 	flex-direction: column;
 	gap: 16px;
 	min-width: 0;
-	overflow-x: auto;
+	
 }
 
 .clients-page__section-header {
