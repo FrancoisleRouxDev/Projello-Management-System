@@ -32,10 +32,20 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
     isFetching,
     error,
     checkActiveParticipants,   // ← NEW
+
+    // Camera controls (add these)
+    cameraEnabled,
+    activeVideoDeviceId,
+    videoDevices,
+    refreshVideoDevices,
+    turnCameraOff,
+    turnCameraOn,
+    switchCamera,   // ← NEW
   } = useProjectCall(projectId);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  const [cameraMenuOpen, setCameraMenuOpen] = useState(false);
 
   // NEW: Track how many people are already in the call
   const [activeParticipants, setActiveParticipants] = useState<string[]>([]);
@@ -109,21 +119,37 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
     return () => window.removeEventListener("auto-join-call", handleAutoJoin);
   }, [joinCall]);
 
+
+  const handleTurnCameraOff = async () => {
+    if (turnCameraOff) await turnCameraOff();
+    setCameraMenuOpen(false);
+  };
+
+  const handleTurnCameraOn = async () => {
+    if (turnCameraOn) await turnCameraOn();
+    setCameraMenuOpen(false);
+  };
+
+  const handleSwitchCamera = async (deviceId: string) => {
+    if (switchCamera) await switchCamera(deviceId);
+    setCameraMenuOpen(false);
+  };
+
   // ADDED: Handle ringing selected members then joining
- const handleStartOrRing = async () => {
-  outgoingRingtone.currentTime = 0;
-  outgoingRingtone.play().catch(console.error);
-  try {
-    if (selectedUserIds.length > 0 && ringUsers) {
-      await ringUsers(selectedUserIds);   // Ring selected members first
-    }
-    await joinCall();                     // Then join the call room
-  } catch (err: any) {
-    outgoingRingtone.pause();
+  const handleStartOrRing = async () => {
     outgoingRingtone.currentTime = 0;
-    console.error("Failed to ring or start call:", err);
-  }
-};
+    outgoingRingtone.play().catch(console.error);
+    try {
+      if (selectedUserIds.length > 0 && ringUsers) {
+        await ringUsers(selectedUserIds);   // Ring selected members first
+      }
+      await joinCall();                     // Then join the call room
+    } catch (err: any) {
+      outgoingRingtone.pause();
+      outgoingRingtone.currentTime = 0;
+      console.error("Failed to ring or start call:", err);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -154,9 +180,9 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
                       const name = member.FullName || member.fullName || member.Name || "Unknown User";
 
                       return (
-                        <div 
-                          key={userId} 
-                          className="user-item" 
+                        <div
+                          key={userId}
+                          className="user-item"
                           onClick={() => toggleMember(userId)}
                         >
                           <div className="avatar">
@@ -170,8 +196,8 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
                               <span className="user-role">{member.AssignedAs}</span>
                             )}
                           </div>
-                          <input 
-                            type="checkbox" 
+                          <input
+                            type="checkbox"
                             checked={selectedUserIds.includes(userId)}
                             onChange={() => toggleMember(userId)}
                             onClick={(e) => e.stopPropagation()}
@@ -191,12 +217,12 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
                   className="btn-join"
                   disabled={isFetching}
                 >
-                  {isFetching 
-                    ? "Connecting..." 
-                    : selectedUserIds.length > 0 
-                      ? `Ring ${selectedUserIds.length} & Join Call` 
-                      : activeParticipants.length > 0 
-                        ? `Join Call (${activeParticipants.length} active)` 
+                  {isFetching
+                    ? "Connecting..."
+                    : selectedUserIds.length > 0
+                      ? `Ring ${selectedUserIds.length} & Join Call`
+                      : activeParticipants.length > 0
+                        ? `Join Call (${activeParticipants.length} active)`
                         : "Start Call"
                   }
                 </button>
@@ -241,9 +267,60 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
 
               {/* Bottom Controls */}
               <div className="call-controls">
-                <button className="control-btn">🎤 Mute</button>
-                <button className="control-btn">📹 Stop Video</button>
-                <button className="control-btn">🖥️ Share Screen</button>
+                <div className="camera-control">
+                  <button
+                    type="button"
+                    className={`control-btn camera-btn ${cameraEnabled ? "is-on" : "is-off"}`}
+                    onClick={() => setCameraMenuOpen((open) => !open)}
+                    aria-haspopup="menu"
+                  >
+                    {cameraEnabled ? "📹 Camera" : "📷 Camera Off"}
+                  </button>
+
+                  {cameraMenuOpen && (
+                    <div className="camera-menu">
+                      {cameraEnabled ? (
+                        <button
+                          type="button"
+                          className="camera-menu__item"
+                          onClick={handleTurnCameraOff}
+                        >
+                          Turn camera off
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="camera-menu__item"
+                          onClick={handleTurnCameraOn}
+                        >
+                          Turn camera on
+                        </button>
+                      )}
+
+                      <div className="camera-menu__divider" />
+
+                      {videoDevices && videoDevices.length > 0 ? (
+                        videoDevices.map((device, index) => {
+                          const label = device.label || `Camera ${index + 1}`;
+                          const isActive = device.deviceId === activeVideoDeviceId;
+                          return (
+                            <button
+                              key={device.deviceId}
+                              type="button"
+                              className={`camera-menu__item ${isActive ? "is-active" : ""}`}
+                              onClick={() => handleSwitchCamera(device.deviceId)}
+                            >
+                              {label} {isActive ? " (active)" : ""}
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="camera-menu__empty">No other cameras detected</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <button onClick={leaveCall} className="control-btn end-call">
                   End Call
                 </button>

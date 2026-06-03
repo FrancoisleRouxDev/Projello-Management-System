@@ -351,6 +351,30 @@
   pointer-events: auto;
 }
 
+
+/* the following is exclusively for the discussion tab */
+.discussion-reaction-btn {
+  background: white;
+  border: 1px solid #d1d5dc;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+
+.discussion-reaction-btn:hover {
+  border-color: #99a1af;
+  background: #f3f4f6;
+}
+
+.discussion-reaction-btn:active {
+  transform: translateY(1px);
+}
+
 @media (max-width: 1200px) {
   .single-project-view__stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
