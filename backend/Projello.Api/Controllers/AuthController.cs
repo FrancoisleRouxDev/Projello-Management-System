@@ -122,17 +122,15 @@ namespace Projello.Api.Controllers
         }
 
         // --- READ: GET CURRENT USER (ME) ---
-        // --- READ: GET CURRENT USER (ME) ---
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()
         {
-            // FIXED: Use Id instead of email
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
-            var user = await _userManager.FindByIdAsync(userId);   // ← Changed from FindByEmailAsync
+            var user = await _userManager.FindByIdAsync(userId);
 
             if (user == null)
                 return NotFound();
@@ -144,7 +142,7 @@ namespace Projello.Api.Controllers
                 fullName = user.FullName,
                 roleId = user.RoleID,
                 isTwoFactorEnabled = user.IsTwoFactorEnabled,
-                avatarSeed = user.AvatarSeed,           // ← Add these two lines
+                avatarSeed = user.AvatarSeed,           
                 avatarBackground = user.AvatarBackground
             });
         }
@@ -154,9 +152,10 @@ namespace Projello.Api.Controllers
         [HttpPost("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
         {
-            var email = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var user = await _userManager.FindByEmailAsync(email!);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return NotFound();
 
             var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
@@ -170,9 +169,10 @@ namespace Projello.Api.Controllers
         [HttpDelete("delete-account")]
         public async Task<IActionResult> DeleteAccount()
         {
-            var email = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var user = await _userManager.FindByEmailAsync(email!);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return NotFound();
 
             var result = await _userManager.DeleteAsync(user);
@@ -181,50 +181,31 @@ namespace Projello.Api.Controllers
             return BadRequest(result.Errors);
         }
 
-        // --- 2FA: VERIFICATION ---
-        [HttpPost("verify-2fa")]
-        public async Task<IActionResult> Verify2FA([FromBody] Verify2FaDto model)
-        {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null) return BadRequest(new { Message = "User not found." });
-
-            if (string.IsNullOrEmpty(user.TwoFactorSecret))
-                return BadRequest(new { Message = "2FA is not configured." });
-
-            var totp = new Totp(Base32Encoding.ToBytes(user.TwoFactorSecret));
-            bool isValid = totp.VerifyTotp(model.Code, out long timeStepMatched);
-
-            if (isValid)
-            {
-                // --- NEW PRODUCTION LOGIC ---
-                // If they are verifying for the first time during setup, officially enable it!
-                if (!user.IsTwoFactorEnabled)
-                {
-                    user.IsTwoFactorEnabled = true;
-                    await _userManager.UpdateAsync(user);
-                }
-
-                var token = GenerateJwtToken(user);
-                return Ok(new { Token = token, User = user.FullName });
-            }
-
-            return BadRequest(new { Message = "Invalid verification code." });
-        }
-
-        // --- 2FA: SETUP ---
+        // --- 2FA: STEP 1 - GENERATE TEMPORARY UNVERIFIED SECRET KEY ---
+        [Authorize]
         [HttpPost("generate-2fa-secret")]
         public async Task<IActionResult> Generate2FASecret([FromBody] Setup2FaDto model)
         {
+            var authenticatedEmail = User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(authenticatedEmail) || !authenticatedEmail.Equals(model.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null) return NotFound();
 
+            if (user.IsTwoFactorEnabled)
+            {
+                return BadRequest(new { Message = "Two-Factor Authentication is already fully activated on this account profile." });
+            }
+
+            // Generate a fresh unique secret configuration key
             var secretKey = KeyGeneration.GenerateRandomKey(20);
             var base32Secret = Base32Encoding.ToString(secretKey);
 
-            // Save the secret, but DO NOT enable 2FA yet!
-            user.TwoFactorSecret = base32Secret;
-
-            await _userManager.UpdateAsync(user);
+            // Staging token securely within Identity's unverified token framework
+            await _userManager.SetAuthenticationTokenAsync(user, "Projello2FA", "UnverifiedSecretKey", base32Secret);
 
             var issuer = "Projello";
             var authenticatorUri = $"otpauth://totp/{issuer}:{user.Email}?secret={base32Secret}&issuer={issuer}";
@@ -232,14 +213,81 @@ namespace Projello.Api.Controllers
             return Ok(new { SecretKey = base32Secret, AuthenticatorUri = authenticatorUri });
         }
 
+        // --- 2FA: STEP 2 - VERIFY SETUP CHALLENGE AND ACTIVATE CORES ---
+        [HttpPost("verify-2fa")]
+        public async Task<IActionResult> Verify2FA([FromBody] Verify2FaDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null) return BadRequest(new { Message = "User not found." });
+
+            string base32Secret;
+            bool isInitialSetupWorkflow = !user.IsTwoFactorEnabled;
+
+            if (isInitialSetupWorkflow)
+            {
+                base32Secret = await _userManager.GetAuthenticationTokenAsync(user, "Projello2FA", "UnverifiedSecretKey") ?? "";
+                if (string.IsNullOrEmpty(base32Secret))
+                {
+                    // Atomic Gate Protection: If another device already verified, this session key is empty!
+                    return BadRequest(new { Message = "This setup session is dead or has already been consumed. Please generate a new QR code." });
+                }
+            }
+            else
+            {
+                base32Secret = user.TwoFactorSecret ?? "";
+            }
+
+            if (string.IsNullOrEmpty(base32Secret))
+                return BadRequest(new { Message = "2FA configuration parameters missing." });
+
+            var totp = new Totp(Base32Encoding.ToBytes(base32Secret));
+            
+            // FIXED: Enforce valid OtpNet evaluation syntax using the correct named parameter 'future'
+            bool isValid = totp.VerifyTotp(model.Code, out long timeStepMatched, new VerificationWindow(previous: 1, future: 1));
+
+            if (isValid)
+            {
+                if (isInitialSetupWorkflow)
+                {
+                    // 1. Promote verified configuration state parameters permanently
+                    user.TwoFactorSecret = base32Secret;
+                    user.IsTwoFactorEnabled = true;
+                    
+                    var identityUpdateResult = await _userManager.UpdateAsync(user);
+                    if (!identityUpdateResult.Succeeded)
+                    {
+                        return BadRequest(new { Message = "Failed to update profile configurations." });
+                    }
+
+                    // 2. ATOMIC SECURITY ACTION: Flush unverified token space immediately. 
+                    // This renders the displayed setup barcode completely useless for any subsequent scanning attempts.
+                    await _userManager.RemoveAuthenticationTokenAsync(user, "Projello2FA", "UnverifiedSecretKey");
+                }
+
+                var token = GenerateJwtToken(user);
+                return Ok(new { Token = token, User = user.FullName });
+            }
+
+            // PENALTY LOCKDOWN: If anyone attempts to send an invalid code during the setup state,
+            // we assume a registration hijacking attempt happened. We immediately kill the unverified key keyway.
+            if (isInitialSetupWorkflow)
+            {
+                await _userManager.RemoveAuthenticationTokenAsync(user, "Projello2FA", "UnverifiedSecretKey");
+                return BadRequest(new { Message = "Verification failed. Setup session neutralized for safety. Please generate a new code." });
+            }
+
+            return BadRequest(new { Message = "Invalid verification code." });
+        }
+
         // --- 2FA: DISABLE ---
         [Authorize]
         [HttpPost("disable-2fa")]
         public async Task<IActionResult> Disable2FA()
         {
-            var email = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var user = await _userManager.FindByEmailAsync(email!);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return NotFound();
 
             user.IsTwoFactorEnabled = false;
@@ -259,6 +307,7 @@ namespace Projello.Api.Controllers
             return Ok(new { is2FAEnabled = user.IsTwoFactorEnabled });
         }
 
+        // --- COMPANY REGISTRATION ---
         [HttpPost("register-company")]
         public async Task<IActionResult> RegisterCompany([FromBody] UserRegisterDto model)
         {
@@ -301,7 +350,7 @@ namespace Projello.Api.Controllers
             return BadRequest(result.Errors);
         }
 
-
+        // --- GENERATE INVITE ---
         [Authorize]
         [HttpPost("generate-invite")]
         public async Task<IActionResult> GenerateInviteCode()
@@ -341,6 +390,7 @@ namespace Projello.Api.Controllers
                 Message = "Invite code generated successfully. Valid for 24 hours and can only be used once."
             });
         }
+
         // --- HELPER: JWT GENERATION ---
         private string GenerateJwtToken(User user)
         {

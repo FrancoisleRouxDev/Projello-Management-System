@@ -124,18 +124,18 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// NOTE: The line below registers the custom authorization service that will be used to check if users can join or interact with project call rooms.
 builder.Services.AddSignalR();
 builder.Services.Configure<WebRtcOptions>(
     builder.Configuration.GetSection(WebRtcOptions.SectionName));
 builder.Services.AddSignalR().AddHubOptions<ProjectCallHub>(options =>
 {
-options.EnableDetailedErrors = true;
+    options.EnableDetailedErrors = true;
 });
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+// Fixed conditional redirect blocks to prevent routing layout failure loops on Dev environments
+if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
@@ -143,7 +143,6 @@ if (app.Environment.IsDevelopment())
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
 app.UseCors("AllowApp");
 app.UseAuthentication();
 

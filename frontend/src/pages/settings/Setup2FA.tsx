@@ -9,18 +9,26 @@ interface Setup2FAProps {
 export default function Setup2FA({ userEmail }: Setup2FAProps) {
   const [secretKey, setSecretKey] = useState('');
   const [authenticatorUri, setAuthenticatorUri] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleGenerate2FA = async () => {
     setLoading(true);
     setError('');
+    setSuccessMessage('');
     
     try {
+      const token = localStorage.getItem('token'); // Retrieve token for required [Authorize] endpoint access
       const response = await fetch(`${API_BASE_URL}/api/Auth/generate-2fa-secret`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail }) // Pass the logged-in user's email
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ email: userEmail }) 
       });
 
       const data = await response.json();
@@ -38,17 +46,66 @@ export default function Setup2FA({ userEmail }: Setup2FAProps) {
     }
   };
 
+  const handleVerifySetup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (verificationCode.length !== 6) {
+      setError('Please enter a valid 6-digit code.');
+      return;
+    }
+
+    setVerifying(true);
+    setError('');
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/Auth/verify-2fa`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: userEmail,
+          code: verificationCode 
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccessMessage('✓ Two-Factor Authentication is now successfully activated on your account profile!');
+        setAuthenticatorUri(''); // Clear intermediate state parameters to reset/close UI view footprint
+        setSecretKey('');
+        setVerificationCode('');
+      } else {
+        // CRITICAL SECURITY FLUSH: The backend dropped a penalty lockdown.
+        // Instantly wipe all parameters from local RAM to prevent physical overlook exploitation.
+        setError(data.message || 'Invalid verification code. Setup session neutralized for safety.');
+        setAuthenticatorUri(''); 
+        setSecretKey('');
+        setVerificationCode('');
+      }
+    } catch (err) {
+      // Flush on unexpected client/network exceptions as well to keep the state secure
+      setError('Network verification error. Setup workflow reset.');
+      setAuthenticatorUri('');
+      setSecretKey('');
+      setVerificationCode('');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   // Styling in between the component for testing purposes, will be moved to CSS file later
   return (
     <div style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '8px', maxWidth: '500px' }}>
       <h3>Secure Your Account</h3>
       <p>Enable Two-Factor Authentication using an app like Google Authenticator or Authy.</p>
 
+      {successMessage && <p style={{ color: 'green', marginTop: '10px', fontWeight: 'bold' }}>{successMessage}</p>}
+      {error && <p style={{ color: 'red', marginTop: '10px', fontWeight: 'bold' }}>{error}</p>}
+
       {!authenticatorUri ? (
         <button 
           onClick={handleGenerate2FA} 
           disabled={loading}
-          style={{ padding: '10px 15px', backgroundColor: '#7C9082', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          style={{ padding: '10px 15px', backgroundColor: '#7C9082', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', marginTop: '10px' }}
         >
           {loading ? 'Generating...' : 'Setup 2FA Now'}
         </button>
@@ -56,21 +113,35 @@ export default function Setup2FA({ userEmail }: Setup2FAProps) {
         <div style={{ marginTop: '20px', textAlign: 'center' }}>
           <p style={{ fontWeight: 'bold' }}>1. Scan this QR Code with your Authenticator App</p>
           
-          <div style={{ padding: '20px', backgroundColor: 'white', display: 'inline-block', borderRadius: '8px' }}>
+          <div style={{ padding: '20px', backgroundColor: 'white', display: 'inline-block', borderRadius: '8px', marginTop: '10px', marginBottom: '10px', border: '1px solid #eee' }}>
              <QRCodeSVG value={authenticatorUri} size={200} level="H" fgColor="#2c3e35" />
           </div>
 
           <p style={{ marginTop: '20px', fontWeight: 'bold' }}>2. Or enter this setup key manually:</p>
-          <code style={{ padding: '10px', backgroundColor: '#eee', letterSpacing: '2px', display: 'block' }}>
+          <code style={{ padding: '10px', backgroundColor: '#eee', letterSpacing: '2px', display: 'block', margin: '10px 0', fontFamily: 'monospace' }}>
             {secretKey}
           </code>
           
-          <p style={{ marginTop: '20px', color: 'green' }}>
-            ✓ 2FA is now enabled on your account! You will be prompted for a code on your next login.
-          </p>
+          <form onSubmit={handleVerifySetup} style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+            <p style={{ fontWeight: 'bold' }}>3. Enter the 6-digit confirmation code generated by your app:</p>
+            <input 
+              type="text" 
+              maxLength={6}
+              placeholder="123456"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))} // Restrict entry input to digits only
+              style={{ padding: '10px', width: '150px', textAlign: 'center', fontSize: '18px', letterSpacing: '4px', marginRight: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+            />
+            <button 
+              type="submit"
+              disabled={verifying}
+              style={{ padding: '10px 15px', backgroundColor: '#2c3e35', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', verticalAlign: 'top' }}
+            >
+              {verifying ? 'Verifying...' : 'Verify & Enable'}
+            </button>
+          </form>
         </div>
       )}
-      {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
     </div>
   );
 }
