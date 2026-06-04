@@ -45,7 +45,7 @@
 
 .project-add-modal__input:focus {
   outline: none;
-  border-color: #a9ad89;
+  border-color: var(--accent-1, #5e745f);
   box-shadow: 0 0 0 2px rgba(169, 173, 137, 0.1);
 }
 
@@ -64,6 +64,6 @@
 
 .project-add-modal__textarea:focus {
   outline: none;
-  border-color: #a9ad89;
+  border-color: var(--accent-1, #5e745f);
   box-shadow: 0 0 0 2px rgba(169, 173, 137, 0.1);
 }

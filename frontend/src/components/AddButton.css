@@ -19,7 +19,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background-color: #a9ad89;
+  background-color: var(--accent-1, #5e745f);
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -32,7 +32,7 @@
 }
 
 .add-button:hover:not(:disabled) {
-  background-color: #95a66d;
+  background-color: #5e745f50;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
@@ -43,7 +43,7 @@
 }
 
 .add-button:disabled {
-  background-color: #c0c4a8;
+  background-color: #5e745f30;
   cursor: not-allowed;
   opacity: 0.6;
 }
@@ -60,6 +60,7 @@
   font-size: 18px;
   font-weight: 600;
   line-height: 1;
+  color: var(--text-light);
 }
 
 /* ============================================================================
@@ -68,4 +69,5 @@
 .add-button__label {
   font-size: 14px;
   font-weight: 500;
+  color: #ffffff;
 }

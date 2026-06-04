@@ -8,6 +8,7 @@
     width: 100%;
     margin: 0;
     font-family: "Roboto", sans-serif;
+    overflow: hidden;
 }
 
 .management-page__content {

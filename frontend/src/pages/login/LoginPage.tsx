@@ -3,6 +3,7 @@ import Logo from "../../assets/Frame 160.svg";
 import "./LoginPage.css";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from '../../config';
+import { PasswordInput } from "../../components/PasswordInput";
 
 // Import the Godzilla roar audio file for the success sound effect
 const godzillaRoar = require("../../assets/zilla-1.mp3").default; 
@@ -103,14 +104,14 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToRegisterCompany,
               required
             />
             
-            {/* Password input field, controlled by React state */}
-            <input
+            {/* Password input field with show/hide toggle */}
+            <PasswordInput
               className="login-input"
-              type="password"
               placeholder="Password..."
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="current-password"
             />
             
             {/* Conditionally render the error message if the error state is not empty */}

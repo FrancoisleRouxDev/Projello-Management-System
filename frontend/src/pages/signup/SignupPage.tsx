@@ -3,6 +3,7 @@ import Logo from "../../assets/Frame 160.svg";
 import "../login/LoginPage.css";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../config";
+import { PasswordInput } from "../../components/PasswordInput";
 
 interface SignUpPageProps {
   onSwitchToLogin: () => void;
@@ -94,22 +95,22 @@ export default function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
               required
             />
 
-            <input
+            <PasswordInput
               className="login-input"
-              type="password"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="new-password"
             />
 
-            <input
+            <PasswordInput
               className="login-input"
-              type="password"
               placeholder="Confirm Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              autoComplete="new-password"
             />
 
             {/* Invite Code Field */}
