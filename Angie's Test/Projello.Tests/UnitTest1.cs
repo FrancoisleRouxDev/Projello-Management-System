@@ -1,11 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Projello.Api.Controllers;
 using Projello.Api.Data;
 using Projello.Api.DTOs;
 using Projello.Api.Models;
+using Projello.Api.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Projello.Tests
@@ -26,12 +31,17 @@ namespace Projello.Tests
             var company = new Company { CompanyID = 1, Name = "BuildCorp Enterprise", CreatedAt = DateTime.UtcNow };
             context.Companies.Add(company);
 
+            // Also added Client here for system-wide relational stability
+            var client = new Client { ClientID = 5, Name = "Alpha Corporation", ContactEmail = "alpha@client.com", CreatedAt = DateTime.UtcNow };
+            context.Clients.Add(client);
+
             var project = new Project 
             { 
                 ProjectID = 10, 
                 Name = "Site Upgrade Alpha", 
                 Status = "Planning", 
                 ClientID = 5, 
+                CreatedByUserID = targetUserId,
                 CreatedAt = DateTime.UtcNow 
             };
             context.Projects.Add(project);
@@ -41,7 +51,7 @@ namespace Projello.Tests
                 MilestoneID = 1, 
                 ProjectID = 10, 
                 Title = "Groundwork Phase", 
-                Status = "NotStarted", 
+                Status = "NotStarted",
                 CreatedAt = DateTime.UtcNow 
             };
             context.Milestones.Add(milestone);
@@ -53,6 +63,15 @@ namespace Projello.Tests
                 AssignedAs = "Foreman" 
             };
             context.ProjectMembers.Add(membership);
+
+            var systemUser = new User
+            {
+                Id = targetUserId,
+                FullName = "System User",
+                Email = "user@buildcorp.co.za",
+                UserName = "user@buildcorp.co.za"
+            };
+            context.Users.Add(systemUser);
 
             context.SaveChanges();
         }
@@ -102,10 +121,13 @@ namespace Projello.Tests
             var context = GetInMemoryDbContext();
             string testWorkerId = "worker-id";
             SeedMockDataWorkspace(context, testWorkerId);
-            
+
             var membership = context.ProjectMembers.FirstOrDefault(pm => pm.UserID == testWorkerId);
-            if (membership != null) context.ProjectMembers.Remove(membership);
-            context.SaveChanges();
+            if (membership != null)
+            {
+                membership.AssignedAs = "Worker";
+                context.SaveChanges();
+            }
 
             var controller = new TasksController(context);
 
@@ -124,7 +146,8 @@ namespace Projello.Tests
 
             var result = await controller.CreateTask(dto);
 
-            Assert.IsType<ForbidResult>(result.Result);
+            var actionResult = Assert.IsType<ActionResult<TaskReadDto>>(result);
+            Assert.IsType<ForbidResult>(actionResult.Result);
         }
 
         [Fact]
@@ -156,7 +179,7 @@ namespace Projello.Tests
         }
 
         [Fact]
-        public async Task CreateTask_WithInvalidMilestone_ReturnsCreated_BecauseNoValidationExists()
+        public async Task CreateTask_WithInvalidMilestone_ReturnsNotFound()
         {
             var context = GetInMemoryDbContext(); 
             string testAdminId = "admin-1";
@@ -179,7 +202,7 @@ namespace Projello.Tests
             var result = await controller.CreateTask(dto);
 
             var actionResult = Assert.IsType<ActionResult<TaskReadDto>>(result);
-            Assert.IsType<CreatedAtActionResult>(actionResult.Result);
+            Assert.IsType<NotFoundObjectResult>(actionResult.Result);
         }
 
         [Fact]
@@ -189,8 +212,8 @@ namespace Projello.Tests
             string targetUser = "foreman-alpha";
             SeedMockDataWorkspace(context, targetUser);
 
-            var task1 = new TaskItem { TaskID = 100, MilestoneID = 1, Title = "Pour Cement", AssignedToUserID = targetUser, Status = "InProgress", Priority = "High" };
-            var task2 = new TaskItem { TaskID = 200, MilestoneID = 1, Title = "Paint Walls", AssignedToUserID = "external-worker-id", Status = "NotStarted", Priority = "Low" };
+            var task1 = new TaskItem { TaskID = 100, MilestoneID = 1, Title = "Pour Cement", AssignedToUserID = targetUser, Status = Status.InProgress, Priority = "High" };
+            var task2 = new TaskItem { TaskID = 200, MilestoneID = 1, Title = "Paint Walls", AssignedToUserID = "external-worker-id", Status = Status.NotStarted, Priority = "Low" };
             
             context.Tasks.AddRange(task1, task2);
             context.SaveChanges();
