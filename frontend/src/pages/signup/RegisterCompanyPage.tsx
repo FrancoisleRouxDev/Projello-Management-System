@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Logo from "../../assets/Frame 160.svg";
 import "./SignupPage.css";
 import { API_BASE_URL } from "../../config";
+import { PasswordInput } from "../../components/PasswordInput";
 
 interface RegisterCompanyPageProps {
   onSwitchToLogin: () => void;
@@ -106,21 +107,21 @@ export default function RegisterCompanyPage({ onSwitchToLogin }: RegisterCompany
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <input
+            <PasswordInput
               className="signup-input"
-              type="password"
               placeholder="Password..."
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              autoComplete="new-password"
             />
-            <input
+            <PasswordInput
               className="signup-input"
-              type="password"
               placeholder="Confirm Password..."
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              autoComplete="new-password"
             />
 
             <input
