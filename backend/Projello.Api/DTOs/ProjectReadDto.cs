@@ -16,5 +16,9 @@ namespace Projello.Api.DTOs
 
          // New property to hold project members
         public List<ProjectMemberDto> Members { get; set; } = new();
+
+
+        public decimal? TotalPaid { get; set; }
+        public decimal? Outstanding { get; set; }
     }
 }

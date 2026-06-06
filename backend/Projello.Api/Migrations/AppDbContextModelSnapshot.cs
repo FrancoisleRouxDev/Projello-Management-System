@@ -454,6 +454,9 @@ namespace Projello.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<decimal?>("Outstanding")
+                        .HasColumnType("numeric");
+
                     b.Property<DateOnly?>("StartDate")
                         .HasColumnType("date");
 
@@ -461,6 +464,9 @@ namespace Projello.Api.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
+
+                    b.Property<decimal?>("TotalPaid")
+                        .HasColumnType("numeric");
 
                     b.HasKey("ProjectID");
 

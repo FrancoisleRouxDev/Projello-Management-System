@@ -432,7 +432,9 @@ export default function ClientsPage() {
     }, []);
 
     const handleRowAction = (row: ManagementClientRow) => setActionRow(row);
-    const handleRowClick = (row: ManagementClientRow) => navigate(`/single-view/${row.clientId}`);
+    const handleRowClick = (row: ManagementClientRow) => {
+    
+};
 
     const handleAddProject = (row: ManagementClientRow) => {
         setSelectedClientForProject(row);
