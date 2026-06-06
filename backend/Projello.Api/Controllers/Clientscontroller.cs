@@ -25,6 +25,7 @@ namespace Projello.Api.Controllers
         }
 
         // GET: api/clients
+        
         [HttpGet]
         public async Task<IActionResult> GetClients()
         {
@@ -42,15 +43,25 @@ namespace Projello.Api.Controllers
 
             var clients = await query.ToListAsync();
 
-            var result = clients.Select(c => new ClientBlacklistStatusDto
+            var result = new List<object>();
+            foreach (var c in clients)
             {
-                ClientID = c.ClientID,
-                Name = c.Name,
-                IsBlacklisted = c.IsBlacklisted,
-                BlacklistReason = (role == "1" || role == "4") ? c.BlacklistReason : null,
-                BlacklistedAt = (role == "1" || role == "4") ? c.BlacklistedAt : null,
-                BlacklistedByName = (role == "1" || role == "4") ? c.BlacklistedBy?.FullName : null
-            });
+                var activeProjects = await _context.Projects
+                    .CountAsync(p => p.ClientID == c.ClientID && p.Status != "Completed");
+
+                result.Add(new
+                {
+                    clientID = c.ClientID,
+                    name = c.Name,
+                    company = c.Company?.Name ?? "",
+                    totalPaid = c.TotalPaid,
+                    outstanding = c.Outstanding,
+                    projects = $"{activeProjects} total",
+                    activeProjects = $"{activeProjects} active",
+                    status = c.Status,
+                    isBlacklisted = c.IsBlacklisted
+                });
+            }
 
             return Ok(result);
         }
@@ -68,18 +79,23 @@ namespace Projello.Api.Controllers
 
             if (client == null) return NotFound();
 
-            // Owners can only view clients from their own company
             if (role == "4" && client.CompanyID != currentUser?.CompanyId)
                 return Forbid();
 
-            return Ok(new ClientBlacklistStatusDto
+            var activeProjects = await _context.Projects
+                .CountAsync(p => p.ClientID == client.ClientID && p.Status != "Completed");
+
+            return Ok(new
             {
-                ClientID = client.ClientID,
-                Name = client.Name,
-                IsBlacklisted = client.IsBlacklisted,
-                BlacklistReason = (role == "1" || role == "4") ? client.BlacklistReason : null,
-                BlacklistedAt = (role == "1" || role == "4") ? client.BlacklistedAt : null,
-                BlacklistedByName = (role == "1" || role == "4") ? client.BlacklistedBy?.FullName : null
+                clientID = client.ClientID,
+                name = client.Name,
+                company = client.Company?.Name ?? "",
+                totalPaid = client.TotalPaid,
+                outstanding = client.Outstanding,
+                projects = $"{activeProjects} total",
+                activeProjects = $"{activeProjects} active",
+                status = client.Status,
+                isBlacklisted = client.IsBlacklisted
             });
         }
 
@@ -116,6 +132,44 @@ namespace Projello.Api.Controllers
 
             return Ok(new { Message = "Client created successfully.", ClientID = client.ClientID });
         }
+
+        // Update Client financials and status (without blacklisting)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateClient(int id, [FromBody] ClientUpdateDto dto)
+        {
+            var role = GetUserRole();
+            if (role != "1" && role != "4") return Forbid();
+
+            var client = await _context.Clients.FindAsync(id);
+            if (client == null) return NotFound();
+
+            var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
+            if (role == "4" && client.CompanyID != currentUser?.CompanyId)
+                return Forbid();
+
+            if (dto.TotalPaid.HasValue)
+                client.TotalPaid = dto.TotalPaid.Value;
+
+            if (dto.Outstanding.HasValue)
+                client.Outstanding = dto.Outstanding.Value;
+
+            if (!string.IsNullOrWhiteSpace(dto.Status))
+            {
+                // Prevent setting Blacklisted status through this endpoint
+                // (Blacklisting has its own dedicated feature)
+                if (dto.Status.Trim().Equals("Blacklisted", StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest(new { Message = "Use the dedicated blacklist feature to blacklist a client." });
+                }
+
+                client.Status = dto.Status.Trim();
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Client updated successfully." });
+        }
+        // 
 
         // Blacklist
         [HttpPost("{id}/blacklist")]
@@ -211,4 +265,3 @@ public async Task<ActionResult<ClientSummaryDto>> GetClientSummary()
     }
     
 }
-

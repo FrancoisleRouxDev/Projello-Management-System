@@ -165,3 +165,5 @@ app.MapControllers();
 app.MapHub<ProjectCallHub>("/callhub");
 app.MapHub<TeamNotificationHub>("/teamnotificationHub");
 app.Run();
+
+public partial class Program { }

@@ -44,22 +44,43 @@ function ModalHeader({ title, onClose }: { title: string; onClose: () => void })
     );
 }
 
-type ModalStep = "menu" | "blacklist-reason" | "status-pick" | "confirm-unblacklist";
+type ModalStep = "menu" | "blacklist-reason" | "status-pick" | "confirm-unblacklist" | "edit-payments";
 
 interface ActionModalProps {
     row: ManagementClientRow;
     onClose: () => void;
     onRefresh: () => void | Promise<void>;
     onAddProject?: (row: ManagementClientRow) => void;
+    currentUserRole?: number;
 }
 
-function ClientActionModal({ row, onClose, onRefresh, onAddProject }: ActionModalProps) {
+function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserRole = 0 }: ActionModalProps) {
     const [step, setStep] = useState<ModalStep>("menu");
     const [blacklistReason, setBlacklistReason] = useState("");
     const [busy, setBusy] = useState(false);
     const [feedback, setFeedback] = useState<string | null>(null);
 
+    const [editTotalPaid, setEditTotalPaid] = useState(0);
+    const [editOutstanding, setEditOutstanding] = useState(0);
+    const [editStatus, setEditStatus] = useState("Active");
+
     const isBlacklisted = row.status === "Blacklisted";
+
+    const parseAmount = (value: any): number => {
+        if (typeof value === "number") return value;
+        if (typeof value === "string") {
+            return parseFloat(value.replace(/[^0-9.]/g, "")) || 0;
+        }
+        return 0;
+    };
+
+    useEffect(() => {
+        if (step === "edit-payments") {
+            setEditTotalPaid(parseAmount(row.totalPaid));
+            setEditOutstanding(parseAmount(row.outstanding));
+            setEditStatus(row.status);
+        }
+    }, [step]);
 
     const doBlacklist = async () => {
         setBusy(true);
@@ -101,9 +122,34 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject }: ActionModa
         }
     };
 
-    const doStatusChange = (statusLabel: string) => {
-        setFeedback(`Status for "${row.name}" changed to ${statusLabel} (UI only for now).`);
-        void onRefresh();
+   
+
+    const handleSaveEdit = async () => {
+        setBusy(true);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE_URL}/api/clients/${row.clientId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({
+                    totalPaid: editTotalPaid,
+                    outstanding: editOutstanding,
+                    status: editStatus,
+                }),
+            });
+
+            if (!res.ok) throw new Error("Failed to update client");
+
+            setFeedback(`Updated successfully. Status is now "${editStatus}".`);
+            await onRefresh();
+        } catch {
+            setFeedback("Failed to update client. Please try again.");
+        } finally {
+            setBusy(false);
+        }
     };
 
     if (feedback) {
@@ -138,9 +184,16 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject }: ActionModa
                             {isBlacklisted ? "Remove from Blacklist" : "Blacklist Client"}
                         </button>
 
-                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => setStep("status-pick")}>
-                            Change Status
-                        </button>
+                      
+
+                        {[1, 4].includes(currentUserRole) && (
+                            <button
+                                className="action-modal__btn action-modal__btn--secondary"
+                                onClick={() => setStep("edit-payments")}
+                            >
+                                Edit Payments & Status
+                            </button>
+                        )}
 
                         <button className="action-modal__btn action-modal__btn--secondary" onClick={() => setFeedback("Edit functionality coming soon.")}>
                             Edit Client
@@ -208,18 +261,54 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject }: ActionModa
         );
     }
 
-    if (step === "status-pick") {
+
+
+    if (step === "edit-payments") {
         return (
             <div className="action-modal-overlay" onClick={onClose}>
                 <div className="action-modal" onClick={e => e.stopPropagation()}>
-                    <ModalHeader title="Change Status" onClose={onClose} />
+                    <ModalHeader title={`Edit ${row.name}`} onClose={onClose} />
                     <div className="action-modal__body">
-                        <p className="action-modal__sub">Select a new status for <strong>"{row.name}"</strong></p>
+                        <div style={{ marginBottom: 12 }}>
+                            <label>Total Paid (R)</label>
+                            <input
+                                type="number"
+                                value={editTotalPaid}
+                                onChange={e => setEditTotalPaid(parseFloat(e.target.value) || 0)}
+                                style={{ width: "100%", padding: 8 }}
+                            />
+                        </div>
+                        <div style={{ marginBottom: 12 }}>
+                            <label>Outstanding (R)</label>
+                            <input
+                                type="number"
+                                value={editOutstanding}
+                                onChange={e => setEditOutstanding(parseFloat(e.target.value) || 0)}
+                                style={{ width: "100%", padding: 8 }}
+                            />
+                        </div>
+                        <div>
+                            <label>Status</label>
+                            <select
+                                value={editStatus}
+                                onChange={e => setEditStatus(e.target.value)}
+                                style={{ width: "100%", padding: 8 }}
+                            >
+                                <option value="Active">Active</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Planning">Planning</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
                     </div>
                     <div className="action-modal__actions">
-                        <button className="action-modal__btn action-modal__btn--primary" onClick={() => doStatusChange("Active")}>Active</button>
-                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => doStatusChange("Pending")}>Pending</button>
-                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => doStatusChange("Completed")}>Completed</button>
+                        <button
+                            className="action-modal__btn action-modal__btn--primary"
+                            onClick={handleSaveEdit}
+                            disabled={busy}
+                        >
+                            {busy ? "Saving..." : "Save Changes"}
+                        </button>
                         <button className="action-modal__btn action-modal__btn--ghost" onClick={() => setStep("menu")}>Back</button>
                     </div>
                 </div>
@@ -261,46 +350,51 @@ export default function ClientsPage() {
     }, []);
 
     const fetchClients = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE_URL}/api/clients`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        });
-        if (!res.ok) throw new Error(await res.text() || "Failed to load clients");
+        setLoading(true);
+        setError(null);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE_URL}/api/clients`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            });
+            if (!res.ok) throw new Error(await res.text() || "Failed to load clients");
 
-        const data = await res.json();
-        const mapped: ManagementClientRow[] = (data ?? []).map((c: any) => ({
-            clientId: String(c.clientID ?? c.ClientID ?? c.ClientId ?? ""),
-            initials: getInitials(c.name ?? c.Name),
-            name: c.name ?? c.Name ?? "",
-            company: c.company ?? c.Company ?? "",
-            totalPaid: c.totalPaid ?? "R 0",
-            outstanding: c.outstanding ?? "R 0",
-            projects: c.projects ? String(c.projects) : "0",
-            activeProjects: c.activeProjects ?? "0 active",
-            status: c.isBlacklisted || c.IsBlacklisted ? "Blacklisted" : "Active",
-            statusTone: c.isBlacklisted || c.IsBlacklisted ? "danger" : "success",
-        }));
+            const data = await res.json();
 
-        setRows(mapped);
+            const mapped: ManagementClientRow[] = (data ?? []).map((c: any) => {
+                const isBlacklisted = c.isBlacklisted || c.IsBlacklisted;
 
-        const blacklistedCount = mapped.filter((row) => row.status === "Blacklisted").length;
-        const activeCount = mapped.length - blacklistedCount;
+                return {
+                    clientId: String(c.clientID ?? c.ClientID ?? c.ClientId ?? ""),
+                    initials: getInitials(c.name ?? c.Name),
+                    name: c.name ?? c.Name ?? "",
+                    company: c.company ?? c.Company ?? "",
+                    totalPaid: c.totalPaid ?? "R 0",
+                    outstanding: c.outstanding ?? "R 0",
+                    projects: c.projects ? String(c.projects) : "0",
+                    activeProjects: c.activeProjects ?? "0 active",
+                    status: isBlacklisted ? "Blacklisted" : (c.status ?? "Active"),
+                    statusTone: isBlacklisted ? "danger" : "success",
+                };
+            });
 
-        setSummary({
-            totalRevenue: null,
-            outstanding: null,
-            activeClients: activeCount,
-            blacklistClients: blacklistedCount,
-        });
-    } catch (err: any) {
-        setError(err.message || "Failed to fetch clients");
-    } finally {
-        setLoading(false);
-    }
-};
+            setRows(mapped);
+
+            const blacklistedCount = mapped.filter((row) => row.status === "Blacklisted").length;
+            const activeCount = mapped.length - blacklistedCount;
+
+            setSummary({
+                totalRevenue: null,
+                outstanding: null,
+                activeClients: activeCount,
+                blacklistClients: blacklistedCount,
+            });
+        } catch (err: any) {
+            setError(err.message || "Failed to fetch clients");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchClientSummary = async () => {
         try {
@@ -348,7 +442,6 @@ export default function ClientsPage() {
     return (
         <div className="clients-page">
             <div className="clients-page__stats">
-                {/* Total Revenue */}
                 <StatCard
                     value={formatCurrency(summary.totalRevenue)}
                     label="Total Revenue"
@@ -360,7 +453,6 @@ export default function ClientsPage() {
                     }
                 />
 
-                {/* Outstanding - Using the exact icon you wanted */}
                 <StatCard
                     value={formatCurrency(summary.outstanding)}
                     label="Outstanding"
@@ -372,7 +464,6 @@ export default function ClientsPage() {
                     }
                 />
 
-                {/* Active Clients */}
                 <StatCard
                     value={String(summary.activeClients)}
                     label="Active Clients"
@@ -384,7 +475,6 @@ export default function ClientsPage() {
                     }
                 />
 
-                {/* Blacklisted */}
                 <StatCard
                     value={String(summary.blacklistClients)}
                     label="Blacklisted"
@@ -427,6 +517,7 @@ export default function ClientsPage() {
                     onClose={() => setActionRow(null)}
                     onRefresh={fetchClients}
                     onAddProject={handleAddProject}
+                    currentUserRole={currentUserRole}
                 />
             )}
 

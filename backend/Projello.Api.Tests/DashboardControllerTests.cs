@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Projello.Api.Controllers;
 using Projello.Api.Data;
-using Projello.Api.DTOs;        
+using Projello.Api.DTOs;
 using Projello.Api.Models;
 using System;
 using System.Linq;
@@ -38,12 +38,12 @@ namespace Projello.Api.Tests
             var context = GetInMemoryDbContext();
             var adminId = "admin-001";
 
-            context.Projects.Add(new Project 
-            { 
-                ProjectID = 1, 
-                Name = "Site A", 
-                Status = "In Progress", 
-                CreatedByUserID = adminId 
+            context.Projects.Add(new Project
+            {
+                ProjectID = 1,
+                Name = "Site A",
+                Status = "In Progress",
+                CreatedByUserID = adminId
             });
             context.SaveChanges();
 
@@ -55,7 +55,7 @@ namespace Projello.Api.Tests
 
             var result = await controller.GetDashboardOverview();
             var ok = Assert.IsType<OkObjectResult>(result.Result);
-            var dto = Assert.IsType<DashboardDtos>(ok.Value);
+            var dto = Assert.IsType<DashboardOverviewDto>(ok.Value);
 
             Assert.NotEmpty(dto.ActiveProjects);
         }
@@ -67,9 +67,9 @@ namespace Projello.Api.Tests
             var userId = "foreman-42";
 
             context.Projects.AddRange(
-                new Project { ProjectID = 10, Name = "My Project", Status = "In Progress" },
-                new Project { ProjectID = 11, Name = "Other Project", Status = "In Progress" }
-            );
+     new Project { ProjectID = 10, Name = "My Project", Status = "In Progress", CreatedByUserID = userId },
+     new Project { ProjectID = 11, Name = "Other Project", Status = "In Progress", CreatedByUserID = userId }
+ );
             context.ProjectMembers.Add(new ProjectMember { ProjectID = 10, UserID = userId });
             context.SaveChanges();
 
@@ -81,7 +81,7 @@ namespace Projello.Api.Tests
 
             var result = await controller.GetDashboardOverview();
             var ok = Assert.IsType<OkObjectResult>(result.Result);
-            var dto = Assert.IsType<DashboardDtos>(ok.Value);
+            var dto = Assert.IsType<DashboardOverviewDto>(ok.Value);
 
             Assert.Single(dto.ActiveProjects);
             Assert.Equal("My Project", dto.ActiveProjects.First().Name);

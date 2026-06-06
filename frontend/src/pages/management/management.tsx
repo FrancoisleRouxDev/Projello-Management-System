@@ -60,7 +60,7 @@ export default function ManagementPage() {
   const fetchClients = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_BASE_URL}/clients`, {
+      const res = await fetch(`${API_BASE_URL}/api/clients`, {
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
       if (!res.ok) {
@@ -68,7 +68,10 @@ export default function ManagementPage() {
         throw new Error(txt || res.statusText || "Failed to load clients");
       }
       const data = await res.json();
-      const mapped = (data ?? []).map((c: any) => ({ clientID: c.clientID ?? c.ClientID ?? c.ClientId, name: c.name ?? c.Name ?? "" }));
+      const mapped = (data ?? []).map((c: any) => ({
+        clientID: c.clientID ?? c.ClientID ?? c.ClientId,
+        name: c.name ?? c.Name ?? ""
+      }));
       setClients(mapped);
     } catch (err: any) {
       console.warn("Could not load clients for selector:", err);

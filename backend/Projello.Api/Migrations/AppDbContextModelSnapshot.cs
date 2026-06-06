@@ -259,6 +259,16 @@ namespace Projello.Api.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
+                    b.Property<decimal>("Outstanding")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("TotalPaid")
+                        .HasColumnType("numeric");
+
                     b.HasKey("ClientID");
 
                     b.HasIndex("BlacklistedById");
