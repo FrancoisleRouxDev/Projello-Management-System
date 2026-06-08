@@ -51,12 +51,12 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
       return;
     }
     onSubmit(formData);
-    setFormData({ name: "", description: "", clientName: "", dueDate: "" });
+    setFormData({ name: "", description: "", clientName: "", startDate: "", dueDate: "" });
     onClose();
   };
 
   const handleCancel = () => {
-    setFormData({ name: "", description: "", clientName: "", dueDate: "" });
+    setFormData({ name: "", description: "", clientName: "", startDate: "", dueDate: "" });
     onClose();
   };
 
