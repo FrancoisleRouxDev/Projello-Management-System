@@ -34,6 +34,14 @@ const getInitials = (fullName?: string) => {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
+const parseAmount = (value: any): number => {
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+        return parseFloat(value.replace(/[^0-9.]/g, "")) || 0;
+    }
+    return 0;
+};
+
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
     return (
         <div className="action-modal__header">
@@ -66,13 +74,7 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserR
 
     const isBlacklisted = row.status === "Blacklisted";
 
-    const parseAmount = (value: any): number => {
-        if (typeof value === "number") return value;
-        if (typeof value === "string") {
-            return parseFloat(value.replace(/[^0-9.]/g, "")) || 0;
-        }
-        return 0;
-    };
+  
 
     useEffect(() => {
         if (step === "edit-payments") {
@@ -261,7 +263,7 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserR
 
 
 
-    if (step === "edit-payments") {
+   if (step === "edit-payments") {
         return (
             <div className="action-modal-overlay" onClick={onClose}>
                 <div className="action-modal" onClick={e => e.stopPropagation()}>
@@ -271,8 +273,9 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserR
                             <label>Total Paid (R)</label>
                             <input
                                 type="number"
+                                min="0"
                                 value={editTotalPaid}
-                                onChange={e => setEditTotalPaid(parseFloat(e.target.value) || 0)}
+                                onChange={e => setEditTotalPaid(Math.max(0, parseFloat(e.target.value) || 0))}
                                 style={{ width: "100%", padding: 8 }}
                             />
                         </div>
@@ -280,8 +283,9 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserR
                             <label>Outstanding (R)</label>
                             <input
                                 type="number"
+                                min="0"
                                 value={editOutstanding}
-                                onChange={e => setEditOutstanding(parseFloat(e.target.value) || 0)}
+                                onChange={e => setEditOutstanding(Math.max(0, parseFloat(e.target.value) || 0))}
                                 style={{ width: "100%", padding: 8 }}
                             />
                         </div>
@@ -359,9 +363,14 @@ export default function ClientsPage() {
             if (!res.ok) throw new Error(await res.text() || "Failed to load clients");
 
             const data = await res.json();
+            let calculatedRevenue = 0;
+            let calculatedOutstanding = 0;
 
             const mapped: ManagementClientRow[] = (data ?? []).map((c: any) => {
                 const isBlacklisted = c.isBlacklisted || c.IsBlacklisted;
+
+                calculatedRevenue += parseAmount(c.totalPaid ?? c.TotalPaid);
+                calculatedOutstanding += parseAmount(c.outstanding ?? c.Outstanding);
 
                 return {
                     clientId: String(c.clientID ?? c.ClientID ?? c.ClientId ?? ""),
@@ -383,8 +392,8 @@ export default function ClientsPage() {
             const activeCount = mapped.length - blacklistedCount;
 
             setSummary({
-                totalRevenue: null,
-                outstanding: null,
+                totalRevenue: calculatedRevenue,
+                outstanding: calculatedOutstanding,
                 activeClients: activeCount,
                 blacklistClients: blacklistedCount,
             });
@@ -461,7 +470,7 @@ export default function ClientsPage() {
 
                 <StatCard
                     value={formatCurrency(summary.outstanding)}
-                    label="Outstanding"
+                    label="Total Outstanding"
                     tone="warning"
                     icon={
                         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 28 28" fill="#f59e0b">
