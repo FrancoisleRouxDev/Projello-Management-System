@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -159,6 +159,85 @@ namespace Projello.Api.Tests
             // Assert
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("You cannot demote yourself from Admin.", badRequest.Value);
+        }
+
+        [Fact]
+        public async Task GetUsers_WithSearchQuery_ExecutesSearchBranch()
+        {
+            // Arrange
+            using var context = CreateContext();
+            context.Users.AddRange(
+                new User { Id = "admin-id", FullName = "Global Admin", RoleID = 1, CompanyId = 10, Email = "admin@test.com", UserName = "admin@test.com" },
+                new User { Id = "user-match", FullName = "Alex Smith", RoleID = 2, CompanyId = 10, Email = "alex@test.com", UserName = "alex@test.com" },
+                new User { Id = "user-nomatch", FullName = "John Doe", RoleID = 2, CompanyId = 10, Email = "john@test.com", UserName = "john@test.com" }
+            );
+            await context.SaveChangesAsync();
+
+            var userManagerMock = CreateSimpleUserManagerMock(context);
+            var controller = new UsersController(userManagerMock.Object, context)
+            {
+                ControllerContext = CreateControllerContext("admin-id", "1")
+            };
+
+            // Act - Passing a search string forces the code to evaluate the search condition branch
+            var result = await controller.GetUsers(search: "Alex");
+
+            // Assert
+            var ok = Assert.IsType<OkObjectResult>(result.Result);
+            var items = Assert.IsAssignableFrom<IEnumerable<UserDisplayDto>>(ok.Value).ToList();
+            Assert.Single(items);
+            Assert.Contains(items, u => u.FullName.Contains("Alex"));
+        }
+
+        [Fact]
+        public async Task UpdateUserRole_UserNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            using var context = CreateContext();
+            context.Users.Add(new User { Id = "admin-id", RoleID = 1, Email = "admin@test.com", UserName = "admin@test.com" });
+            await context.SaveChangesAsync();
+
+            var userManagerMock = CreateSimpleUserManagerMock(context);
+            var controller = new UsersController(userManagerMock.Object, context)
+            {
+                ControllerContext = CreateControllerContext("admin-id", "1")
+            };
+
+            var payload = new UserRoleUpdateDto { RoleID = 2 };
+
+            // Act - Try updating a user that doesn't exist to trigger 'if (user == null)'
+            var result = await controller.UpdateUserRole("invalid-user-id", payload);
+
+            // Assert
+            Assert.True(result is NotFoundResult || result is NotFoundObjectResult);
+        }
+
+        [Fact]
+        public async Task UpdateUserRole_ValidUser_ReturnsSuccessAndChangesRole()
+        {
+            // Arrange
+            using var context = CreateContext();
+            var targetUser = new User { Id = "target-worker-id", RoleID = 3, Email = "worker@test.com", UserName = "worker@test.com" };
+            context.Users.AddRange(
+                new User { Id = "admin-id", RoleID = 1, Email = "admin@test.com", UserName = "admin@test.com" },
+                targetUser
+            );
+            await context.SaveChangesAsync();
+
+            var userManagerMock = CreateSimpleUserManagerMock(context);
+            var controller = new UsersController(userManagerMock.Object, context)
+            {
+                ControllerContext = CreateControllerContext("admin-id", "1")
+            };
+
+            var payload = new UserRoleUpdateDto { RoleID = 2 };
+
+            // Act - Testing the full happy path branch execution
+            var result = await controller.UpdateUserRole("target-worker-id", payload);
+
+            // Assert
+            Assert.True(result is OkResult || result is NoContentResult || result is OkObjectResult);
+            Assert.Equal(2, targetUser.RoleID); // Verify database/model branch updated successfully
         }
     }
 }

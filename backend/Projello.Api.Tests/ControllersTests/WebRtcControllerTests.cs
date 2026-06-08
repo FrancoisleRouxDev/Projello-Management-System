@@ -69,7 +69,7 @@ namespace Projello.Api.Tests
             var result = controller.Test();
 
             var ok = Assert.IsType<OkObjectResult>(result);
-            Assert.Contains("WebRTC controller is working", ok.Value.ToString());
+            Assert.Contains("WebRTC controller is working", ok.Value!.ToString());
         }
     }
 }
