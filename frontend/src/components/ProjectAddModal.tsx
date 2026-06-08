@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import CustomModal from "./CustomModal";
 import { Button } from "antd";
+import { PlusCircle } from "lucide-react";
+import "./WorkerClientAddModal.css";
 import "./ProjectAddModal.css";
 
 interface ProjectAddModalProps {
@@ -8,7 +10,9 @@ interface ProjectAddModalProps {
   onClose: () => void;
   onSubmit: (data: ProjectFormData) => void;
   clientId?: string;      // optional - passed from action menu
-  clientName?: string;    // prefill when opened from client row
+  clientName?: string;    // prefill when opened from client row or dashboard
+  clientOptions?: string[]; // optional client list for combo box selection
+  disableClientName?: boolean; // when true, client name is locked for the form
 }
 
 interface ProjectFormData {
@@ -23,6 +27,8 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
   onClose,
   onSubmit,
   clientName,
+  clientOptions,
+  disableClientName,
 }) => {
   const [formData, setFormData] = useState<ProjectFormData>({
     name: "",
@@ -47,6 +53,10 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
       alert("Client name is required");
       return;
     }
+    if (clientOptions && clientOptions.length > 0 && !clientOptions.includes(formData.clientName)) {
+      alert("Please select a valid client from the list.");
+      return;
+    }
     onSubmit(formData);
     setFormData({ name: "", description: "", clientName: "", dueDate: "" });
     onClose();
@@ -61,60 +71,81 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
     <CustomModal
       open={open}
       onCancel={handleCancel}
-      // title={
-      //   <div className="entity-modal__title-row">
-      //     <div className="entity-modal__title-icon" aria-hidden="true">
-      //     </div>
-      //     <div>
-      //       <div className="entity-modal__title">Add New Project</div>
-      //       <div className="entity-modal__subtitle">Create a new project record</div>
-      //     </div>
-      //   </div>
-      // }
-      title="Add New Project"
-      footer={[
-        <Button key="cancel" onClick={handleCancel}>
-          Cancel
-        </Button>,
-        <Button key="submit" type="primary" onClick={handleSubmit}>
-          Create Project
-        </Button>,
-      ]}
+      title={
+        <div className="entity-modal__title-row">
+          <div className="entity-modal__title-icon" aria-hidden="true">
+            <PlusCircle size={18} strokeWidth={2.2} />
+          </div>
+          <div>
+            <div className="entity-modal__title">Add New Project</div>
+            <div className="entity-modal__subtitle">Create a new project record</div>
+          </div>
+        </div>
+      }
+      footer={
+        <div className="entity-modal__footer">
+          <Button onClick={handleCancel}>
+            Cancel
+          </Button>
+          <Button type="primary" onClick={handleSubmit}>
+            Create Project
+          </Button>
+        </div>
+      }
+      wrapClassName="entity-modal entity-modal--project"
+      width={680}
     >
-      <div className="project-add-modal__form">
-        <div className="project-add-modal__form-group">
-          <label className="project-add-modal__label project-add-modal__label--required">
+      <form className="entity-modal__form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+        <div className="entity-modal__form-group">
+          <label className="entity-modal__label entity-modal__label--required">
             Project Name
           </label>
           <input
             type="text"
-            className="project-add-modal__input"
+            className="entity-modal__input"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             placeholder="Enter project name"
           />
         </div>
 
-        <div className="project-add-modal__form-group">
-          <label className="project-add-modal__label project-add-modal__label--required">
+        <div className="entity-modal__form-group">
+          <label className="entity-modal__label entity-modal__label--required">
             Client Name
           </label>
-          <input
-            type="text"
-            className="project-add-modal__input"
-            value={formData.clientName}
-            onChange={(e) =>
-              setFormData({ ...formData, clientName: e.target.value })
-            }
-            placeholder="Enter client name"
-            disabled={!!clientName}   // disabled when prefilled from action menu
-          />
+          {clientOptions && clientOptions.length > 0 && !disableClientName ? (
+            <select
+              className="entity-modal__input"
+              value={formData.clientName}
+              onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+            >
+              <option value="" disabled>
+                Select a client
+              </option>
+              {clientOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="text"
+              className="entity-modal__input"
+              value={formData.clientName}
+              onChange={(e) =>
+                setFormData({ ...formData, clientName: e.target.value })
+              }
+              placeholder={clientOptions && clientOptions.length > 0 ? "Select a client" : "Enter client name"}
+              disabled={disableClientName}
+            />
+          )}
         </div>
 
-        <div className="project-add-modal__form-group">
-          <label className="project-add-modal__label">Description</label>
+        <div className="entity-modal__form-group">
+          <label className="entity-modal__label">Description</label>
           <textarea
-            className="project-add-modal__textarea"
+            className="entity-modal__textarea"
             value={formData.description}
             onChange={(e) =>
               setFormData({ ...formData, description: e.target.value })
@@ -124,12 +155,12 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
           />
         </div>
 
-        <div className="project-add-modal__form-group">
-          <label className="project-add-modal__label" htmlFor="project-due-date">Due Date</label>
+        <div className="entity-modal__form-group">
+          <label className="entity-modal__label" htmlFor="project-due-date">Due Date</label>
           <input
             id="project-due-date"
             type="date"
-            className="project-add-modal__input"
+            className="entity-modal__input"
             value={formData.dueDate}
             onChange={(e) =>
               setFormData({ ...formData, dueDate: e.target.value })
@@ -139,7 +170,7 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
             aria-label="Due date"
           />
         </div>
-      </div>
+      </form>
     </CustomModal>
   );
 };

@@ -5,19 +5,26 @@ import { useNavigate } from "react-router-dom";
 interface JelloItemProps {
     name: string;
     clientName: string;
-    date: string;
-    progressPercent: number;
-    milestonesLabel: string;
+    dueDate: string;
     workers: number;
     onClick?: () => void;
 }
 
+const formatDueDate = (value: string) => {
+    if (!value) return "No due date";
+    const parsed = new Date(value);
+    if (isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    });
+};
+
 export default function JelloItem({
     name,
     clientName,
-    date,
-    progressPercent,
-    milestonesLabel,
+    dueDate,
     workers,
     onClick,
 }: JelloItemProps) {
@@ -38,13 +45,7 @@ export default function JelloItem({
             </div>
 
             <div className="JelloInfo">
-                <div className="Item_Date"> <h5>{date}</h5> </div>
-                <div className="Item_Progress">
-                    <div className="ProgressBar">
-                        <div className="ProgressBar__fill" style={{ width: `${progressPercent}%` }} />
-                    </div>
-                    <span className="ProgressBar__label">{milestonesLabel}</span>
-                </div>
+                <div className="Item_Date"> <h5>{formatDueDate(dueDate)}</h5> </div>
                 <div className="Item_ActiveWorkers"> <h5>{workers} Workers</h5> </div>
             </div>
         </div>

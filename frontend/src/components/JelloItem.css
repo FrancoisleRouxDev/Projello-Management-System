@@ -13,7 +13,8 @@
   background-color: var(--secondary-background-item, #f7f7f3);
   width: 100%;
   height: 75px;
-  box-shadow: 0 2px 4px 0 var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1)) inset;
+  box-shadow: 0 2px 4px 0 var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1))
+    inset;
   border-radius: 20px;
   border: 1px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
   display: flex;
@@ -78,22 +79,6 @@
   max-width: 100%;
 }
 
-.filterBar .searchBar {
-  flex: 2 0 0;
-  min-width: 0;
-}
-.filterBar #AZsorter,
-.filterBar #prioritySorter {
-  flex: 1 0 0;
-  min-width: 0;
-}
-.filterBar #dateSorter,
-.filterBar #progressSorter,
-.filterBar #activeWorkersSorter {
-  flex: 1 0 0;
-  min-width: 0;
-}
-
 .Item_ActiveWorkers {
   font-family: Roboto, sans-serif;
   font-style: normal;
@@ -103,41 +88,4 @@
   align-items: center;
   justify-content: flex-start;
   width: 100%;
-}
-
-.Item_Progress {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: flex-end;
-  padding: 10px;
-  padding-top: 20px;
-  padding-bottom: 0;
-}
-
-.ProgressBar {
-  width: 100%;
-  height: 26px;
-  background: #e0e0e0;
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 4px;
-}
-.ProgressBar__fill {
-  height: 100%;
-  background: #bdd04e;
-  box-shadow:
-    2px -1px 3px 0 rgba(0, 0, 0, 0.35) inset,
-    -1px 2px 3px 0 rgba(247, 247, 243, 0.57) inset;
-  border-radius: 10px 0 0 10px;
-  transition: width 0.3s;
-}
-.ProgressBar__label {
-  font-size: 0.7rem;
-  color: var(--accent-2-40_Opacity, rgba(40, 51, 43, 0.4));
-  font-family: Roboto, sans-serif;
-  font-style: italic;
-  text-align: center;
-  text-shadow: 0 0 1px rgba(0, 0, 0, 0.15);
-  font-weight: 500;
 }

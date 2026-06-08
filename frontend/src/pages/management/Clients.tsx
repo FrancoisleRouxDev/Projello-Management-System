@@ -439,6 +439,7 @@ export default function ClientsPage() {
                     }}
                     clientId={selectedClientForProject.clientId}
                     clientName={selectedClientForProject.name}
+                    disableClientName={true}
                     onSubmit={async (data) => {
                         try {
                             const token = localStorage.getItem("token");
