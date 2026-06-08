@@ -2,8 +2,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import "./Workers.css";
 import StatCard from "../../components/StatCard";
 import { SearchInput } from "../../components/SearchInput";
-import { FilterButton } from "../../components/FilterButton";
-import { SortButton } from "../../components/SortButton";
 import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
 import { API_BASE_URL } from "../../config";
 import { AddButton } from "../../components/AddButton";
@@ -266,8 +264,6 @@ export default function WorkersPage() {
             placeholder="Search workers, roles, or projects..."
             onSearch={setSearchTerm}
           />
-          <FilterButton label="All Status" onFilter={() => console.log("Filter clicked")} />
-          <SortButton label="Sort" onSort={() => console.log("Sort clicked")} />
         </div>
 
         <section className="workers-page__section">

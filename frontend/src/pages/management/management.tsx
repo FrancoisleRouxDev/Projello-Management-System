@@ -391,6 +391,7 @@ export default function ManagementPage() {
                 rows={tableRows}
                 onRowAction={handleRowAction}
                 onRowClick={handleRowClick}
+                hideProjectsColumn={true}
               />
             )}
           </>

@@ -4,12 +4,11 @@ import "./Clients.css";
 import StatCard from "../../components/StatCard";
 import ManagementClientTable, { ManagementClientRow } from "../../components/ManagementClientTable";
 import { SearchInput } from "../../components/SearchInput";
-import { FilterButton } from "../../components/FilterButton";
-import { SortButton } from "../../components/SortButton";
 import { AddButton } from "../../components/AddButton";
 import { API_BASE_URL } from "../../config";
 import ClientAddModal from "../../components/ClientAddModal";
 import { ProjectAddModal } from "../../components/ProjectAddModal";
+
 
 type ClientSummary = {
     totalRevenue: number | null;
@@ -63,6 +62,7 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserR
     const [editTotalPaid, setEditTotalPaid] = useState(0);
     const [editOutstanding, setEditOutstanding] = useState(0);
     const [editStatus, setEditStatus] = useState("Active");
+    
 
     const isBlacklisted = row.status === "Blacklisted";
 
@@ -195,9 +195,7 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserR
                             </button>
                         )}
 
-                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => setFeedback("Edit functionality coming soon.")}>
-                            Edit Client
-                        </button>
+                     
 
                         <button
                             className="action-modal__btn action-modal__btn--secondary"
@@ -337,6 +335,7 @@ export default function ClientsPage() {
 
     const [showProjectAddModal, setShowProjectAddModal] = useState(false);
     const [selectedClientForProject, setSelectedClientForProject] = useState<ManagementClientRow | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -441,6 +440,11 @@ export default function ClientsPage() {
         setShowProjectAddModal(true);
     };
 
+    const filteredRows = rows.filter(row =>
+    row.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    row.company.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
     return (
         <div className="clients-page">
             <div className="clients-page__stats">
@@ -490,9 +494,10 @@ export default function ClientsPage() {
             </div>
 
             <div className="clients-page__controls">
-                <SearchInput placeholder="Search clients..." onSearch={(v) => console.log(v)} />
-                <FilterButton label="All Status" onFilter={() => {}} />
-                <SortButton label="Sort" onSort={() => {}} />
+                <SearchInput
+                    placeholder="Search clients..."
+                    onSearch={setSearchTerm}
+                />
             </div>
 
             <section className="clients-page__table-section">
@@ -506,9 +511,17 @@ export default function ClientsPage() {
                     </div>
                 </div>
 
-                {loading ? <p className="clients-page__message">Loading clients...</p> :
-                 error ? <p className="clients-page__message--error">Error: {error}</p> :
-                 <ManagementClientTable rows={rows} onRowAction={handleRowAction} onRowClick={handleRowClick} />}
+                {loading ? (
+                    <p className="clients-page__message">Loading clients...</p>
+                ) : error ? (
+                    <p className="clients-page__message--error">Error: {error}</p>
+                ) : (
+                    <ManagementClientTable
+                        rows={filteredRows}
+                        onRowAction={handleRowAction}
+                        onRowClick={handleRowClick}
+                    />
+                )}
             </section>
 
             <ClientAddModal open={showAddModal} onClose={() => setShowAddModal(false)} onClientAdded={fetchClients} />
