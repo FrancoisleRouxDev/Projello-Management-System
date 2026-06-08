@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./single-project-view.css";
+import "./DiscussionTab.css";
 import { API_BASE_URL } from "../../config";
 
 type DiscussionReaction = {

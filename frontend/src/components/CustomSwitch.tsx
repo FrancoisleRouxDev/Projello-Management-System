@@ -10,14 +10,14 @@ interface CustomSwitchProps {
 
 const CustomSwitch: React.FC<CustomSwitchProps> = ({ checked, onChange, disabled, label }) => (
   <label className="theme-switch" style={{ margin: 0 }}>
+    <span className="slider"></span>
+    {label && <span className="theme-label-text">{label}</span>}
     <input
       type="checkbox"
       checked={checked}
       onChange={e => onChange(e.target.checked)}
       disabled={disabled}
     />
-    <span className="slider"></span>
-    {label && <span className="theme-label-text">{label}</span>}
   </label>
 );
 

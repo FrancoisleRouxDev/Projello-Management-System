@@ -264,6 +264,8 @@ export default function WorkersPage() {
             placeholder="Search workers, roles, or projects..."
             onSearch={setSearchTerm}
           />
+          {/* <FilterButton label="All Status" onFilter={() => console.log("Filter clicked")} />
+          <SortButton label="Sort" onSort={() => console.log("Sort clicked")} /> */}
         </div>
 
         <section className="workers-page__section">
@@ -283,6 +285,10 @@ export default function WorkersPage() {
 								  />
 							  )}
 
+							  {/* <AddButton
+								  label="Add Worker"
+								  onClick={() => setWorkerModalOpen(true)}
+							  /> */}
 						  </div>
             </div>
           </div>

@@ -21,7 +21,7 @@ type ProjectDetails= {
   status: string;
   startDate: string | null;
   dueDate: string | null;
-  createdAt: string;
+  CreatedAt: string;
   photoTiles?: string[];
 };
 
@@ -31,7 +31,7 @@ type SiteImageUpdate = {
   userId: string;
   caption: string | null;
   imageUrl: string;
-  createdAt: string;
+  CreatedAt: string;
 };
 
 function RecentSitePhotosSection({ 
@@ -149,10 +149,12 @@ export default function SingleProjectViewPage() {
   const [renameValue, setRenameValue] = useState("");
   const [renameSaving, setRenameSaving] = useState(false);
 
-  // Description edit states
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [descriptionValue, setDescriptionValue] = useState("");
-  const [descriptionSaving, setDescriptionSaving] = useState(false);
+  // Status Editor State
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [statusUpdating, setStatusUpdating] = useState(false);
+
+  const STATUS_OPTIONS = ["Not Started", "Planning", "In Progress", "Completed"];
 
   const openRenameModal = () => {
     setRenameValue(project?.name || "");
@@ -203,26 +205,18 @@ export default function SingleProjectViewPage() {
     }
   };
 
-  // description edit functions
-  const startEditingDescription = () => {
-    setDescriptionValue(project?.description || "");
-    setIsEditingDescription(true);
+  const handleStatusSelect = (status: string) => {
+    setSelectedStatus(status);
   };
 
-  const saveDescription = async () => {
-    if (!project) return;
+  const handleConfirmStatusChange = async () => {
+    if (!project || !selectedStatus) return;
 
-    const trimmedDesc = descriptionValue.trim();
-    if (trimmedDesc === project.description) {
-      setIsEditingDescription(false);
-      return;
-    }
-
-    setDescriptionSaving(true);
+    setStatusUpdating(true);
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/api/projects/${project.projectID}`, {
+      const response = await fetch(`${API_BASE_URL}/api/projects/${project.projectID}/status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -234,27 +228,32 @@ export default function SingleProjectViewPage() {
           clientID: project.clientID,
           startDate: project.startDate,
           dueDate: project.dueDate,
+          status: selectedStatus,
         }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || "Failed to update description.");
+        throw new Error(errorText || "Failed to update project status.");
       }
 
-      setProject((prev) => (prev ? { ...prev, description: trimmedDesc } : prev));
-      antdMessage.success("Description updated successfully.");
-      setIsEditingDescription(false);
-    } catch (err: any) {
-      antdMessage.error(err.message || "Failed to update description.");
-    } finally {
-      setDescriptionSaving(false);
-    }
-  };
+      setProject((prev) => (prev ? { ...prev, status: selectedStatus } : prev));
+      antdMessage.success("Project status updated successfully.");
+      setShowStatusModal(false);
+      setSelectedStatus(null);
 
-  const cancelDescriptionEdit = () => {
-    setIsEditingDescription(false);
-    setDescriptionValue("");
+      // If status is Completed, redirect to history page
+      if (selectedStatus === "Completed") {
+        setTimeout(() => {
+          navigate("/history");
+          antdMessage.info("Project moved to history page.");
+        }, 500);
+      }
+    } catch (err: any) {
+      antdMessage.error(err.message || "Failed to update project status.");
+    } finally {
+      setStatusUpdating(false);
+    }
   };
 
   // Get current user role
@@ -599,7 +598,7 @@ export default function SingleProjectViewPage() {
             <span className="single-project-view__separator">/</span>
             <span className="single-project-view__client-name">{project.clientName}</span>
 
-            {[4].includes(currentUserRole) && (
+            {[4].includes(currentUserRole) && project.status !== "Completed" && (
               <button
                 type="button"
                 onClick={openRenameModal}
@@ -615,8 +614,8 @@ export default function SingleProjectViewPage() {
             className="single-project-view__call-button"
             onClick={handleStartVoiceCall}
           >
-            <span aria-hidden="true">☎</span>
-            <span>Start Call</span>
+            <span aria-hidden="true" className="single-project-view__call-button-text">☎</span>
+            <span className="single-project-view__call-button-text">Start Call</span>
           </button>
         </div>
 
@@ -646,10 +645,25 @@ export default function SingleProjectViewPage() {
           <span className="single-project-view__stat-label">Project ID</span>
           <span className="single-project-view__stat-value">{project.projectID}</span>
         </div>
-        <div className="single-project-view__stat-card">
-          <span className="single-project-view__stat-label">Status</span>
-          <span className="single-project-view__stat-value">{project.status}</span>
-        </div>
+        {project.status === "Completed" ? (
+          <div className="single-project-view__stat-card">
+            <span className="single-project-view__stat-label">Status</span>
+            <span className="single-project-view__stat-value">{project.status}</span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="single-project-view__stat-card single-project-view__stat-card--clickable"
+            onClick={() => {
+              setSelectedStatus(project.status);
+              setShowStatusModal(true);
+            }}
+            // style={{ cursor: "pointer" }}
+          >
+            <span className="single-project-view__stat-label">Status</span>
+            <span className="single-project-view__stat-value">{project.status}</span>
+          </button>
+        )}
         <div className="single-project-view__stat-card">
           <span className="single-project-view__stat-label">Start Date</span>
           <span className="single-project-view__stat-value">
@@ -663,6 +677,57 @@ export default function SingleProjectViewPage() {
           </span>
         </div>
       </div>
+
+      {/* Status Modal */}
+      {showStatusModal && project.status !== "Completed" && (
+        <div className="status-modal-mask" onClick={() => setShowStatusModal(false)}>
+          <div className="status-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="status-modal__header">
+              <h3 className="status-modal__title">Update Project Status</h3>
+            </div>
+
+            <div className="status-modal__options">
+              {STATUS_OPTIONS.map((option) => (
+                <label key={option} className="status-option">
+                  <input
+                    type="radio"
+                    name="projectStatus"
+                    value={option}
+                    checked={selectedStatus === option}
+                    onChange={() => handleStatusSelect(option)}
+                  />
+                  <span className="status-option__label">{option}</span>
+                </label>
+              ))}
+            </div>
+
+            {selectedStatus === "Completed" && (
+              <div className="status-modal__warning">
+                <strong>⚠️ Warning:</strong> Setting the status to "Completed" will move this project to the History page.
+              </div>
+            )}
+
+            <div className="status-modal__footer">
+              <button
+                type="button"
+                className="status-modal__cancel-btn"
+                onClick={() => setShowStatusModal(false)}
+                disabled={statusUpdating}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="status-modal__confirm-btn"
+                onClick={handleConfirmStatusChange}
+                disabled={statusUpdating || selectedStatus === project.status}
+              >
+                {statusUpdating ? "Updating..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/*TAB CONTENT */}
       {activeTab === "overview" && (
@@ -722,105 +787,10 @@ export default function SingleProjectViewPage() {
               )}
             </div>
 
-            {/* Milestones Panel */}
-            <div className="single-project-view__panel">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                <h3 className="single-project-view__panel-title">Milestones</h3>
-                <button 
-                  onClick={handleAddMilestone}
-                  style={{
-                    background: "#5e745f",
-                    color: "white",
-                    border: "none",
-                    padding: "6px 14px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    fontSize: "13px",
-                    fontWeight: 600
-                  }}
-                >
-                  + Add Milestone
-                </button>
-              </div>
-
-              {milestones.length === 0 ? (
-                <p style={{ color: "#888", fontSize: "14px" }}>
-                  No milestones yet. Click "+ Add Milestone" to create one.
-                </p>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  {milestones.map((m) => (
-                    <div 
-                      key={m.milestoneID} 
-                      style={{ 
-                        border: "1px solid #eee", 
-                        padding: "12px", 
-                        borderRadius: "8px",
-                        background: "#fafafa"
-                      }}
-                    >
-                      <div style={{ 
-                        display: "flex", 
-                        justifyContent: "space-between", 
-                        alignItems: "center", 
-                        marginBottom: "8px" 
-                      }}>
-                        <input
-                          type="text"
-                          value={m.title}
-                          onChange={(e) => handleTitleChange(m.milestoneID, e.target.value)}
-                          onBlur={() => handleSaveMilestone(m)}
-                          style={{
-                            flex: 1,
-                            border: "none",
-                            fontSize: "15px",
-                            fontWeight: 500,
-                            background: "transparent",
-                            paddingRight: "8px"
-                          }}
-                        />
-
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ 
-                            fontWeight: "bold", 
-                            color: "#5e745f", 
-                            minWidth: "45px", 
-                            textAlign: "right" 
-                          }}>
-                            {m.progress}%
-                          </span>
-
-                          <button
-                            onClick={() => handleDeleteMilestone(m.milestoneID)}
-                            style={{
-                              background: "transparent",
-                              border: "none",
-                              color: "#ff4d4f",
-                              cursor: "pointer",
-                              fontSize: "16px",
-                              padding: "2px 4px"
-                            }}
-                            title="Delete milestone"
-                          >
-                            🗑
-                          </button>
-                        </div>
-                      </div>
-
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={m.progress}
-                        onChange={(e) => handleProgressChange(m.milestoneID, parseInt(e.target.value))}
-                        onMouseUp={() => handleSaveMilestone(m)}
-                        style={{ width: "100%" }}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* <div className="single-project-view__panel">
+              <h3 className="single-project-view__panel-title">Milestones</h3>
+              <p>Milestone data coming soon...</p>
+            </div> */}
           </div>
 
           <RecentSitePhotosSection 
@@ -852,11 +822,11 @@ export default function SingleProjectViewPage() {
           <h3 className="single-project-view__panel-title">Team Members ({teamMembers.length})</h3>
 
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            {[1, 4].includes(currentUserRole) && (
+
+            {[1, 4].includes(currentUserRole) && project.status !== "Completed" && (
               <button
                 onClick={() => setShowAddMemberModal(true)}
-                className="single-project-view__view-all-button"
-                style={{ color: "#0a0a0a", fontWeight: "600" }}
+                className="single-project-view__view-all-button single-project-view__add-member-button"
               >
                 + Add Member
               </button>
@@ -874,7 +844,7 @@ export default function SingleProjectViewPage() {
                   {m.FullName || m.fullName} — <strong>{m.AssignedAs || m.assignedAs}</strong>
                 </div>
 
-                {[1, 4].includes(currentUserRole) && (
+                {[1, 4].includes(currentUserRole) && project.status !== "Completed" && (
                   <button
                     type="button"
                     className="team-member-row__remove-btn"
@@ -971,7 +941,7 @@ export default function SingleProjectViewPage() {
           ]}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <label style={{ fontWeight: 600, color: "var(--text-dark)" }}>
+            <label className="single-project-view__modal-label">
               Project Name
             </label>
             <input

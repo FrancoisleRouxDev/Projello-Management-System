@@ -17,9 +17,7 @@ interface Project {
   status: string;
   startDate: string | null;
   dueDate: string | null;
-  createdAt: string;
-  totalPaid?: number | string | null;
-  outstanding?: number | string | null;
+  CreatedAt: string;
 }
 
 type ManagementView = "projects" | "clients" | "workers";
@@ -322,7 +320,10 @@ export default function ManagementPage() {
   }, []);
 
   // Map Project data to ManagementClientRow for table display
-  const tableRows: ManagementClientRow[] = projects.map((project) => {
+  // Filter out completed projects from management view
+  const activeProjects = projects.filter((project) => project.status !== "Completed");
+  
+  const tableRows: ManagementClientRow[] = activeProjects.map((project) => {
     const clientInitials = project.clientName
       .split(" ")
       .map((word) => word[0])

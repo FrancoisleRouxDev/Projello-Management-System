@@ -1,5 +1,5 @@
 .stat-card {
-  min-width: 0;
+  min-width: 100px;
   padding: 24px;
   background: var(--secondary-background-item, #f7f7f3);
   border-radius: 20px;
@@ -7,6 +7,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  width: 100%;
 }
 
 .stat-card__header {

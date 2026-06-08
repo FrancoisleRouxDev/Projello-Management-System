@@ -12,7 +12,7 @@ interface Project {
   status: string;
   startDate: string | null;
   dueDate: string | null;
-  createdAt: string;
+  CreatedAt: string;
   // Suggested backend addition: include photo URLs here so the gallery section can render real images.
   photoTiles?: string[];
 }

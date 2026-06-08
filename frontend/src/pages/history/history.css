@@ -45,7 +45,7 @@ body {
 
 /* --- Core Control Actions --- */
 .refresh-history-btn {
-  background-color: var(--deep-green-accent);
+  background-color: var(--accent-1, #5e745f);
   color: #ffffff;
   border: none;
   padding: 0.6rem 1.2rem;

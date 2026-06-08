@@ -16,8 +16,11 @@
 /* Header row - THIS needs the grid */
 .management-client-table__header-row {
   display: grid;
-  grid-template-columns: minmax(220px, 1.8fr) repeat(3, minmax(110px, 1fr)) minmax(120px, 1fr) 64px;
-  align-items: center;
+  grid-template-columns: minmax(280px, 12.8fr) repeat(3, minmax(150px, 0.1fr)) minmax(12px, 0.1fr) 14px;
+  align-items: space-between;
+  /* dispaly: flex;
+  flex-direction: row;
+  align-items: space-between;*/
 }
 
 .management-client-table__header {
@@ -37,11 +40,18 @@
   padding: 20px 28px;
   border-top: 1px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
   /* box-shadow: 0 2px 4px 0 var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1)) inset; */
+  display: grid;
+  grid-template-columns: minmax(280px, 12.8fr) repeat(3, minmax(150px, 0.1fr)) minmax(12px, 0.1fr) 14px;
+  /* overflow: visable; */
 }
 
 .management-client-table__row--clickable {
   cursor: pointer;
   transition: background-color 0.16s ease;
+}
+
+#blacklistBtn{
+  color: var(--error-red);
 }
 
 .management-client-table__row--clickable:hover {
@@ -60,7 +70,8 @@
 }
 
 .management-client-table__cell--actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: management-client-table__cell;
   justify-content: flex-end;
   align-items: center;
   min-width: 64px;
@@ -177,31 +188,52 @@
 
 .management-client-table__action-button:hover {
   color: #0b1220;
-  background: rgba(11,18,32,0.04);
+  background: rgba(11, 18, 32, 0.04);
 }
 
-.management-client-table__body > .management-client-table__row > .management-client-table__cell--actions {
+.management-client-table__body
+  > .management-client-table__row
+  > .management-client-table__cell--actions {
   flex-shrink: 0;
 }
+
+/* .management-client-table__body{
+  display: flex;
+  flex-direction: row;
+} */
 
 /* Responsive */
 @media (max-width: 1100px) {
   .management-client-table__header-row,
   .management-client-table__row {
-    grid-template-columns: minmax(180px, 1.4fr) repeat(3, minmax(90px, 1fr)) minmax(100px, 1fr) 56px;
+    grid-template-columns: minmax(180px, 1.4fr) repeat(
+        3,
+        minmax(90px, 1fr)
+      ) minmax(100px, 1fr) 56px;
   }
-  .management-client-table__avatar { width: 40px; height: 40px; }
-  .management-client-table__name { font-size: 15px; }
+  .management-client-table__avatar {
+    width: 40px;
+    height: 40px;
+  }
+  .management-client-table__name {
+    font-size: 15px;
+  }
 }
 
 @media (max-width: 900px) {
-  .management-client-table__header { display: none; }
+  .management-client-table__header {
+    display: none;
+  }
   .management-client-table__header-row,
   .management-client-table__row {
     grid-template-columns: 1fr;
     gap: 8px;
     padding: 12px 14px;
   }
-  .management-client-table__cell--actions { justify-content: flex-start; }
-  .management-client-table__company { font-size: 12px; }
+  .management-client-table__cell--actions {
+    justify-content: flex-start;
+  }
+  .management-client-table__company {
+    font-size: 12px;
+  }
 }

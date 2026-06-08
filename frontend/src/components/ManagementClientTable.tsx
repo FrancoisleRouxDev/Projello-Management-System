@@ -42,15 +42,11 @@ export default function ManagementClientTable({
       <div className="management-client-table__header" role="rowgroup">
         <div role="row" className="management-client-table__header-row">
           <div className="management-client-table__cell management-client-table__cell--client" role="columnheader">Client</div>
-          <div className="management-client-table__cell" role="columnheader">Total Paid</div>
-          <div className="management-client-table__cell" role="columnheader">Outstanding</div>
-
-          {!hideProjectsColumn && (
-            <div className="management-client-table__cell" role="columnheader">Projects</div>
-          )}
-
+          {/* <div className="management-client-table__cell" role="columnheader">Total Paid</div>
+          <div className="management-client-table__cell" role="columnheader">Outstanding</div> */}
           <div className="management-client-table__cell" role="columnheader">Status</div>
-          <div className="management-client-table__cell management-client-table__cell--actions" role="columnheader" aria-hidden="true" />
+          <div className="management-client-table__cell" role="columnheader">Projects</div>
+          {/* <div className="management-client-table__cell management-client-table__cell--actions" role="columnheader" aria-hidden="true" /> */}
         </div>
       </div>
 
@@ -76,37 +72,32 @@ export default function ManagementClientTable({
               </div>
             </div>
 
-            {/* Total Paid */}
-            <div className="management-client-table__cell" role="cell">
+            {/* <div className="management-client-table__cell" role="cell">
               <div className="management-client-table__value">{row.totalPaid}</div>
               <div className="management-client-table__subvalue">total paid</div>
-            </div>
+            </div> */}
 
-            {/* Outstanding */}
-            <div className="management-client-table__cell" role="cell">
+            {/* <div className="management-client-table__cell" role="cell">
               <div className={`management-client-table__value ${row.statusTone === "warning" ? "management-client-table__value--warning" : ""}`.trim()}>
                 {row.outstanding}
               </div>
               <div className="management-client-table__subvalue">outstanding</div>
-            </div>
+            </div> */}
 
-            {/* Projects (conditionally rendered) */}
-            {!hideProjectsColumn && (
-              <div className="management-client-table__cell" role="cell">
-                <div className="management-client-table__value">{row.projects}</div>
-                <div className="management-client-table__subvalue">{row.activeProjects}</div>
-              </div>
-            )}
-
-            {/* Status */}
-            <div className="management-client-table__cell" role="cell">
+<div className="management-client-table__cell" role="cell">
               <span className={`management-client-table__badge management-client-table__badge--${row.statusTone ?? "neutral"}`.trim()}>
                 {row.status}
               </span>
             </div>
 
-            {/* Actions */}
-            <div className="management-client-table__cell management-client-table__cell--actions" role="cell">
+            <div className="management-client-table__cell" role="cell">
+              <div className="management-client-table__value">{row.projects} Projects</div>
+              {/* <div className="management-client-table__subvalue">{row.activeProjects} Projects</div> */}
+            </div>
+
+            
+
+            <div className="management-client-table__cell management-client-table__cell--actions" id="blacklistBtn" role="cell">
               <div onClick={(e) => e.stopPropagation()}>
                 <Dropdown
                   menu={{
