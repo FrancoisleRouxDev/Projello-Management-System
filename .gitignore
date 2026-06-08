@@ -15,7 +15,7 @@ publish/
 *.cache
 *.props
 
-# --- Sensitive Config (The "Big Three") ---
+# --- Sensitive Config (The \"Big Three\") ---
 # We use **/ to catch them regardless of folder depth
 **/appsettings.json
 **/appsettings.Development.json
@@ -25,6 +25,7 @@ publish/
 node_modules/
 dist/
 build/
+out/
 .eslintcache
 npm-debug.log*
 
