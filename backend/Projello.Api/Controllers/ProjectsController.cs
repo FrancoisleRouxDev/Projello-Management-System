@@ -115,6 +115,7 @@ namespace Projello.Api.Controllers
                 Name = project.Name,
                 Description = project.Description,
                 Status = project.Status,
+                StartDate = project.StartDate,
                 DueDate = project.DueDate,
                 CreatedAt = project.CreatedAt,
                 ClientID = project.ClientID,

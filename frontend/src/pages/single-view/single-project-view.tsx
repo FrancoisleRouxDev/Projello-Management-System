@@ -636,12 +636,7 @@ export default function SingleProjectViewPage() {
             Discussion
           </button>
           
-          <button 
-            className={`single-project-view__tab ${activeTab === "gallery" ? "single-project-view__tab--active" : ""}`}
-            onClick={() => setActiveTab("gallery")}
-          >
-            Gallery
-          </button>
+       
         </div>
       </div>
 
@@ -681,7 +676,7 @@ export default function SingleProjectViewPage() {
                   <button
                     type="button"
                     onClick={startEditingDescription}
-                    style={{ background: "none", border: "none", color: "#1890ff", cursor: "pointer", fontSize: "14px" }}
+                    style={{ background: "none", border: "none", color: "#5e745f", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}
                   >
                     Edit
                   </button>
@@ -708,7 +703,7 @@ export default function SingleProjectViewPage() {
                     <button
                       onClick={saveDescription}
                       disabled={descriptionSaving}
-                      style={{ background: "#1890ff", color: "white", padding: "8px 20px", borderRadius: "6px" }}
+                      style={{ background: "#5e745f", color: "white", padding: "8px 20px", borderRadius: "6px", fontWeight: 600 }}
                     >
                       {descriptionSaving ? "Saving..." : "Save Changes"}
                     </button>
@@ -734,13 +729,14 @@ export default function SingleProjectViewPage() {
                 <button 
                   onClick={handleAddMilestone}
                   style={{
-                    background: "#1890ff",
+                    background: "#5e745f",
                     color: "white",
                     border: "none",
                     padding: "6px 14px",
                     borderRadius: "6px",
                     cursor: "pointer",
-                    fontSize: "13px"
+                    fontSize: "13px",
+                    fontWeight: 600
                   }}
                 >
                   + Add Milestone
@@ -787,7 +783,7 @@ export default function SingleProjectViewPage() {
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <span style={{ 
                             fontWeight: "bold", 
-                            color: "#1890ff", 
+                            color: "#5e745f", 
                             minWidth: "45px", 
                             textAlign: "right" 
                           }}>
@@ -839,11 +835,7 @@ export default function SingleProjectViewPage() {
         <DiscussionTab projectId={parseInt(projectId || "0")} />
       )}
 
-      {activeTab === "gallery" && (
-        <div style={{ padding: 40, textAlign: "center" }}>
-          <p>Gallery coming soon...</p>
-        </div>
-      )}
+    
 
       {/* Hidden file input for upload */}
       <input

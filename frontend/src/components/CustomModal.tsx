@@ -24,6 +24,7 @@ const CustomModal: React.FC<CustomModalProps> = ({ open, onCancel, title, childr
     centered
     destroyOnHidden
     mask={{ closable: !footer }}
+    getContainer={false}
   >
     {children}
   </Modal>
