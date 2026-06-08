@@ -2,13 +2,10 @@ import React, { useEffect, useState, useMemo } from "react";
 import "./Workers.css";
 import StatCard from "../../components/StatCard";
 import { SearchInput } from "../../components/SearchInput";
-import { FilterButton } from "../../components/FilterButton";
-import { SortButton } from "../../components/SortButton";
 import WorkerCard, { WorkerCardProps } from "../../components/WorkerCard";
 import { API_BASE_URL } from "../../config";
 import { AddButton } from "../../components/AddButton";
-import { WorkerAddModal } from "../../components/WorkerAddModal";
-import { Users, UserCheck, HardHat, BadgeCheck } from "lucide-react";
+import CustomModal from "../../components/CustomModal";
 
 interface UserDisplay {
   id: string;
@@ -131,6 +128,9 @@ export default function WorkersPage() {
 
   // Generate Invite Code - robust parsing
   const handleGenerateInviteCode = async () => {
+    setInviteCodeBusy(true);
+    setInviteCodeError("");
+
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(`${API_BASE_URL}/api/Auth/generate-invite`, {
@@ -149,6 +149,7 @@ export default function WorkersPage() {
       const data = await response.json();
       const inviteCode = data?.inviteCode ?? data?.InviteCode ?? data?.code ?? "N/A";
       const expiresRaw = data?.expiresAt ?? data?.ExpiresAt ?? data?.expires_at;
+
       let expiresDisplay = "N/A";
       if (expiresRaw) {
         try {
@@ -158,16 +159,22 @@ export default function WorkersPage() {
         }
       }
 
-      alert(
-        `Invite Code Generated!\n\n` +
-        `Code: ${inviteCode}\n\n` +
-        `Expires: ${expiresDisplay}\n\n` +
-        `Share this code with your workers.`
-      );
+      setInviteCodeValue(inviteCode);
+      setInviteCodeExpires(expiresDisplay);
+      setInviteCodeOpen(true);
     } catch (err: any) {
-      alert("Failed to generate invite code: " + (err.message || "Unknown error"));
+      setInviteCodeError(err.message || "Unknown error");
+      setInviteCodeOpen(true);
+    } finally {
+      setInviteCodeBusy(false);
     }
   };
+
+  const [inviteCodeOpen, setInviteCodeOpen] = useState(false);
+  const [inviteCodeValue, setInviteCodeValue] = useState("");
+  const [inviteCodeExpires, setInviteCodeExpires] = useState("");
+  const [inviteCodeBusy, setInviteCodeBusy] = useState(false);
+  const [inviteCodeError, setInviteCodeError] = useState("");
 
   // Stats (always based on full list)
   const totalWorkers = workers.length;
@@ -257,8 +264,6 @@ export default function WorkersPage() {
             placeholder="Search workers, roles, or projects..."
             onSearch={setSearchTerm}
           />
-          <FilterButton label="All Status" onFilter={() => console.log("Filter clicked")} />
-          <SortButton label="Sort" onSort={() => console.log("Sort clicked")} />
         </div>
 
         <section className="workers-page__section">
@@ -278,10 +283,6 @@ export default function WorkersPage() {
 								  />
 							  )}
 
-							  <AddButton
-								  label="Add Worker"
-								  onClick={() => setWorkerModalOpen(true)}
-							  />
 						  </div>
             </div>
           </div>
@@ -312,11 +313,44 @@ export default function WorkersPage() {
         </section>
       </div>
 
-      <WorkerAddModal
-        open={workerModalOpen}
-        onClose={() => setWorkerModalOpen(false)}
-        onSubmit={handleWorkerSubmit}
-      />
+      <CustomModal
+        open={inviteCodeOpen}
+        onCancel={() => setInviteCodeOpen(false)}
+        title="Invite Code Generated"
+        width={520}
+        footer={null}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="signinText">
+            <strong>Code:</strong> {inviteCodeValue}
+          </div>
+
+          <div className="login-button-row">
+            <button
+              type="button"
+              className="login-cancel-btn"
+              onClick={() => handleCopyCode(inviteCodeValue)}
+              disabled={!inviteCodeValue}
+            >
+              Copy Code
+            </button>
+          </div>
+
+          <p className="login-signup-text">
+            Share this code with the new worker so they can join the company.
+          </p>
+        </div>
+      </CustomModal>
     </>
   );
 }
+
+const handleCopyCode = async (value: string) => {
+  try {
+    await navigator.clipboard.writeText(value);
+    alert("Code copied to clipboard.");
+  } catch (err) {
+    console.error("Copy failed:", err);
+    alert("Failed to copy code.");
+  }
+};

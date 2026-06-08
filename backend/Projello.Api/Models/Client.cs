@@ -39,4 +39,10 @@ public class Client
 
     public string? BlacklistedById { get; set; }
     public User? BlacklistedBy { get; set; }
+
+    // updating
+    public string Status { get; set; } = "Active";
+    public decimal TotalPaid { get; set; } = 0;
+    public decimal Outstanding { get; set; } = 0;
+   
 }

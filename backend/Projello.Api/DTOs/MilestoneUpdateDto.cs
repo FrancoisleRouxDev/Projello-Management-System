@@ -7,5 +7,7 @@ namespace Projello.Api.DTOs
         public DateOnly? DueDate { get; set; }
         public string Status { get; set; } = "NotStarted";
         public DateOnly? CompletedDate { get; set; }
+
+        public int? Progress { get; set; }
     }
 }

@@ -6,3 +6,8 @@ declare module "*.svg" {
 }
 
 declare module "*.css";
+
+
+declare module "*.wav";
+declare module "*.mp3";
+declare module "*.ogg";

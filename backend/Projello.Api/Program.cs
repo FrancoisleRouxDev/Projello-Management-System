@@ -12,6 +12,14 @@ using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// === CRITICAL FIX FOR RENDER.COM ===
+builder.WebHost.UseKestrel(options =>
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "5049";
+    options.ListenAnyIP(int.Parse(port));
+});
+// =====================================
+
 // Cloudinary configuration
 builder.Services.Configure<CloudinarySettings>(
     builder.Configuration.GetSection("CloudinarySettings"));
@@ -48,11 +56,11 @@ builder.Services.AddAuthentication(options => {
 .AddJwtBearer(options => {
     options.UseSecurityTokenValidators = true; // Critical fix for IdentityModel 8.x
     options.TokenValidationParameters = new TokenValidationParameters {
-        ValidateIssuer = true,// Checks token issuer
-        ValidateAudience = true,// Checks intended recipient
-        ValidateLifetime = true,// Ensures not expired
-        ValidateIssuerSigningKey = true, // Verifies signature
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],// From appsettings for flexibility
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ClockSkew = TimeSpan.Zero
@@ -164,4 +172,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<ProjectCallHub>("/callhub");
 app.MapHub<TeamNotificationHub>("/teamnotificationHub");
+
 app.Run();
+
+public partial class Program { }

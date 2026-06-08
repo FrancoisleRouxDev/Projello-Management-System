@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { message as antdMessage } from "antd";
 import { createSignalRClient } from "../services/signalrClient";
+import { API_BASE_URL } from "../../../config";
 
 type TeamJoinedNotification = {
   projectId: number;
@@ -13,7 +14,7 @@ type TeamJoinedNotification = {
 const teamNotificationClient = createSignalRClient<{
   WorkerJoinedProject: [TeamJoinedNotification];
 }>({
-  hubUrl: "/teamNotificationHub",
+   hubUrl: `${API_BASE_URL}/teamNotificationHub`,
   getAccessToken: () => {
     const token = localStorage.getItem("token");
     if (!token) return null;

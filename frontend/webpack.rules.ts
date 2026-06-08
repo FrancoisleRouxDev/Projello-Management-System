@@ -28,4 +28,13 @@ export const rules: Required<ModuleOptions>['rules'] = [
       },
     },
   },
+
+  // === AUDIO FILES RULE (Added) ===
+  {
+    test: /\.(mp3|wav|ogg|m4a)$/i,
+    type: 'asset/resource',
+    generator: {
+      filename: 'assets/[name][ext]'
+    }
+  },
 ];

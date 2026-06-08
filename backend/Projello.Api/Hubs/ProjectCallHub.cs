@@ -19,6 +19,28 @@ public sealed class ProjectCallHub : Hub
 
     private string GetParticipantId() => Context.UserIdentifier ?? Context.ConnectionId;
 
+    public async Task RingUsers(string projectId, string[] targetUserIds)
+    {
+        var callerUserId = Context.UserIdentifier;
+        if (string.IsNullOrEmpty(callerUserId))
+            throw new HubException("User not authenticated.");
+
+        // Security check - only project members can ring others
+        bool isMember = _dbContext.ProjectMembers
+            .Any(m => m.ProjectID == int.Parse(projectId) && m.UserID == callerUserId);
+
+        if (!isMember)
+            throw new HubException("You are not a member of this project.");
+
+        var callerName = Context.User?.FindFirst("FullName")?.Value
+                         ?? Context.User?.Identity?.Name
+                         ?? "Someone";
+
+        // Send notification only to the selected users
+        await Clients.Users(targetUserIds)
+            .SendAsync("IncomingProjectCall", projectId, callerUserId, callerName);
+    }
+
     public async Task JoinProjectCall(string projectId)
     {
         if (string.IsNullOrWhiteSpace(projectId))

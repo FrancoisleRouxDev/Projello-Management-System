@@ -10,6 +10,8 @@ import DiscussionTab from "./DiscussionTab";
 import { message as antdMessage, Modal } from "antd";
 import CustomModal from "../../components/CustomModal";
 
+import { useIncomingCallNotifications } from "../../features/realtime/hooks/useIncomingCallNotifications";
+
 type ProjectDetails= {
   projectID: number;
   name: string;
@@ -59,7 +61,7 @@ function RecentSitePhotosSection({
       <div style={{
         display: "flex",
         gap: "12px",
-        overflowX: "auto",
+        //overflowX: "auto",
         paddingBottom: "12px",
         scrollbarWidth: "thin"
       }}>
@@ -111,6 +113,13 @@ function RecentSitePhotosSection({
 }
 
 export default function SingleProjectViewPage() {
+
+  //milestone
+  const [milestones, setMilestones] = useState<any[]>([]);
+  const [milestonesLoading, setMilestonesLoading] = useState(false);
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+  const [newMilestoneTitle, setNewMilestoneTitle] = useState("");
+
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
 
@@ -140,11 +149,17 @@ export default function SingleProjectViewPage() {
   const [renameValue, setRenameValue] = useState("");
   const [renameSaving, setRenameSaving] = useState(false);
 
+  // Description edit states
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [descriptionValue, setDescriptionValue] = useState("");
+  const [descriptionSaving, setDescriptionSaving] = useState(false);
+
   const openRenameModal = () => {
     setRenameValue(project?.name || "");
     setShowRenameModal(true);
   };
 
+  //Rename project function
   const handleRenameProject = async () => {
     if (!project) return;
 
@@ -188,6 +203,60 @@ export default function SingleProjectViewPage() {
     }
   };
 
+  // description edit functions
+  const startEditingDescription = () => {
+    setDescriptionValue(project?.description || "");
+    setIsEditingDescription(true);
+  };
+
+  const saveDescription = async () => {
+    if (!project) return;
+
+    const trimmedDesc = descriptionValue.trim();
+    if (trimmedDesc === project.description) {
+      setIsEditingDescription(false);
+      return;
+    }
+
+    setDescriptionSaving(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/api/projects/${project.projectID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          name: project.name,
+          description: trimmedDesc,
+          clientID: project.clientID,
+          startDate: project.startDate,
+          dueDate: project.dueDate,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to update description.");
+      }
+
+      setProject((prev) => (prev ? { ...prev, description: trimmedDesc } : prev));
+      antdMessage.success("Description updated successfully.");
+      setIsEditingDescription(false);
+    } catch (err: any) {
+      antdMessage.error(err.message || "Failed to update description.");
+    } finally {
+      setDescriptionSaving(false);
+    }
+  };
+
+  const cancelDescriptionEdit = () => {
+    setIsEditingDescription(false);
+    setDescriptionValue("");
+  };
+
   // Get current user role
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -201,6 +270,24 @@ export default function SingleProjectViewPage() {
       }
     }
   }, []);
+
+  // Listen for incoming call accept event
+  useEffect(() => {
+    const handleOpenCall = (event: any) => {
+      if (event.detail.projectId === projectId) {
+        setShowCallOverlay(true);
+
+        if (event.detail.autoJoin) {
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("auto-join-call"));
+          }, 300);
+        }
+      }
+    };
+
+    window.addEventListener("open-project-call", handleOpenCall);
+    return () => window.removeEventListener("open-project-call", handleOpenCall);
+  }, [projectId]);
 
   useEffect(() => { 
     const fetchProject = async () => {
@@ -267,16 +354,138 @@ export default function SingleProjectViewPage() {
     }
   };
 
+  const fetchMilestones = async () => {
+    if (!projectId) return;
+    setMilestonesLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/api/projects/${projectId}/milestones`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMilestones(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch milestones:", err);
+    } finally {
+      setMilestonesLoading(false);
+    }
+  };
+
   // Fetch updates when project loads
   useEffect(() => {
     if (projectId) {
       fetchSiteUpdates();
+      fetchMilestones();
     }
   }, [projectId]);
 
   //Upload Functions
   const handleAddPhoto = () => {
     fileInputRef.current?.click();
+  };
+
+  // Add new milestone
+  const handleAddMilestone = () => {
+    setNewMilestoneTitle("");
+    setShowMilestoneModal(true);
+  };
+
+  // This function actually creates the milestone
+  const createMilestone = async () => {
+    const title = newMilestoneTitle.trim();
+    if (!title) {
+      antdMessage.warning("Please enter a milestone title");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/api/milestones`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          projectID: parseInt(projectId!),
+          title,
+          progress: 0,
+        }),
+      });
+
+      if (res.ok) {
+        setShowMilestoneModal(false);
+        setNewMilestoneTitle("");
+        fetchMilestones();
+        antdMessage.success("Milestone created");
+      } else {
+        antdMessage.error("Failed to create milestone (you need Admin, Foreman or Owner role)");
+      }
+    } catch (err) {
+      console.error(err);
+      antdMessage.error("Error creating milestone");
+    }
+  };
+
+  // Update progress in local state
+  const handleProgressChange = (id: number, newProgress: number) => {
+    setMilestones(prev =>
+      prev.map(m =>
+        m.milestoneID === id ? { ...m, progress: newProgress } : m
+      )
+    );
+  };
+
+  // Save changes to backend
+  const handleSaveMilestone = async (milestone: any) => {
+    try {
+      const token = localStorage.getItem("token");
+      await fetch(`${API_BASE_URL}/api/milestones/${milestone.milestoneID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          title: milestone.title,
+          progress: milestone.progress,
+          status: milestone.progress === 100 ? "Completed" : "InProgress",
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to save milestone", err);
+    }
+  };
+
+  // Delete milestone
+  const handleDeleteMilestone = async (id: number) => {
+    if (!window.confirm("Delete this milestone?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/api/milestones/${id}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (res.ok) {
+        fetchMilestones();
+      } else {
+        antdMessage.error("Failed to delete milestone");
+      }
+    } catch (err) {
+      console.error(err);
+      antdMessage.error("Error deleting milestone");
+    }
+  };
+
+  // Update title
+  const handleTitleChange = (id: number, newTitle: string) => {
+    setMilestones(prev =>
+      prev.map(m => (m.milestoneID === id ? { ...m, title: newTitle } : m))
+    );
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -331,16 +540,8 @@ export default function SingleProjectViewPage() {
       onOk: async () => {
         try {
           const token = localStorage.getItem("token");
-
-          // tolerant lookup for member id
           const targetId =
-            member.UserID ??
-            member.userID ??
-            member.userId ??
-            member.id ??
-            member.user?.id ??
-            member.user?.userId ??
-            null;
+            member.UserID ?? member.userID ?? member.userId ?? member.id ?? null;
 
           if (!targetId) {
             antdMessage.error("Unable to determine member ID.");
@@ -419,7 +620,7 @@ export default function SingleProjectViewPage() {
           </button>
         </div>
 
-    {/*UPDATED TABS*/}
+        {/*UPDATED TABS*/}
         <div className="single-project-view__tabs">
           <button 
             className={`single-project-view__tab ${activeTab === "overview" ? "single-project-view__tab--active" : ""}`}
@@ -435,14 +636,8 @@ export default function SingleProjectViewPage() {
             Discussion
           </button>
           
-          <button 
-            className={`single-project-view__tab ${activeTab === "gallery" ? "single-project-view__tab--active" : ""}`}
-            onClick={() => setActiveTab("gallery")}
-          >
-            Gallery
-          </button>
+       
         </div>
-        {/*Updated Tabs */}
       </div>
 
       {/* Stats */}
@@ -474,15 +669,157 @@ export default function SingleProjectViewPage() {
         <>
           <div className="single-project-view__main-grid">
             <div className="single-project-view__panel">
-              <h3 className="single-project-view__panel-title">Description</h3>
-              <p className="single-project-view__project-description">
-                {project.description || "No description provided."}
-              </p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <h3 className="single-project-view__panel-title">Description</h3>
+                
+                {[1, 4].includes(currentUserRole) && !isEditingDescription && (
+                  <button
+                    type="button"
+                    onClick={startEditingDescription}
+                    style={{ background: "none", border: "none", color: "#5e745f", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+
+              {isEditingDescription ? (
+                <div>
+                  <textarea
+                    value={descriptionValue}
+                    onChange={(e) => setDescriptionValue(e.target.value)}
+                    style={{
+                      width: "100%",
+                      minHeight: "140px",
+                      padding: "12px",
+                      border: "1px solid #d9d9d9",
+                      borderRadius: "6px",
+                      fontSize: "15px",
+                      resize: "vertical"
+                    }}
+                    placeholder="Enter project description..."
+                  />
+                  <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+                    <button
+                      onClick={saveDescription}
+                      disabled={descriptionSaving}
+                      style={{ background: "#5e745f", color: "white", padding: "8px 20px", borderRadius: "6px", fontWeight: 600 }}
+                    >
+                      {descriptionSaving ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                      onClick={cancelDescriptionEdit}
+                      style={{ padding: "8px 20px", borderRadius: "6px" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="single-project-view__project-description">
+                  {project.description || "No description provided."}
+                </p>
+              )}
             </div>
 
+            {/* Milestones Panel */}
             <div className="single-project-view__panel">
-              <h3 className="single-project-view__panel-title">Milestones</h3>
-              <p>Milestone data coming soon...</p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <h3 className="single-project-view__panel-title">Milestones</h3>
+                <button 
+                  onClick={handleAddMilestone}
+                  style={{
+                    background: "#5e745f",
+                    color: "white",
+                    border: "none",
+                    padding: "6px 14px",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    fontWeight: 600
+                  }}
+                >
+                  + Add Milestone
+                </button>
+              </div>
+
+              {milestones.length === 0 ? (
+                <p style={{ color: "#888", fontSize: "14px" }}>
+                  No milestones yet. Click "+ Add Milestone" to create one.
+                </p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {milestones.map((m) => (
+                    <div 
+                      key={m.milestoneID} 
+                      style={{ 
+                        border: "1px solid #eee", 
+                        padding: "12px", 
+                        borderRadius: "8px",
+                        background: "#fafafa"
+                      }}
+                    >
+                      <div style={{ 
+                        display: "flex", 
+                        justifyContent: "space-between", 
+                        alignItems: "center", 
+                        marginBottom: "8px" 
+                      }}>
+                        <input
+                          type="text"
+                          value={m.title}
+                          onChange={(e) => handleTitleChange(m.milestoneID, e.target.value)}
+                          onBlur={() => handleSaveMilestone(m)}
+                          style={{
+                            flex: 1,
+                            border: "none",
+                            fontSize: "15px",
+                            fontWeight: 500,
+                            background: "transparent",
+                            paddingRight: "8px"
+                          }}
+                        />
+
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ 
+                            fontWeight: "bold", 
+                            color: "#5e745f", 
+                            minWidth: "45px", 
+                            textAlign: "right" 
+                          }}>
+                            {m.progress}%
+                          </span>
+
+                          <button
+                            onClick={() => handleDeleteMilestone(m.milestoneID)}
+                            style={{
+                              background: "transparent",
+                              border: "none",
+                              color: "#ff4d4f",
+                              cursor: "pointer",
+                              fontSize: "16px",
+                              padding: "2px 4px"
+                            }}
+                            title="Delete milestone"
+                          >
+                            🗑
+                          </button>
+                        </div>
+                      </div>
+
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={m.progress}
+                        onChange={(e) => handleProgressChange(m.milestoneID, parseInt(e.target.value))}
+                        onMouseUp={() => handleSaveMilestone(m)}
+                        style={{ width: "100%" }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -498,12 +835,7 @@ export default function SingleProjectViewPage() {
         <DiscussionTab projectId={parseInt(projectId || "0")} />
       )}
 
-      {activeTab === "gallery" && (
-        <div style={{ padding: 40, textAlign: "center" }}>
-          <p>Gallery coming soon...</p>
-        </div>
-      )}
-      {/* Tab Content */}
+    
 
       {/* Hidden file input for upload */}
       <input
@@ -520,7 +852,6 @@ export default function SingleProjectViewPage() {
           <h3 className="single-project-view__panel-title">Team Members ({teamMembers.length})</h3>
 
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-
             {[1, 4].includes(currentUserRole) && (
               <button
                 onClick={() => setShowAddMemberModal(true)}
@@ -538,10 +869,7 @@ export default function SingleProjectViewPage() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {teamMembers.map((m: any) => (
-              <div
-                key={m.UserID}
-                className="team-member-row"
-              >
+              <div key={m.UserID} className="team-member-row">
                 <div className="team-member-row__info">
                   {m.FullName || m.fullName} — <strong>{m.AssignedAs || m.assignedAs}</strong>
                 </div>
@@ -578,10 +906,44 @@ export default function SingleProjectViewPage() {
         onClose={() => setShowAddMemberModal(false)}
         projectId={project.projectID}
         onMemberAdded={() => {
-          // The useProjectMember hook will automatically refresh
           console.log("Member added - list should refresh");
         }}
       />
+
+      {/* Add Milestone Modal */}
+      <Modal
+        title="Add New Milestone"
+        open={showMilestoneModal}
+        onOk={createMilestone}
+        onCancel={() => {
+          setShowMilestoneModal(false);
+          setNewMilestoneTitle("");
+        }}
+        okText="Create Milestone"
+        cancelText="Cancel"
+      >
+        <input
+          type="text"
+          placeholder="Enter milestone title..."
+          value={newMilestoneTitle}
+          onChange={(e) => setNewMilestoneTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              createMilestone();
+            }
+          }}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            fontSize: "15px",
+            border: "1px solid #d9d9d9",
+            borderRadius: "6px",
+            outline: "none",
+          }}
+          autoFocus
+        />
+      </Modal>
+
       {/* Rename Modal */}
       {showRenameModal && (
         <CustomModal

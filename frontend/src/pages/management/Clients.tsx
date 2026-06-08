@@ -4,12 +4,11 @@ import "./Clients.css";
 import StatCard from "../../components/StatCard";
 import ManagementClientTable, { ManagementClientRow } from "../../components/ManagementClientTable";
 import { SearchInput } from "../../components/SearchInput";
-import { FilterButton } from "../../components/FilterButton";
-import { SortButton } from "../../components/SortButton";
 import { AddButton } from "../../components/AddButton";
 import { API_BASE_URL } from "../../config";
 import ClientAddModal from "../../components/ClientAddModal";
 import { ProjectAddModal } from "../../components/ProjectAddModal";
+
 
 type ClientSummary = {
     totalRevenue: number | null;
@@ -35,6 +34,14 @@ const getInitials = (fullName?: string) => {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
+const parseAmount = (value: any): number => {
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+        return parseFloat(value.replace(/[^0-9.]/g, "")) || 0;
+    }
+    return 0;
+};
+
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
     return (
         <div className="action-modal__header">
@@ -44,22 +51,38 @@ function ModalHeader({ title, onClose }: { title: string; onClose: () => void })
     );
 }
 
-type ModalStep = "menu" | "blacklist-reason" | "status-pick" | "confirm-unblacklist";
+type ModalStep = "menu" | "blacklist-reason" | "status-pick" | "confirm-unblacklist" | "edit-payments";
 
 interface ActionModalProps {
     row: ManagementClientRow;
     onClose: () => void;
     onRefresh: () => void | Promise<void>;
     onAddProject?: (row: ManagementClientRow) => void;
+    currentUserRole?: number;
 }
 
-function ClientActionModal({ row, onClose, onRefresh, onAddProject }: ActionModalProps) {
+function ClientActionModal({ row, onClose, onRefresh, onAddProject, currentUserRole = 0 }: ActionModalProps) {
     const [step, setStep] = useState<ModalStep>("menu");
     const [blacklistReason, setBlacklistReason] = useState("");
     const [busy, setBusy] = useState(false);
     const [feedback, setFeedback] = useState<string | null>(null);
 
+    const [editTotalPaid, setEditTotalPaid] = useState(0);
+    const [editOutstanding, setEditOutstanding] = useState(0);
+    const [editStatus, setEditStatus] = useState("Active");
+    
+
     const isBlacklisted = row.status === "Blacklisted";
+
+  
+
+    useEffect(() => {
+        if (step === "edit-payments") {
+            setEditTotalPaid(parseAmount(row.totalPaid));
+            setEditOutstanding(parseAmount(row.outstanding));
+            setEditStatus(row.status);
+        }
+    }, [step]);
 
     const doBlacklist = async () => {
         setBusy(true);
@@ -101,9 +124,34 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject }: ActionModa
         }
     };
 
-    const doStatusChange = (statusLabel: string) => {
-        setFeedback(`Status for "${row.name}" changed to ${statusLabel} (UI only for now).`);
-        void onRefresh();
+   
+
+    const handleSaveEdit = async () => {
+        setBusy(true);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE_URL}/api/clients/${row.clientId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                },
+                body: JSON.stringify({
+                    totalPaid: editTotalPaid,
+                    outstanding: editOutstanding,
+                    status: editStatus,
+                }),
+            });
+
+            if (!res.ok) throw new Error("Failed to update client");
+
+            setFeedback(`Updated successfully. Status is now "${editStatus}".`);
+            await onRefresh();
+        } catch {
+            setFeedback("Failed to update client. Please try again.");
+        } finally {
+            setBusy(false);
+        }
     };
 
     if (feedback) {
@@ -138,13 +186,18 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject }: ActionModa
                             {isBlacklisted ? "Remove from Blacklist" : "Blacklist Client"}
                         </button>
 
-                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => setStep("status-pick")}>
-                            Change Status
-                        </button>
+                      
 
-                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => setFeedback("Edit functionality coming soon.")}>
-                            Edit Client
-                        </button>
+                        {[1, 4].includes(currentUserRole) && (
+                            <button
+                                className="action-modal__btn action-modal__btn--secondary"
+                                onClick={() => setStep("edit-payments")}
+                            >
+                                Edit Payments & Status
+                            </button>
+                        )}
+
+                     
 
                         <button
                             className="action-modal__btn action-modal__btn--secondary"
@@ -208,18 +261,56 @@ function ClientActionModal({ row, onClose, onRefresh, onAddProject }: ActionModa
         );
     }
 
-    if (step === "status-pick") {
+
+
+   if (step === "edit-payments") {
         return (
             <div className="action-modal-overlay" onClick={onClose}>
                 <div className="action-modal" onClick={e => e.stopPropagation()}>
-                    <ModalHeader title="Change Status" onClose={onClose} />
+                    <ModalHeader title={`Edit ${row.name}`} onClose={onClose} />
                     <div className="action-modal__body">
-                        <p className="action-modal__sub">Select a new status for <strong>"{row.name}"</strong></p>
+                        <div style={{ marginBottom: 12 }}>
+                            <label>Total Paid (R)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                value={editTotalPaid}
+                                onChange={e => setEditTotalPaid(Math.max(0, parseFloat(e.target.value) || 0))}
+                                style={{ width: "100%", padding: 8 }}
+                            />
+                        </div>
+                        <div style={{ marginBottom: 12 }}>
+                            <label>Outstanding (R)</label>
+                            <input
+                                type="number"
+                                min="0"
+                                value={editOutstanding}
+                                onChange={e => setEditOutstanding(Math.max(0, parseFloat(e.target.value) || 0))}
+                                style={{ width: "100%", padding: 8 }}
+                            />
+                        </div>
+                        <div>
+                            <label>Status</label>
+                            <select
+                                value={editStatus}
+                                onChange={e => setEditStatus(e.target.value)}
+                                style={{ width: "100%", padding: 8 }}
+                            >
+                                <option value="Active">Active</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Planning">Planning</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
                     </div>
                     <div className="action-modal__actions">
-                        <button className="action-modal__btn action-modal__btn--primary" onClick={() => doStatusChange("Active")}>Active</button>
-                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => doStatusChange("Pending")}>Pending</button>
-                        <button className="action-modal__btn action-modal__btn--secondary" onClick={() => doStatusChange("Completed")}>Completed</button>
+                        <button
+                            className="action-modal__btn action-modal__btn--primary"
+                            onClick={handleSaveEdit}
+                            disabled={busy}
+                        >
+                            {busy ? "Saving..." : "Save Changes"}
+                        </button>
                         <button className="action-modal__btn action-modal__btn--ghost" onClick={() => setStep("menu")}>Back</button>
                     </div>
                 </div>
@@ -248,6 +339,7 @@ export default function ClientsPage() {
 
     const [showProjectAddModal, setShowProjectAddModal] = useState(false);
     const [selectedClientForProject, setSelectedClientForProject] = useState<ManagementClientRow | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -261,46 +353,56 @@ export default function ClientsPage() {
     }, []);
 
     const fetchClients = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${API_BASE_URL}/api/clients`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        });
-        if (!res.ok) throw new Error(await res.text() || "Failed to load clients");
+        setLoading(true);
+        setError(null);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE_URL}/api/clients`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            });
+            if (!res.ok) throw new Error(await res.text() || "Failed to load clients");
 
-        const data = await res.json();
-        const mapped: ManagementClientRow[] = (data ?? []).map((c: any) => ({
-            clientId: String(c.clientID ?? c.ClientID ?? c.ClientId ?? ""),
-            initials: getInitials(c.name ?? c.Name),
-            name: c.name ?? c.Name ?? "",
-            company: c.company ?? c.Company ?? "",
-            totalPaid: c.totalPaid ?? "R 0",
-            outstanding: c.outstanding ?? "R 0",
-            projects: c.projects ? String(c.projects) : "0",
-            activeProjects: c.activeProjects ?? "0 active",
-            status: c.isBlacklisted || c.IsBlacklisted ? "Blacklisted" : "Active",
-            statusTone: c.isBlacklisted || c.IsBlacklisted ? "danger" : "success",
-        }));
+            const data = await res.json();
+            let calculatedRevenue = 0;
+            let calculatedOutstanding = 0;
 
-        setRows(mapped);
+            const mapped: ManagementClientRow[] = (data ?? []).map((c: any) => {
+                const isBlacklisted = c.isBlacklisted || c.IsBlacklisted;
 
-        const blacklistedCount = mapped.filter((row) => row.status === "Blacklisted").length;
-        const activeCount = mapped.length - blacklistedCount;
+                calculatedRevenue += parseAmount(c.totalPaid ?? c.TotalPaid);
+                calculatedOutstanding += parseAmount(c.outstanding ?? c.Outstanding);
 
-        setSummary({
-            totalRevenue: null,
-            outstanding: null,
-            activeClients: activeCount,
-            blacklistClients: blacklistedCount,
-        });
-    } catch (err: any) {
-        setError(err.message || "Failed to fetch clients");
-    } finally {
-        setLoading(false);
-    }
-};
+                return {
+                    clientId: String(c.clientID ?? c.ClientID ?? c.ClientId ?? ""),
+                    initials: getInitials(c.name ?? c.Name),
+                    name: c.name ?? c.Name ?? "",
+                    company: c.company ?? c.Company ?? "",
+                    totalPaid: c.totalPaid ?? "R 0",
+                    outstanding: c.outstanding ?? "R 0",
+                    projects: c.projects ? String(c.projects) : "0",
+                    activeProjects: c.activeProjects ?? "0 active",
+                    status: isBlacklisted ? "Blacklisted" : (c.status ?? "Active"),
+                    statusTone: isBlacklisted ? "danger" : "success",
+                };
+            });
+
+            setRows(mapped);
+
+            const blacklistedCount = mapped.filter((row) => row.status === "Blacklisted").length;
+            const activeCount = mapped.length - blacklistedCount;
+
+            setSummary({
+                totalRevenue: calculatedRevenue,
+                outstanding: calculatedOutstanding,
+                activeClients: activeCount,
+                blacklistClients: blacklistedCount,
+            });
+        } catch (err: any) {
+            setError(err.message || "Failed to fetch clients");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const fetchClientSummary = async () => {
         try {
@@ -330,7 +432,7 @@ export default function ClientsPage() {
     };
 
     const refreshClientsPageData = async () => {
-        await Promise.all([fetchClients(), fetchClientSummary()]);
+        await fetchClients();
     };
 
     useEffect(() => {
@@ -338,41 +440,45 @@ export default function ClientsPage() {
     }, []);
 
     const handleRowAction = (row: ManagementClientRow) => setActionRow(row);
-    const handleRowClick = (row: ManagementClientRow) => navigate(`/single-view/${row.clientId}`);
+    const handleRowClick = (row: ManagementClientRow) => {
+    
+};
 
     const handleAddProject = (row: ManagementClientRow) => {
         setSelectedClientForProject(row);
         setShowProjectAddModal(true);
     };
 
+    const filteredRows = rows.filter(row =>
+    row.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    row.company.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
     return (
         <div className="clients-page">
             <div className="clients-page__stats">
-                {/* Total Revenue */}
                 <StatCard
                     value={formatCurrency(summary.totalRevenue)}
                     label="Total Revenue"
                     tone="success"
                     icon={
                         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="#16a34a">
-                            <path d="M21 7.5a.75.75 0 0 0-.75-.75H3.75A.75.75 0 0 0 3 7.5v9a.75.75 0 0 0 .75.75h16.5a.75.75 0 0 0 .75-.75v-9ZM12 12.75a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1-.75-.75Z" />
+                            <path d="M21 7.5a.75.75.0 0 0-.75-.75H3.75A.75.75.0 0 0 3 7.5v9a.75.75.0 0 0 .75.75h16.5a.75.75.0 0 0 .75-.75v-9ZM12 12.75a.75.75.0 0 1 .75-.75h3a.75.75.0 0 1 0 1.5h-3a.75.75.0 0 1-.75-.75Z" />
                         </svg>
                     }
                 />
 
-                {/* Outstanding - Using the exact icon you wanted */}
                 <StatCard
                     value={formatCurrency(summary.outstanding)}
-                    label="Outstanding"
+                    label="Total Outstanding"
                     tone="warning"
                     icon={
-                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 28 28" fill="#f59e0b">
-                            <path d="M13.27 24.367a2.5 2.5 0 0 0-.222 1.61C7.755 25.71 4 23.226 4 19.714V19a3 3 0 0 1 3-3h10.46zM14 2a6 6 0 1 1 0 12a6 6 0 0 1 0-12m5.164 12.828l-5.002 9.992c-.501 1 .222 2.18 1.336 2.18h10.004c1.114 0 1.837-1.18 1.336-2.18l-5.002-9.992c-.552-1.104-2.12-1.104-2.672 0M21 17.5v5a.5.5 0 0 1-1 0v-5a.5.5 0 0 1 1 0m-.5 7.5a.5.5 0 1 1 0-1a.5.5 0 0 1 0 1" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="#f59e0b">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                         </svg>
                     }
                 />
 
-                {/* Active Clients */}
                 <StatCard
                     value={String(summary.activeClients)}
                     label="Active Clients"
@@ -384,7 +490,6 @@ export default function ClientsPage() {
                     }
                 />
 
-                {/* Blacklisted */}
                 <StatCard
                     value={String(summary.blacklistClients)}
                     label="Blacklisted"
@@ -398,9 +503,10 @@ export default function ClientsPage() {
             </div>
 
             <div className="clients-page__controls">
-                <SearchInput placeholder="Search clients..." onSearch={(v) => console.log(v)} />
-                <FilterButton label="All Status" onFilter={() => {}} />
-                <SortButton label="Sort" onSort={() => {}} />
+                <SearchInput
+                    placeholder="Search clients..."
+                    onSearch={setSearchTerm}
+                />
             </div>
 
             <section className="clients-page__table-section">
@@ -414,9 +520,17 @@ export default function ClientsPage() {
                     </div>
                 </div>
 
-                {loading ? <p className="clients-page__message">Loading clients...</p> :
-                 error ? <p className="clients-page__message--error">Error: {error}</p> :
-                 <ManagementClientTable rows={rows} onRowAction={handleRowAction} onRowClick={handleRowClick} />}
+                {loading ? (
+                    <p className="clients-page__message">Loading clients...</p>
+                ) : error ? (
+                    <p className="clients-page__message--error">Error: {error}</p>
+                ) : (
+                    <ManagementClientTable
+                        rows={filteredRows}
+                        onRowAction={handleRowAction}
+                        onRowClick={handleRowClick}
+                    />
+                )}
             </section>
 
             <ClientAddModal open={showAddModal} onClose={() => setShowAddModal(false)} onClientAdded={fetchClients} />
@@ -427,8 +541,11 @@ export default function ClientsPage() {
                     onClose={() => setActionRow(null)}
                     onRefresh={fetchClients}
                     onAddProject={handleAddProject}
+                    currentUserRole={currentUserRole}
                 />
             )}
+
+           
 
             {showProjectAddModal && selectedClientForProject && (
                 <ProjectAddModal
@@ -453,8 +570,9 @@ export default function ClientsPage() {
                                     description: data.description?.trim() || null,
                                     clientID: parseInt(selectedClientForProject.clientId, 10),
                                     status: "Planning",
+                                    startDate: data.startDate || null,
                                     dueDate: data.dueDate || null,
-                                    startDate: null,
+                                    
                                 }),
                             });
                             if (!res.ok) throw new Error(await res.text() || "Failed to create project");

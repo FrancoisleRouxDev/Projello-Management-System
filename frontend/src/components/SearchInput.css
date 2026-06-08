@@ -6,55 +6,31 @@
   word-wrap: break-word;
 }
 
-.StyledVector {
-  width: 10.67px;
-  height: 10.67px;
-  left: 2px;
-  top: 2px;
-  position: absolute;
-  outline: 1.33px solid #99a1af;
-  outline-offset: -0.67px;
-}
-
-.StyledVector01 {
-  width: 2.87px;
-  height: 2.87px;
-  left: 11.13px;
-  top: 11.13px;
-  position: absolute;
-  outline: 1.33px solid #99a1af;
-  outline-offset: -0.67px;
-}
-
 .StyledInput {
-  width: 448px;
-  height: 36px;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  padding-left: 40px;
-  padding-right: 12px;
-  left: 0px;
-  top: 0px;
-  position: absolute;
-  background: white;
-  overflow: hidden;
-  border-radius: 8px;
-  outline: 1px solid rgba(0, 0, 0, 0);
-  outline-offset: -1px;
-  justify-content: flex-start;
+  width: 100%;
+  max-width: 320px;
+  height: 40px;
+  padding-left: 42px;
+  padding-right: 16px;
+  background: #e5e5e2;
+  border-radius: 999px;
+  border: none;
+  box-shadow:
+    0 -2px 4px 0 rgba(249, 251, 236, 0.25) inset,
+    0 2px 4px 0 rgba(0, 0, 0, 0.25) inset;
+  display: flex;
   align-items: center;
-  display: inline-flex;
+  position: relative;
 }
 
 .StyledSearchInput {
-  flex: 1 1 0;
+  flex: 1;
   border: none;
   outline: none;
   background: transparent;
-  color: #0a0a0a;
-  font-size: 14px;
-  font-family: Inter, sans-serif;
-  min-width: 0;
+  color: #28332b;
+  font-size: 15px;
+  font-family: "Roboto", sans-serif;
 }
 
 .StyledSearchInput::placeholder {
@@ -62,27 +38,20 @@
   opacity: 1;
 }
 
-.StyledText {
-  flex: 1 1 0;
-  height: 20px;
-  justify-content: flex-start;
-  align-items: flex-start;
-  display: flex;
-}
-
 .StyledIcon {
-  width: 16px;
-  height: 16px;
-  left: 12px;
-  top: 10px;
   position: absolute;
-  overflow: hidden;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .StyledContainer {
-  width: 448px;
-  height: 36px;
   position: relative;
-  display: flex;
-  align-items: center;
+  width: 100%;
+  max-width: 320px;
 }

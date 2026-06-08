@@ -12,6 +12,7 @@ import SideNavBar from "./components/SideNavBar";
 import BodyBlock from "./components/BodyBlock";
 import SplashPage from "./pages/splash/SplashPage";
 import RegisterCompanyPage from "./pages/signup/RegisterCompanyPage";
+import { useIncomingCallNotifications } from "./features/realtime/hooks/useIncomingCallNotifications"; // Do not remove
 
 import { useTeamNotifications } from "./features/realtime/hooks/useTeamNotifications"; // Do not remove
 
@@ -51,6 +52,7 @@ function Verify2FAWrapper() {
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   useTeamNotifications(); // Keep this here to ensure notifications work across the app
+  useIncomingCallNotifications();
   
   // Added "/verify-2fa" to the array so the sidebar is hidden on this page too
   const hideNav = ["/", "/login", "/signup", "/verify-2fa"].includes(location.pathname);

@@ -17,5 +17,10 @@ namespace Projello.Api.DTOs
         public DateTime? StartDate { get; set; }
 
         public DateTime? DueDate { get; set; }
+
+
+        public string Status { get; set; } = "Planning";
+        public decimal? TotalPaid { get; set; }
+        public decimal? Outstanding { get; set; }
     }
 }

@@ -181,6 +181,8 @@ namespace Projello.Api.Controllers
             return BadRequest(result.Errors);
         }
 
+        // ==================== UPDATED FOR SINGLE SUCCESSFUL SCAN ====================
+
         // --- 2FA: STEP 1 - GENERATE TEMPORARY UNVERIFIED SECRET KEY ---
         [Authorize]
         [HttpPost("generate-2fa-secret")]
@@ -204,13 +206,20 @@ namespace Projello.Api.Controllers
             var secretKey = KeyGeneration.GenerateRandomKey(20);
             var base32Secret = Base32Encoding.ToString(secretKey);
 
-            // Staging token securely within Identity's unverified token framework
+            // === SINGLE-USE SETUP: Store secret + session ID ===
+            var setupSessionId = Guid.NewGuid().ToString();
+
             await _userManager.SetAuthenticationTokenAsync(user, "Projello2FA", "UnverifiedSecretKey", base32Secret);
+            await _userManager.SetAuthenticationTokenAsync(user, "Projello2FA", "SetupSessionId", setupSessionId);
 
             var issuer = "Projello";
             var authenticatorUri = $"otpauth://totp/{issuer}:{user.Email}?secret={base32Secret}&issuer={issuer}";
 
-            return Ok(new { SecretKey = base32Secret, AuthenticatorUri = authenticatorUri });
+            return Ok(new { 
+                SecretKey = base32Secret, 
+                AuthenticatorUri = authenticatorUri,
+                SetupSessionId = setupSessionId
+            });
         }
 
         // --- 2FA: STEP 2 - VERIFY SETUP CHALLENGE AND ACTIVATE CORES ---
@@ -226,10 +235,12 @@ namespace Projello.Api.Controllers
             if (isInitialSetupWorkflow)
             {
                 base32Secret = await _userManager.GetAuthenticationTokenAsync(user, "Projello2FA", "UnverifiedSecretKey") ?? "";
-                if (string.IsNullOrEmpty(base32Secret))
+                var setupSessionId = await _userManager.GetAuthenticationTokenAsync(user, "Projello2FA", "SetupSessionId");
+
+                // If secret was already consumed by someone else
+                if (string.IsNullOrEmpty(base32Secret) || string.IsNullOrEmpty(setupSessionId))
                 {
-                    // Atomic Gate Protection: If another device already verified, this session key is empty!
-                    return BadRequest(new { Message = "This setup session is dead or has already been consumed. Please generate a new QR code." });
+                    return BadRequest(new { Message = "This 2FA setup has already been completed. Please generate a new QR code." });
                 }
             }
             else
@@ -242,42 +253,49 @@ namespace Projello.Api.Controllers
 
             var totp = new Totp(Base32Encoding.ToBytes(base32Secret));
             
-            // FIXED: Enforce valid OtpNet evaluation syntax using the correct named parameter 'future'
             bool isValid = totp.VerifyTotp(model.Code, out long timeStepMatched, new VerificationWindow(previous: 1, future: 1));
 
-            if (isValid)
-            {
+        if (isValid)
+{
                 if (isInitialSetupWorkflow)
                 {
-                    // 1. Promote verified configuration state parameters permanently
+                    // === FIRST SUCCESSFUL SCAN WINS ===
                     user.TwoFactorSecret = base32Secret;
                     user.IsTwoFactorEnabled = true;
-                    
+
                     var identityUpdateResult = await _userManager.UpdateAsync(user);
                     if (!identityUpdateResult.Succeeded)
                     {
                         return BadRequest(new { Message = "Failed to update profile configurations." });
                     }
 
-                    // 2. ATOMIC SECURITY ACTION: Flush unverified token space immediately. 
-                    // This renders the displayed setup barcode completely useless for any subsequent scanning attempts.
+                    // Immediately remove both tokens so no one else can activate with this QR
                     await _userManager.RemoveAuthenticationTokenAsync(user, "Projello2FA", "UnverifiedSecretKey");
+                    await _userManager.RemoveAuthenticationTokenAsync(user, "Projello2FA", "SetupSessionId");
                 }
 
+                // Generate token only once (works for both setup and normal verification)
                 var token = GenerateJwtToken(user);
+
+                if (isInitialSetupWorkflow)
+                {
+                    return Ok(new { Token = token, User = user.FullName, Message = "2FA successfully activated." });
+                }
+
                 return Ok(new { Token = token, User = user.FullName });
             }
 
-            // PENALTY LOCKDOWN: If anyone attempts to send an invalid code during the setup state,
-            // we assume a registration hijacking attempt happened. We immediately kill the unverified key keyway.
+            // Invalid code during setup — do NOT destroy the session (user-friendly)
+            // Only the first correct code activates 2FA
             if (isInitialSetupWorkflow)
             {
-                await _userManager.RemoveAuthenticationTokenAsync(user, "Projello2FA", "UnverifiedSecretKey");
-                return BadRequest(new { Message = "Verification failed. Setup session neutralized for safety. Please generate a new code." });
+                return BadRequest(new { Message = "Invalid code. Please try again with the same QR code." });
             }
 
             return BadRequest(new { Message = "Invalid verification code." });
         }
+
+        // ==================== END OF SINGLE SUCCESSFUL SCAN UPDATES ====================
 
         // --- 2FA: DISABLE ---
         [Authorize]

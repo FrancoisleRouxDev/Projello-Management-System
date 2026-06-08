@@ -16,6 +16,7 @@ interface ProjectFormData {
   description: string;
   clientName: string;
   dueDate?: string;
+  startDate?: string;
 }
 
 export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
@@ -28,7 +29,9 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
     name: "",
     description: "",
     clientName: clientName || "",
+    startDate: "",
     dueDate: "",
+    
   });
 
   // Prefill client name when modal is opened from the 3-dots action menu
@@ -121,6 +124,22 @@ export const ProjectAddModal: React.FC<ProjectAddModalProps> = ({
             }
             placeholder="Enter project description"
             rows={4}
+          />
+        </div>
+
+        <div className="project-add-modal__form-group">
+          <label className="project-add-modal__label" htmlFor="project-start-date">Start Date</label>
+          <input
+            id="project-start-date"
+            type="date"
+            className="project-add-modal__input"
+            value={formData.startDate}
+            onChange={(e) =>
+              setFormData({ ...formData, startDate: e.target.value })
+            }
+            title="Start date"
+            placeholder="Select start date"
+            aria-label="Start date"
           />
         </div>
 

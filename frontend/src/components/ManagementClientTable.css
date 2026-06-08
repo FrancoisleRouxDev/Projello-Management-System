@@ -31,6 +31,9 @@
 }
 
 .management-client-table__row {
+   display: grid;
+  grid-template-columns: minmax(220px, 1.8fr) repeat(3, minmax(110px, 1fr)) minmax(120px, 1fr) 64px;
+  align-items: center;
   padding: 20px 28px;
   border-top: 1px solid var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1));
   /* box-shadow: 0 2px 4px 0 var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1)) inset; */

@@ -6,6 +6,7 @@ namespace Projello.Api.DTOs
         public string Name { get; set; } = null!;
         public string? Description { get; set; }
         public string Status { get; set; } = null!;
+        public DateOnly? StartDate { get; set; }
         public DateOnly? DueDate { get; set; }
         public DateTime CreatedAt { get; set; }
         
@@ -16,5 +17,9 @@ namespace Projello.Api.DTOs
 
          // New property to hold project members
         public List<ProjectMemberDto> Members { get; set; } = new();
+
+
+        public decimal? TotalPaid { get; set; }
+        public decimal? Outstanding { get; set; }
     }
 }

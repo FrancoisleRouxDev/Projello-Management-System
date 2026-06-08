@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Hook imported for navigation
 import { API_BASE_URL } from "../../config"; 
 import "./history.css";
 
-// Interface definitions aligning with Projello's contracts
+// Interface definitions aligning with Projello's UpdateReadDto contracts
 interface CompletedProjectItem {
   projectID: number;
   name: string;
@@ -15,50 +14,53 @@ interface CompletedProjectItem {
 }
 
 export default function HistoryPage() {
-  const navigate = useNavigate(); // Hook initialized
-
-  // Core States
+  // Core State
   const [completedProjects, setCompletedProjects] = useState<CompletedProjectItem[]>([]);
+  
+  // UI Control States
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  
+  // Filter States
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
-    fetchCompletedProjectsArchive();
+    loadDashboardData();
   }, []);
 
-  const fetchCompletedProjectsArchive = async () => {
+  const loadDashboardData = async () => {
     setLoading(true);
     setError("");
     try {
-      const token = localStorage.getItem("token");
-      
-      // Calls the Projects Controller filtering for completed parameters
-      const response = await fetch(`${API_BASE_URL}/api/projects?status=Completed`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Archive retrieval failed with code: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      // Strict client-side verification to guarantee only "Completed" projects are held in state
-      const filtered = data.filter((p: any) => p.status === "Completed");
-      setCompletedProjects(filtered);
+      await fetchCompletedProjectsArchive();
     } catch (err: any) {
-      setError(err.message || "Failed to load historical project records.");
+      setError(err.message || "Failed to load history metrics.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Frontend Query Filtering Engine
+  const fetchCompletedProjectsArchive = async () => {
+    const token = localStorage.getItem("token");
+    // Calls the Projects Controller filtering for closed/archived parameters
+    const response = await fetch(`${API_BASE_URL}/api/projects?status=Completed`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Archive retrieval failed with code: ${response.status}`);
+    }
+    const data = await response.json();
+    // Fallback filter client-side if the endpoint returns all statuses
+    const filtered = data.filter((p: any) => p.status === "Completed" || p.status === "Archived");
+    setCompletedProjects(filtered);
+  };
+
+  // Advanced Frontend Query Filtering Engines
   const filteredArchive = completedProjects.filter(proj => 
     proj.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     (proj.description || "").toLowerCase().includes(searchQuery.toLowerCase())
@@ -69,19 +71,19 @@ export default function HistoryPage() {
       {/* Top Banner Control Board */}
       <header className="history-header">
         <div>
-          <h2 className="history-title">Completed Projects Archive</h2>
+          <h2 className="history-title">System History & Archival Audits</h2>
           <p className="history-subtitle">
-            Review full-scope summaries, timelines, and accounts for verified closed operations.
+            Review verified closed project scopes and historical data.
           </p>
         </div>
         <div className="header-actions">
-          <button className="refresh-history-btn" onClick={fetchCompletedProjectsArchive} disabled={loading}>
+          <button className="refresh-history-btn" onClick={loadDashboardData} disabled={loading}>
             {loading ? "Syncing Workspace..." : "Force Sync Data"}
           </button>
         </div>
       </header>
 
-      {/* Real-time Dynamic Searching Filter Bar */}
+      {/* Real-time Dynamic Searching */}
       <div className="history-control-filter-bar">
         <div className="search-input-wrapper">
           <input 
@@ -94,45 +96,41 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      {error && <div className="history-error-alert">Connection Interruption: {error}</div>}
+      {error && <div className="history-error-alert">Security or Connection Interruption: {error}</div>}
 
-      {/* Main Operations Render View */}
+      {/* Main Panel Operations Render */}
       {loading ? (
         <div className="history-skeleton-loader">
           <div className="spinner-element"></div>
-          <p>Compiling closed project arrays from Projello Cloud Core...</p>
-        </div>
-      ) : filteredArchive.length === 0 ? (
-        <div className="history-empty-state">
-          <p>No completed project records detected matching your active query constraints.</p>
+          <p>Compiling historical data arrays from Projello Cloud Core...</p>
         </div>
       ) : (
-        <div className="archive-grid-layout">
-          {filteredArchive.map((project) => (
-            <div 
-              key={project.projectID} 
-              className="archive-project-card"
-              onClick={() => navigate(`/single-view/${project.projectID}`)}
-              style={{ cursor: "pointer" }} // Adds standard user affordance pointer feedback
-            >
-              <div className="archive-card-status-badge">COMPLETED</div>
-              <h3 className="archive-project-title">{project.name}</h3>
-              <span className="archive-client-label">Client Account: {project.clientName || "Internal Account"}</span>
-              <p className="archive-project-desc">
-                {project.description || "No project text summary provided upon closing initialization."}
-              </p>
-              
-              <div className="archive-project-meta-footer">
-                <div>
-                  <strong>Began:</strong> {project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A"}
-                </div>
-                <div>
-                  <strong>Closed:</strong> {project.dueDate ? new Date(project.dueDate).toLocaleDateString() : "N/A"}
+        /* COMPLETED PROJECTS ARCHIVE */
+        filteredArchive.length === 0 ? (
+          <div className="history-empty-state">
+            <p>No completed or archived project rows detected inside this operational footprint.</p>
+          </div>
+        ) : (
+          <div className="archive-grid-layout">
+            {filteredArchive.map((project) => (
+              <div key={project.projectID} className="archive-project-card">
+                <div className="archive-card-status-badge">ARCHIVED SECURELY</div>
+                <h3 className="archive-project-title">{project.name}</h3>
+                <span className="archive-client-label">Client Account: {project.clientName || "Internal Account"}</span>
+                <p className="archive-project-desc">{project.description || "No project text summary provided upon closing initialization."}</p>
+                
+                <div className="archive-project-meta-footer">
+                  <div>
+                    <strong>Began:</strong> {project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A"}
+                  </div>
+                  <div>
+                    <strong>Closed:</strong> {project.dueDate ? new Date(project.dueDate).toLocaleDateString() : "N/A"}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )
       )}
     </div>
   );

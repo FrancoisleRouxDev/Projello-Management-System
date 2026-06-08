@@ -17,6 +17,10 @@ public class Milestone
     public string Status { get; set; } = "NotStarted";
     public DateOnly? CompletedDate { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public int Progress { get; set; } = 0;   // 0-100 manual progress bar
+
+    
     public Project Project { get; set; } = null!;
     public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
     public ICollection<ProgressUpdate> ProgressUpdates { get; set; } = new List<ProgressUpdate>();

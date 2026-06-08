@@ -115,12 +115,17 @@ namespace Projello.Api.Controllers
                 Name = project.Name,
                 Description = project.Description,
                 Status = project.Status,
+                StartDate = project.StartDate,
                 DueDate = project.DueDate,
                 CreatedAt = project.CreatedAt,
                 ClientID = project.ClientID,
                 ClientName = project.Client?.Name ?? "Unknown",
                 IsClientBlacklisted = project.Client?.IsBlacklisted ?? false,
-                Members = memberDtos
+                Members = memberDtos,
+
+               
+                TotalPaid = project.TotalPaid,
+                Outstanding = project.Outstanding
             });
         }
 
@@ -164,7 +169,7 @@ namespace Projello.Api.Controllers
         }
 
         // --- UPDATE FULL (PUT: api/projects/{id}) ---
-        [HttpPut("{id}")]
+      [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProject(int id, [FromBody] ProjectUpdateDto dto)
         {
             var project = await _context.Projects
@@ -195,6 +200,11 @@ namespace Projello.Api.Controllers
             project.StartDate = dto.StartDate.HasValue ? DateOnly.FromDateTime(dto.StartDate.Value) : null;
             project.DueDate = dto.DueDate.HasValue ? DateOnly.FromDateTime(dto.DueDate.Value) : null;
 
+            // Map the new financials securely onto the database record
+            project.TotalPaid = dto.TotalPaid;
+            project.Outstanding = dto.Outstanding;
+
+            // Save changes cleanly without looking for 'ProjectExists'
             await _context.SaveChangesAsync();
             return NoContent();
         }
@@ -372,7 +382,10 @@ namespace Projello.Api.Controllers
             CreatedAt = p.CreatedAt,
             ClientID = p.ClientID,
             ClientName = p.Client?.Name ?? "Unknown",
-            IsClientBlacklisted = p.Client?.IsBlacklisted ?? false
+            IsClientBlacklisted = p.Client?.IsBlacklisted ?? false,
+
+            TotalPaid = p.TotalPaid,
+            Outstanding = p.Outstanding
         };
     }
 }

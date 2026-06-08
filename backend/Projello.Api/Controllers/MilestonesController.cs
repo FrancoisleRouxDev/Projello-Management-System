@@ -50,7 +50,8 @@ namespace Projello.Api.Controllers
                     DueDate = m.DueDate,
                     Status = m.Status,
                     CompletedDate = m.CompletedDate,
-                    CreatedAt = m.CreatedAt
+                    CreatedAt = m.CreatedAt,
+                    Progress = m.Progress
                 })
                 .ToListAsync();
 
@@ -64,8 +65,8 @@ namespace Projello.Api.Controllers
         {
             // Security: Restricted to Foreman (RoleID 2) or Admin (RoleID 1)
             var role = GetUserRole();
-            if (role != "1" && role != "2") 
-                return Forbid("Only a Foreman or Admin can create milestones.");
+            if (role != "1" && role != "2" && role != "4")
+                return StatusCode(StatusCodes.Status403Forbidden, "Only Admin, Foreman, or Owner can create milestones.");
 
             var milestone = new Milestone
             {
@@ -74,7 +75,8 @@ namespace Projello.Api.Controllers
                 Description = dto.Description,
                 DueDate = dto.DueDate,
                 Status = "NotStarted", // System default 
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Progress = dto.Progress
             };
 
             _context.Milestones.Add(milestone);
@@ -102,7 +104,8 @@ namespace Projello.Api.Controllers
 
             // Security: Restricted to Foreman or Admin
             var role = GetUserRole();
-            if (role != "1" && role != "2") return Forbid();
+            if (role != "1" && role != "2" && role != "4")
+                return StatusCode(StatusCodes.Status403Forbidden, "Only Admin, Foreman, or Owner can update milestones.");
 
             milestone.Title = dto.Title;
             milestone.Description = dto.Description;
@@ -110,6 +113,31 @@ namespace Projello.Api.Controllers
             milestone.Status = dto.Status;
             milestone.CompletedDate = dto.CompletedDate;
 
+            if (dto.Progress.HasValue)
+            {
+                milestone.Progress = dto.Progress.Value;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // DELETE: /api/milestones/{id}
+        [HttpDelete("milestones/{id}")]
+        public async Task<IActionResult> DeleteMilestone(int id)
+        {
+            var milestone = await _context.Milestones.FindAsync(id);
+            if (milestone == null) return NotFound();
+
+            var role = GetUserRole();
+
+            // Allow Admin (1), Foreman (2), or Owner (4)
+            if (role != "1" && role != "2" && role != "4")
+                return StatusCode(StatusCodes.Status403Forbidden,
+                    "Only Admin, Foreman, or Owner can delete milestones.");
+
+            _context.Milestones.Remove(milestone);
             await _context.SaveChangesAsync();
 
             return NoContent();

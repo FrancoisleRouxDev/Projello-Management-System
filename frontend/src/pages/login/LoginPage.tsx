@@ -38,7 +38,7 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToRegisterCompany,
 
     try {
       // Send POST request to the backend login API with email and password
-   const response = await fetch(`${API_BASE_URL}/api/Auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/Auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -122,25 +122,25 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToRegisterCompany,
             
             {/* Text with a clickable link that triggers the parent's switch-to-signup function */}
             <div className="signinText">
-            <p className="login-signup-text">
-              I don't have an Account,{" "}
-              <span className="login-link" onClick={onSwitchToSignUp}>
-                Sign Up
-              </span>
-            </p>
-
-            {onSwitchToRegisterCompany && (
-              <p className="login-signup-text" style={{ marginTop: "4px" }}>
-                Want to create a company?{" "}
-                <span
-                  className="login-link"
-                  onClick={onSwitchToRegisterCompany}
-                  style={{ fontWeight: 700 }}
-                >
-                  Register Company
+              <p className="login-signup-text">
+                I don't have an Account,{" "}
+                <span className="login-link" onClick={onSwitchToSignUp}>
+                  Sign Up
                 </span>
               </p>
-            )}
+
+              {onSwitchToRegisterCompany && (
+                <p className="login-signup-text" style={{ marginTop: "4px" }}>
+                  Want to create a company?{" "}
+                  <span
+                    className="login-link"
+                    onClick={onSwitchToRegisterCompany}
+                    style={{ fontWeight: 700 }}
+                  >
+                    Register Company
+                  </span>
+                </p>
+              )}
             </div>
             
             <div className="login-button-row">
