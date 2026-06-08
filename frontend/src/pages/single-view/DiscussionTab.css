@@ -1,0 +1,81 @@
+.discussion-tab {
+  padding: 16px;
+}
+
+.discussion-tab__header {
+  margin-bottom: 20px;
+}
+
+.discussion-tab__title {
+  margin: 0;
+}
+
+.discussion-tab__loading,
+.discussion-tab__error,
+.discussion-tab__empty {
+  padding: 20px;
+}
+
+.discussion-tab__error {
+  color: var(--error-red);
+}
+
+.discussion-tab__post-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.discussion-tab__post-card {
+  background: var(--card-bg);
+  border: 1px solid var(--shadow-gray);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.discussion-tab__post-content {
+  padding: 14px 16px;
+}
+
+.discussion-tab__post-caption {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-dark);
+}
+
+.discussion-tab__post-meta {
+  font-size: 12px;
+  color: var(--text-light-gray);
+  margin-bottom: 12px;
+}
+
+.discussion-tab__reactions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--secondary-background);
+  border-bottom: 1px solid var(--secondary-background);
+}
+
+.discussion-tab__reaction {
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.discussion-tab__comments-label {
+  font-size: 13px;
+  color: var(--text-light-gray);
+  margin-bottom: 8px;
+}
+
+.discussion-tab__comment-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--shadow-gray);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--white);
+  color: var(--text-dark);
+}
