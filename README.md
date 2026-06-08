@@ -2,6 +2,8 @@
 
 ## Lightweight Project Management System Built for the Construction Industry
 
+![Projello Cover Image](ReadmeImages/Cover.png)
+
 ---
 
 ## 📄 Description
@@ -47,6 +49,8 @@ This structural domain is supported by role-based access controls that secure vi
 
 Projello is built using a robust, decoupled client-server architecture designed to ensure environment consistency, high availability, and native desktop deployment lifecycle management.
 
+![Architecture Image](ReadmeImages/Architecture.png)
+
 ---
 
 ### Presentation Layer (Frontend)
@@ -78,7 +82,8 @@ Projello uses a modular CSS architecture built around an optimised sage green pa
 --dark-slate-green:   #2C3E31;
 --semantic-highlight: #F7F7F3;
 ```
-
+![Colour Palette](ReadmeImages/Light%20Palette.png)
+![Colour Palette](ReadmeImages/Systematic%20colours.png)
 ---
 
 ### Service Infrastructure (Backend)
@@ -223,6 +228,8 @@ Projello aims to provide a focused, construction-specific project management sol
 
 Rather than adapting generic software designed for software development teams, Projello delivers workflows intentionally built around the realities of construction projects, enabling project managers, site workers, contractors, and clients to collaborate through a streamlined and transparent platform.
 
+---
+
 ## 3. Database Synchronisation & State Rehydration
 
 Entity Framework Core translates the tracking sequence into a parameterised, highly efficient SQL statement executed against the Aiven Managed PostgreSQL database.
@@ -231,17 +238,12 @@ Upon successful commitment of the transaction, the backend API issues an HTTP `2
 
 The React runtime captures the successful response within `AddProjectMemberModal.tsx`, invokes the `onMemberAdded()` callback, updates local state arrays, and triggers an immediate interface re-render.
 
+![ERD](ReadmeImages/ERD.png)
+
 ---
 
 # ✨ Key Features
 
-## ⏱️ 30-Second Daily Check-ins
-
-A streamlined interface enabling field crews to update operational statuses, record concise notes, and report structural progress directly from site locations.
-
-The system promotes lightweight communication by allowing crews to submit check-in commentary alongside non-intrusive emoji status reactions, limited to five predefined symbols.
-
----
 
 ## 🔐 Granular Role-Based Access Control (RBAC)
 
@@ -320,6 +322,7 @@ This approach aligns with Projello's lightweight, functional-first philosophy.
 
 ---
 
+
 # 📸 Application Screenshots
 
 ## Dashboard Workspace
@@ -333,7 +336,7 @@ The primary operational dashboard displaying:
 
 ---
 
-## Milestone Tracking
+## Project Tracking
 
 Interactive timeline visualisations showing:
 
@@ -341,17 +344,6 @@ Interactive timeline visualisations showing:
 * Progress indicators
 * Task completion states
 * Due dates and deadlines
-
----
-
-## Daily Check-in Interface
-
-A simplified 30-second reporting workflow used by site crews to:
-
-* Submit progress updates
-* Record site observations
-* Upload verification photographs
-* Submit status reactions
 
 ---
 
