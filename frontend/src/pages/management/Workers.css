@@ -29,7 +29,7 @@
 	flex-direction: column;
 	gap: 6px;
 	width: 100%;
-	background: #ffffff;
+	/* background: #ffffff; */
 	border-radius: 14px;
 	padding: 16px 24px;
 	box-sizing: border-box;
@@ -44,7 +44,7 @@
 
 .workers-page__title {
 	margin: 0;
-	color: #0a0a0a;
+	color: var(--text-dark);
 	font-size: 24px;
 	font-weight: 600;
 	line-height: 32px;
@@ -52,7 +52,7 @@
 
 .workers-page__subtitle {
 	margin: 0;
-	color: #6b7280;
+	color: var(--accent-2-40_Opacity);
 	font-size: 14px;
 	line-height: 20px;
 }
@@ -78,9 +78,10 @@
 }
 
 .workers-page__card-button:hover {
-	transform: translateY(-4px);
-	box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 
-	            0 8px 10px -6px rgb(0 0 0 / 0.1);
+	transform: translateY(-2px);
+	/* box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 
+	            0 8px 10px -6px rgb(0 0 0 / 0.1); */
+	filter: brightness(0.99);
 }
 
 .workers-page__card-button:focus-visible {

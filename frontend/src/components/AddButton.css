@@ -26,15 +26,16 @@
   font-family: "Roboto", sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: var(--text-light, #ffffff);
+  color: var(--white, #ffffff);
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .add-button:hover:not(:disabled) {
-  background-color: var(--accent-2, #4e644f);
+  background-color: var(--accent-1, #4e644f);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  filter: brightness(1.05);
 }
 
 .add-button:active:not(:disabled) {
@@ -60,7 +61,7 @@
   font-size: 18px;
   font-weight: 600;
   line-height: 1;
-  color: var(--text-light);
+  color: var(--white, #ffffff);
 }
 
 /* ============================================================================

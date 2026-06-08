@@ -90,6 +90,7 @@
 .ant-modal .ant-modal-close {
   top: 18px;
   right: 18px;
+  color: var(--accent-1);
 }
 .setup-list {
   margin: 0 0 16px 18px;

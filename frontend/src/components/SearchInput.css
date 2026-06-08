@@ -31,19 +31,25 @@
   height: 36px;
   padding-top: 4px;
   padding-bottom: 4px;
-  padding-left: 40px;
-  padding-right: 12px;
+  padding-left: 20px;
+  padding-right: 20px;
   left: 0px;
   top: 0px;
   position: absolute;
   background: white;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 20px;
   outline: 1px solid rgba(0, 0, 0, 0);
   outline-offset: -1px;
   justify-content: flex-start;
   align-items: center;
   display: inline-flex;
+}
+
+.StyledInput:focus {
+  /* outline: 1px solid #0ea5e9; */
+  /* outline-offset: -1px; */
+  filter: brightness(0.95);
 }
 
 .StyledSearchInput {

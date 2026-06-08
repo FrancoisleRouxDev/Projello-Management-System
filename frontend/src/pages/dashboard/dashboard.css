@@ -152,7 +152,7 @@ body {
   min-width: 220px;
   border-radius: 10px;
   background: var(--Shadow-Gray, #e5e5e2);
-  color: var(--background, #28332b);
+  color: var(--background, #28332b) !important;
   border: 1px solid rgba(0, 0, 0, 0.08);
   cursor: pointer;
   appearance: none;
@@ -165,7 +165,12 @@ body {
 }
 
 .sortDropdown__label {
-  font-weight: 600;
+  font-weight: 500;
+  color: var(--background, #28332b) !important;
+}
+
+.sortDropdown__selected{
+  color: var(--background, #28332b) !important;
 }
 
 .sortDropdown__menu {
@@ -213,7 +218,7 @@ body {
 .sortDropdownModal__title {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--background, #28332b);
+  color: var(--text-dark, #28332b);
 }
 
 .sortDropdownModal .sortDropdown__menu {

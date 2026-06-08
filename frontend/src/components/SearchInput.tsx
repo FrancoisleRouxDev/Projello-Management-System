@@ -33,10 +33,10 @@ export const SearchInput: React.FC<SearchInputProps> = ({
           onChange={handleChange}
         />
       </div>
-      <div className="StyledIcon">
+      {/* <div className="StyledIcon">
         <div className="StyledVector" />
         <div className="StyledVector01" />
-      </div>
+      </div> */}
     </div>
   );
 };

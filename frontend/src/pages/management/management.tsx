@@ -17,7 +17,7 @@ interface Project {
   status: string;
   startDate: string | null;
   dueDate: string | null;
-  createdAt: string;
+  CreatedAt: string;
 }
 
 type ManagementView = "projects" | "clients" | "workers";

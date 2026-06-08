@@ -19,7 +19,7 @@ type ProjectDetails= {
   status: string;
   startDate: string | null;
   dueDate: string | null;
-  createdAt: string;
+  CreatedAt: string;
   photoTiles?: string[];
 };
 
@@ -29,7 +29,7 @@ type SiteImageUpdate = {
   userId: string;
   caption: string | null;
   imageUrl: string;
-  createdAt: string;
+  CreatedAt: string;
 };
 
 function RecentSitePhotosSection({ 

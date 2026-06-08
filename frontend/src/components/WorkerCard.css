@@ -1,5 +1,5 @@
 .worker-card {
-  background: #f7f7f3;
+  background: var(--secondary-background-item, #f7f7f3);
   border-radius: 20px;
   outline: 1px solid rgba(40, 51, 43, 0.1);
   outline-offset: -1px;
@@ -28,8 +28,8 @@
   width: 48px;
   height: 48px;
   border-radius: 9999px;
-  background: #e5e7eb;
-  color: #101828;
+  background: var(--accent-2);
+  color: var(--text-light);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -47,7 +47,7 @@
 }
 
 .worker-card__name {
-  color: #101828;
+  color: var(--text-dark);
   font-size: 16px;
   font-weight: 600;
   line-height: 24px;
@@ -57,7 +57,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #6a7282;
+  color: var(--accent-2-40_Opacity);
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -96,26 +96,26 @@
 }
 
 .worker-card--success .worker-card__status {
-  background: #dcfce7;
-  color: #016630;
+  background: var(--secondary-background-item);
+  color: var(--success-green);
 }
 
 .worker-card--success .worker-card__status-dot {
-  background: #00c950;
+  background: var(--success-green);
 }
 
 .worker-card--warning .worker-card__status {
-  background: #fff7ed;
-  color: #c2410c;
+  background: var(--secondary-background-item);
+  color: var(--warning-red);
 }
 
 .worker-card--warning .worker-card__status-dot {
-  background: #fb923c;
+  background: var(--warning-red);
 }
 
 .worker-card--neutral .worker-card__status {
-  background: #f3f4f6;
-  color: #364153;
+  background: var(--secondary-background-item);
+  color: var(--text-dark);
 }
 
 .worker-card--neutral .worker-card__status-dot {
@@ -148,14 +148,14 @@
 }
 
 .worker-card__assignment-label {
-  color: #6a7282;
+  color: var(--accent-2-40_Opacity);
   font-size: 12px;
   font-weight: 400;
   line-height: 16px;
 }
 
 .worker-card__assignment-value {
-  color: #101828;
+  color: var(--text-dark);
   font-size: 14px;
   font-weight: 500;
   line-height: 20px;
