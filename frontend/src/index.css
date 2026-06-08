@@ -60,7 +60,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  x-overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* Theme switching: use [data-theme="dark"] for dark mode, [data-theme="light"] for light mode */
