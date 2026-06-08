@@ -7,6 +7,7 @@ using CloudinaryDotNet.Actions;
 
 using Projello.Api.DTOs;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Projello.Api.Controllers;
 
@@ -137,7 +138,7 @@ public class SiteUpdatesController : ControllerBase
     }
 
     // POST: Add reaction to an update
-  [HttpPost("{updateId}/react")]
+    [HttpPost("{updateId}/react")]
     public async Task<IActionResult> React(int updateId, [FromBody] ReactDto dto)
     {
         var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -188,4 +189,53 @@ public class SiteUpdatesController : ControllerBase
         return Ok(comment);
     }
 
+    // DELETE entire post (image + caption + all comments)
+    [HttpDelete("{updateId}")]
+    public async Task<IActionResult> DeleteUpdate(int updateId)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized();
+
+        var update = await _context.ProjectUpdates.FirstOrDefaultAsync(u => u.Id == updateId);
+        if (update == null) return NotFound("Update not found.");
+
+        // Authorization: Post owner OR Owner/Admin
+        var role = User.FindFirst("RoleID")?.Value;
+        bool isOwnerOrAdmin = role == "1" || role == "4";
+        bool isPostAuthor = update.UserId == userId;
+
+        if (!isPostAuthor && !isOwnerOrAdmin)
+            return Forbid("You don't have permission to delete this post.");
+
+        _context.ProjectUpdates.Remove(update);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    // DELETE single comment
+    [HttpDelete("{updateId}/comments/{commentId}")]
+    public async Task<IActionResult> DeleteComment(int updateId, int commentId)
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized();
+
+        var comment = await _context.UpdateComments
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.UpdateId == updateId);
+
+        if (comment == null) return NotFound("Comment not found.");
+
+        // Authorization: Comment owner OR Owner/Admin
+        var role = User.FindFirst("RoleID")?.Value;
+        bool isOwnerOrAdmin = role == "1" || role == "4";
+        bool isCommentAuthor = comment.UserId == userId;
+
+        if (!isCommentAuthor && !isOwnerOrAdmin)
+            return Forbid("You can only delete your own comments.");
+
+        _context.UpdateComments.Remove(comment);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }

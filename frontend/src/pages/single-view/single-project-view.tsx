@@ -149,11 +149,17 @@ export default function SingleProjectViewPage() {
   const [renameValue, setRenameValue] = useState("");
   const [renameSaving, setRenameSaving] = useState(false);
 
+  // Description edit states
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [descriptionValue, setDescriptionValue] = useState("");
+  const [descriptionSaving, setDescriptionSaving] = useState(false);
+
   const openRenameModal = () => {
     setRenameValue(project?.name || "");
     setShowRenameModal(true);
   };
 
+  //Rename project function
   const handleRenameProject = async () => {
     if (!project) return;
 
@@ -195,6 +201,60 @@ export default function SingleProjectViewPage() {
     } finally {
       setRenameSaving(false);
     }
+  };
+
+  // description edit functions
+  const startEditingDescription = () => {
+    setDescriptionValue(project?.description || "");
+    setIsEditingDescription(true);
+  };
+
+  const saveDescription = async () => {
+    if (!project) return;
+
+    const trimmedDesc = descriptionValue.trim();
+    if (trimmedDesc === project.description) {
+      setIsEditingDescription(false);
+      return;
+    }
+
+    setDescriptionSaving(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/api/projects/${project.projectID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          name: project.name,
+          description: trimmedDesc,
+          clientID: project.clientID,
+          startDate: project.startDate,
+          dueDate: project.dueDate,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to update description.");
+      }
+
+      setProject((prev) => (prev ? { ...prev, description: trimmedDesc } : prev));
+      antdMessage.success("Description updated successfully.");
+      setIsEditingDescription(false);
+    } catch (err: any) {
+      antdMessage.error(err.message || "Failed to update description.");
+    } finally {
+      setDescriptionSaving(false);
+    }
+  };
+
+  const cancelDescriptionEdit = () => {
+    setIsEditingDescription(false);
+    setDescriptionValue("");
   };
 
   // Get current user role
@@ -614,10 +674,57 @@ export default function SingleProjectViewPage() {
         <>
           <div className="single-project-view__main-grid">
             <div className="single-project-view__panel">
-              <h3 className="single-project-view__panel-title">Description</h3>
-              <p className="single-project-view__project-description">
-                {project.description || "No description provided."}
-              </p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <h3 className="single-project-view__panel-title">Description</h3>
+                
+                {[1, 4].includes(currentUserRole) && !isEditingDescription && (
+                  <button
+                    type="button"
+                    onClick={startEditingDescription}
+                    style={{ background: "none", border: "none", color: "#1890ff", cursor: "pointer", fontSize: "14px" }}
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+
+              {isEditingDescription ? (
+                <div>
+                  <textarea
+                    value={descriptionValue}
+                    onChange={(e) => setDescriptionValue(e.target.value)}
+                    style={{
+                      width: "100%",
+                      minHeight: "140px",
+                      padding: "12px",
+                      border: "1px solid #d9d9d9",
+                      borderRadius: "6px",
+                      fontSize: "15px",
+                      resize: "vertical"
+                    }}
+                    placeholder="Enter project description..."
+                  />
+                  <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+                    <button
+                      onClick={saveDescription}
+                      disabled={descriptionSaving}
+                      style={{ background: "#1890ff", color: "white", padding: "8px 20px", borderRadius: "6px" }}
+                    >
+                      {descriptionSaving ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                      onClick={cancelDescriptionEdit}
+                      style={{ padding: "8px 20px", borderRadius: "6px" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="single-project-view__project-description">
+                  {project.description || "No description provided."}
+                </p>
+              )}
             </div>
 
             {/* Milestones Panel */}

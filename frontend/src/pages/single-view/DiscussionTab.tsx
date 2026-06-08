@@ -171,6 +171,52 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
     }
   };
 
+  // NEW: Delete entire post (image + caption + all comments)
+  const handleDeletePost = async (updateId: number) => {
+    if (!confirm("Delete this entire post and all its comments? This cannot be undone.")) return;
+
+    try {
+      setSubmittingId(updateId);
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/api/projects/${projectId}/updates/${updateId}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!res.ok) throw new Error("Failed to delete post");
+
+      await refreshPosts();
+    } catch (err: any) {
+      setError(err.message || "Failed to delete post");
+    } finally {
+      setSubmittingId(null);
+    }
+  };
+
+  // NEW: Delete single comment
+  const handleDeleteComment = async (updateId: number, commentId: number) => {
+    if (!confirm("Delete this comment?")) return;
+
+    try {
+      setSubmittingId(commentId);
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/api/projects/${projectId}/updates/${updateId}/comments/${commentId}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!res.ok) throw new Error("Failed to delete comment");
+
+      await refreshPosts();
+    } catch (err: any) {
+      setError(err.message || "Failed to delete comment");
+    } finally {
+      setSubmittingId(null);
+    }
+  };
+
   const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -202,7 +248,7 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
       setNewPostCaption("");
       setImageFileInput(null);
       setImagePreviewUrl(null);
-      await refreshPosts(); //Changed to prevent full page refresh
+      await refreshPosts();
     } catch (err: any) {
       setError(err.message || "Failed to post update");
     } finally {
@@ -289,12 +335,33 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
 
               {/* Image */}
               {post.imageUrl && (
-                <img
-                  src={post.imageUrl}
-                  alt="Post"
-                  onClick={() => setZoomedImageUrl(post.imageUrl)}
-                  style={{ width: "100%", maxHeight: 360, objectFit: "cover", display: "block" }}
-                />
+                <div style={{ position: "relative" }}>
+                  <img
+                    src={post.imageUrl}
+                    alt="Post"
+                    onClick={() => openImageZoom(post.imageUrl)}
+                    style={{ width: "100%", maxHeight: 360, objectFit: "cover", display: "block" }}
+                  />
+                  {/* Delete entire post button */}
+                  <button
+                    onClick={() => handleDeletePost(post.id)}
+                    disabled={submittingId === post.id}
+                    style={{
+                      position: "absolute",
+                      top: 12,
+                      right: 12,
+                      background: "rgba(239, 68, 68, 0.9)",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 6,
+                      padding: "6px 12px",
+                      fontSize: 13,
+                      cursor: "pointer"
+                    }}
+                  >
+                    Delete Post
+                  </button>
+                </div>
               )}
 
               <div style={{ padding: 16 }}>
@@ -336,6 +403,18 @@ export default function DiscussionTab({ projectId }: DiscussionTabProps) {
                           <span style={{ fontSize: 12, color: "#64748b" }}>{comment.createdAt ? new Date(comment.createdAt).toLocaleString() : ""}</span>
                         </div>
                         <p style={{ margin: "8px 0 0", lineHeight: 1.5 }}>{comment.commentText}</p>
+                        
+                        {/* Delete comment button (own comments + Owner/Admin) */}
+                        {comment.userId === currentUserId && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteComment(post.id, comment.id)}
+                            disabled={submittingId === comment.id}
+                            style={{ marginTop: 8, fontSize: 13, color: "#ef4444", background: "none", border: "none", cursor: "pointer" }}
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     ))
                   ) : (
