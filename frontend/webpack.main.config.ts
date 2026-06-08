@@ -1,5 +1,5 @@
 import type { Configuration } from 'webpack';
-import { DefinePlugin } from 'webpack';
+import { DefinePlugin, IgnorePlugin } from 'webpack';
 import dotenv from 'dotenv';
 
 import { rules } from './webpack.rules';
@@ -24,7 +24,13 @@ export const mainConfig: Configuration = {
   module: {
     rules,
   },
-  plugins: [...plugins, definePlugin],
+  plugins: [
+    ...plugins, 
+    definePlugin,
+    new IgnorePlugin({
+      resourceRegExp: /\.(test|spec)\.(ts|tsx)$/,
+    }),
+  ],
   resolve: {
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.css', '.json'],
   },
