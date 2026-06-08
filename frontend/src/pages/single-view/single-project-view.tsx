@@ -140,6 +140,13 @@ export default function SingleProjectViewPage() {
   const [renameValue, setRenameValue] = useState("");
   const [renameSaving, setRenameSaving] = useState(false);
 
+  // Status Editor State
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [statusUpdating, setStatusUpdating] = useState(false);
+
+  const STATUS_OPTIONS = ["Not Started", "Planning", "In Progress", "Completed"];
+
   const openRenameModal = () => {
     setRenameValue(project?.name || "");
     setShowRenameModal(true);
@@ -185,6 +192,52 @@ export default function SingleProjectViewPage() {
       antdMessage.error(err.message || "Failed to rename project.");
     } finally {
       setRenameSaving(false);
+    }
+  };
+
+  const handleStatusSelect = (status: string) => {
+    setSelectedStatus(status);
+  };
+
+  const handleConfirmStatusChange = async () => {
+    if (!project || !selectedStatus) return;
+
+    setStatusUpdating(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/api/projects/${project.projectID}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          status: selectedStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to update project status.");
+      }
+
+      setProject((prev) => (prev ? { ...prev, status: selectedStatus } : prev));
+      antdMessage.success("Project status updated successfully.");
+      setShowStatusModal(false);
+      setSelectedStatus(null);
+
+      // If status is Completed, redirect to history page
+      if (selectedStatus === "Completed") {
+        setTimeout(() => {
+          navigate("/history");
+          antdMessage.info("Project moved to history page.");
+        }, 500);
+      }
+    } catch (err: any) {
+      antdMessage.error(err.message || "Failed to update project status.");
+    } finally {
+      setStatusUpdating(false);
     }
   };
 
@@ -398,7 +451,7 @@ export default function SingleProjectViewPage() {
             <span className="single-project-view__separator">/</span>
             <span className="single-project-view__client-name">{project.clientName}</span>
 
-            {[4].includes(currentUserRole) && (
+            {[4].includes(currentUserRole) && project.status !== "Completed" && (
               <button
                 type="button"
                 onClick={openRenameModal}
@@ -414,8 +467,8 @@ export default function SingleProjectViewPage() {
             className="single-project-view__call-button"
             onClick={handleStartVoiceCall}
           >
-            <span aria-hidden="true">☎</span>
-            <span>Start Call</span>
+            <span aria-hidden="true" className="single-project-view__call-button-text">☎</span>
+            <span className="single-project-view__call-button-text">Start Call</span>
           </button>
         </div>
 
@@ -451,10 +504,25 @@ export default function SingleProjectViewPage() {
           <span className="single-project-view__stat-label">Project ID</span>
           <span className="single-project-view__stat-value">{project.projectID}</span>
         </div>
-        <div className="single-project-view__stat-card">
-          <span className="single-project-view__stat-label">Status</span>
-          <span className="single-project-view__stat-value">{project.status}</span>
-        </div>
+        {project.status === "Completed" ? (
+          <div className="single-project-view__stat-card">
+            <span className="single-project-view__stat-label">Status</span>
+            <span className="single-project-view__stat-value">{project.status}</span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="single-project-view__stat-card single-project-view__stat-card--clickable"
+            onClick={() => {
+              setSelectedStatus(project.status);
+              setShowStatusModal(true);
+            }}
+            style={{ cursor: "pointer", border: "none", background: "inherit", padding: "inherit" }}
+          >
+            <span className="single-project-view__stat-label">Status</span>
+            <span className="single-project-view__stat-value">{project.status}</span>
+          </button>
+        )}
         <div className="single-project-view__stat-card">
           <span className="single-project-view__stat-label">Start Date</span>
           <span className="single-project-view__stat-value">
@@ -469,6 +537,57 @@ export default function SingleProjectViewPage() {
         </div>
       </div>
 
+      {/* Status Modal */}
+      {showStatusModal && project.status !== "Completed" && (
+        <div className="status-modal-mask" onClick={() => setShowStatusModal(false)}>
+          <div className="status-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="status-modal__header">
+              <h3 className="status-modal__title">Update Project Status</h3>
+            </div>
+
+            <div className="status-modal__options">
+              {STATUS_OPTIONS.map((option) => (
+                <label key={option} className="status-option">
+                  <input
+                    type="radio"
+                    name="projectStatus"
+                    value={option}
+                    checked={selectedStatus === option}
+                    onChange={() => handleStatusSelect(option)}
+                  />
+                  <span className="status-option__label">{option}</span>
+                </label>
+              ))}
+            </div>
+
+            {selectedStatus === "Completed" && (
+              <div className="status-modal__warning">
+                <strong>⚠️ Warning:</strong> Setting the status to "Completed" will move this project to the History page.
+              </div>
+            )}
+
+            <div className="status-modal__footer">
+              <button
+                type="button"
+                className="status-modal__cancel-btn"
+                onClick={() => setShowStatusModal(false)}
+                disabled={statusUpdating}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="status-modal__confirm-btn"
+                onClick={handleConfirmStatusChange}
+                disabled={statusUpdating || selectedStatus === project.status}
+              >
+                {statusUpdating ? "Updating..." : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/*TAB CONTENT */}
       {activeTab === "overview" && (
         <>
@@ -480,10 +599,10 @@ export default function SingleProjectViewPage() {
               </p>
             </div>
 
-            <div className="single-project-view__panel">
+            {/* <div className="single-project-view__panel">
               <h3 className="single-project-view__panel-title">Milestones</h3>
               <p>Milestone data coming soon...</p>
-            </div>
+            </div> */}
           </div>
 
           <RecentSitePhotosSection 
@@ -521,11 +640,10 @@ export default function SingleProjectViewPage() {
 
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
 
-            {[1, 4].includes(currentUserRole) && (
+            {[1, 4].includes(currentUserRole) && project.status !== "Completed" && (
               <button
                 onClick={() => setShowAddMemberModal(true)}
-                className="single-project-view__view-all-button"
-                style={{ color: "#0a0a0a", fontWeight: "600" }}
+                className="single-project-view__view-all-button single-project-view__add-member-button"
               >
                 + Add Member
               </button>
@@ -546,7 +664,7 @@ export default function SingleProjectViewPage() {
                   {m.FullName || m.fullName} — <strong>{m.AssignedAs || m.assignedAs}</strong>
                 </div>
 
-                {[1, 4].includes(currentUserRole) && (
+                {[1, 4].includes(currentUserRole) && project.status !== "Completed" && (
                   <button
                     type="button"
                     className="team-member-row__remove-btn"
@@ -609,7 +727,7 @@ export default function SingleProjectViewPage() {
           ]}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <label style={{ fontWeight: 600, color: "var(--text-dark)" }}>
+            <label className="single-project-view__modal-label">
               Project Name
             </label>
             <input

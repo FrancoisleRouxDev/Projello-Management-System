@@ -86,13 +86,19 @@ export default function DashboardPage() {
     return isNaN(date.getTime()) ? Number.MAX_SAFE_INTEGER : date.getTime();
   };
 
-  const filteredProjects = search.trim().length > 0
-    ? projects.filter((project) => {
-        const name = formatProjectName(project).toLowerCase();
-        const searchTerm = search.trim().toLowerCase();
-        return name.includes(searchTerm);
-      })
-    : projects;
+  const filteredProjects = projects.filter((project) => {
+    // Exclude completed projects from dashboard
+    if ((project.status || project.Status) === "Completed") {
+      return false;
+    }
+    
+    if (search.trim().length > 0) {
+      const name = formatProjectName(project).toLowerCase();
+      const searchTerm = search.trim().toLowerCase();
+      return name.includes(searchTerm);
+    }
+    return true;
+  });
 
   const sortedProjects = [...filteredProjects].sort((a, b) => {
     if (sortOption === "az") {

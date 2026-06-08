@@ -88,7 +88,10 @@ export default function ManagementPage() {
   }, []);
 
   // Map Project data to ManagementClientRow for table display
-  const tableRows: ManagementClientRow[] = projects.map((project) => {
+  // Filter out completed projects from management view
+  const activeProjects = projects.filter((project) => project.status !== "Completed");
+  
+  const tableRows: ManagementClientRow[] = activeProjects.map((project) => {
     const clientInitials = project.clientName
       .split(" ")
       .map((word) => word[0])
