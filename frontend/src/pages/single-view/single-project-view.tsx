@@ -517,7 +517,7 @@ export default function SingleProjectViewPage() {
               setSelectedStatus(project.status);
               setShowStatusModal(true);
             }}
-            style={{ cursor: "pointer", border: "none", background: "inherit", padding: "inherit" }}
+            // style={{ cursor: "pointer" }}
           >
             <span className="single-project-view__stat-label">Status</span>
             <span className="single-project-view__stat-value">{project.status}</span>

@@ -112,6 +112,7 @@
   transition:
     background-color 0.4s ease,
     box-shadow 0.4s ease;
+  margin-left: 12px;
 }
 
 .single-project-view__call-button span {
@@ -141,7 +142,7 @@
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: var(--text-dark);
+  color: var(--white);
   font-size: 16px;
   font-weight: 600;
   padding: 8px 12px 10px;
@@ -152,7 +153,9 @@
 
 .single-project-view__tab--active {
   color: var(--white);
-  border-bottom-color: var(--text-dark);
+  border-bottom-color: var(--white);
+  background: #ffffff15;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .single-project-view__stats {
@@ -179,7 +182,7 @@
 }
 
 .single-project-view__stat-value {
-  font-size: 32px;
+  font-size: 1.8rem;
   line-height: 1.1;
   font-weight: 700;
   color: var(--text-dark);
@@ -215,6 +218,10 @@
   opacity: 0.85;
   font-size: 15px;
   line-height: 1.6;
+  overflow: clip;
+  display: -webkit-box;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 .single-project-view__progress-list {
@@ -389,15 +396,17 @@
 
 /* Status Modal Styles */
 .single-project-view__stat-card--clickable {
+  /* background: var(--secondary-background-item); */
   cursor: pointer;
   transition:
-    background 0.2s ease,
-    transform 0.2s ease;
+    background 0.4s ease,
+    transform 0.4s ease;
 }
 
 .single-project-view__stat-card--clickable:hover {
-  background: var(--secondary-background);
-  transform: translateY(-2px);
+  background: var(--secondary-background-item);
+  transform: translateY(-1px);
+  filter: brightness(0.98);
 }
 
 .status-modal-mask {
@@ -504,7 +513,7 @@
 
 .status-modal__confirm-btn {
   background: var(--accent-1);
-  color: var(--text-light);
+  color: var(--white);
 }
 
 .status-modal__confirm-btn:hover:not(:disabled) {
