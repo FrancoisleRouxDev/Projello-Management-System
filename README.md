@@ -56,59 +56,70 @@ Projello is built using a robust, decoupled client-server architecture designed 
 ### Presentation Layer (Frontend)
 
 #### Core Technologies
-UI Framework: React 19 (TypeScript)
 
-Desktop Runtime: Electron Shell Wrapper
+- UI Framework: React 19 (TypeScript)
+- Desktop Runtime: Electron Shell Wrapper
+- Build System: Webpack and Electron Forge
+- Compilation Tooling: @electron-forge/cli
 
-Build System: Webpack and Electron Forge
+#### Asset Management
 
-Compilation Tooling: @electron-forge/cli
+- @vercel/webpack-asset-relocator-loader
+- css-loader
+- @svgr/webpack
 
-Asset Management:
+#### Real-Time Communication
 
-@vercel/webpack-asset-relocator-loader
-css-loader
-@svgr/webpack
-Real-Time Communication
-Native HTML5 WebRTC API
-SignalR Client Hub integration for real-time audio and video communication
+- Native HTML5 WebRTC API
+- SignalR Client Hub integration for real-time audio and video communication
 
 #### Theming & Visual Identity
-Projello uses a modular CSS architecture built around an optimised sage green palette designed to remain legible under direct sunlight and outdoor working conditions.
 
+Projectllo uses a modular CSS architecture built around an optimised sage green palette designed to remain legible under direct sunlight and outdoor working conditions.
+
+```css
 --primary-sage-green: #4A6B52;
 --light-background:   #EAF0EB;
 --dark-slate-green:   #2C3E31;
 --semantic-highlight: #F7F7F3;
-<img src="ReadmeImages/Light%20Palette.png" alt="Colour Palette"> <img src="ReadmeImages/Systematic%20colours.png" alt="Colour Palette">
+```
+
+<img src="ReadmeImages/Light%20Palette.png" alt="Light Colour Palette" width="400">
+<img src="ReadmeImages/Systematic%20colours.png" alt="Systematic Colours"  width="400">
 
 ### Service Infrastructure (Backend)
 
 #### Core Technologies
-API Framework: ASP.NET Core 10.0 Web API
-Programming Language: C# 14 (.NET 10 SDK)
-ORM: Entity Framework Core 10
-Database Engine: PostgreSQL
-Database Driver: Npgsql
+
+- API Framework: ASP.NET Core 10.0 Web API
+- Programming Language: C# 14 (.NET 10 SDK)
+- ORM: Entity Framework Core 10
+- Database Engine: PostgreSQL
+- Database Driver: Npgsql
 
 #### Identity & Security
-ASP.NET Core Identity
-JSON Web Token (JWT) Authentication
-BCrypt.Net-Next Password Hashing
-Otp.NET Two-Factor Authentication (2FA)
+
+- ASP.NET Core Identity
+- JSON Web Token (JWT) Authentication
+- BCrypt.Net-Next Password Hashing
+- Otp.NET Two-Factor Authentication (2FA)
 
 #### Real-Time Services
-ASP.NET Core SignalR Hub for WebRTC channel synchronisation
+
+- ASP.NET Core SignalR Hub for WebRTC channel synchronisation
 
 #### Cloud Infrastructure
-Docker containerisation
-Persistent cloud-hosted PostgreSQL infrastructure via Aiven Managed PostgreSQL
+
+- Docker containerisation
+- Persistent cloud-hosted PostgreSQL infrastructure via Aiven Managed PostgreSQL
 
 #### File & Media Management
-CloudinaryDotNet for image and media verification uploads
+
+- CloudinaryDotNet for image and media verification uploads
 
 #### API Documentation
-Swashbuckle OpenAPI Swagger (6.x)
+
+- Swashbuckle OpenAPI Swagger (6.x)
 
 ### Data Flow Example
 
