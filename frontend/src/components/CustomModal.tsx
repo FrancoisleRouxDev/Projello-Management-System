@@ -4,23 +4,29 @@ import { Modal } from "antd";
 interface CustomModalProps {
   open: boolean;
   onCancel: () => void;
-  title?: string;
+  title?: React.ReactNode;           // ← Fixed: now accepts JSX + string
   children: React.ReactNode;
   footer?: React.ReactNode;
   width?: number;
-    wrapClassName?: string;  // <-- Added this for the new modals on the management pages
+  wrapClassName?: string;
 }
 
-const CustomModal: React.FC<CustomModalProps> = ({ open, onCancel, title, children, footer, width, wrapClassName }) => (
+const CustomModal: React.FC<CustomModalProps> = ({ 
+  open, 
+  onCancel, 
+  title, 
+  children, 
+  footer, 
+  width, 
+  wrapClassName 
+}) => (
   <Modal
     open={open}
     onCancel={onCancel}
     title={title}
     footer={footer}
     width={width || 420}
-
-      wrapClassName={wrapClassName}
-
+    wrapClassName={wrapClassName}
     centered
     destroyOnHidden
     mask={{ closable: !footer }}

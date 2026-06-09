@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-// import {Link} from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import "./management.css";
 import ManagementClientTable, { ManagementClientRow } from "../../components/ManagementClientTable";
@@ -18,6 +17,10 @@ interface Project {
   startDate: string | null;
   dueDate: string | null;
   CreatedAt: string;
+  // Added for monetary fields
+  totalPaid?: number | null;
+  outstanding?: number | null;
+  createdAt?: string;
 }
 
 type ManagementView = "projects" | "clients" | "workers";
@@ -63,7 +66,6 @@ function ProjectActionModal({ project, onClose, onRefresh, allProjects }: Projec
     try {
       const token = localStorage.getItem("token");
 
-    
       const res = await fetch(`${API_BASE_URL}/api/projects/${project.projectID}`, {
         method: "PUT",
         headers: {
@@ -87,7 +89,6 @@ function ProjectActionModal({ project, onClose, onRefresh, allProjects }: Projec
         throw new Error(`Failed to update project (${res.status}): ${errorText || res.statusText}`);
       }
 
-      // Update status via the dedicated endpoint (this is the correct way for status)
       const statusRes = await fetch(`${API_BASE_URL}/api/projects/${project.projectID}/status`, {
         method: "PUT",
         headers: {
@@ -95,7 +96,7 @@ function ProjectActionModal({ project, onClose, onRefresh, allProjects }: Projec
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          status: editStatus,  
+          status: editStatus,
         }),
       });
 
@@ -234,8 +235,6 @@ export default function ManagementPage() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectModal, setShowProjectModal] = useState(false);
 
-  let isMounted = true; // To prevent state updates on unmounted component
-
   const formatCurrency = (value: number | null | undefined) => {
     if (value === null || value === undefined) return "—";
     return new Intl.NumberFormat("en-ZA", {
@@ -270,14 +269,18 @@ export default function ManagementPage() {
         clientID: p.clientID ?? p.ClientID ?? p.clientId,
         clientName: p.clientName ?? p.ClientName ?? p.client_name ?? "",
         status: p.status ?? p.Status ?? "Planning",
-        startDate: p.startDate ?? p.StartDate ?? null,
-        dueDate: p.dueDate ?? p.DueDate ?? null,
-        createdAt: p.createdAt ?? p.CreatedAt ?? "",
+
+        // More robust date mapping
+        startDate: p.startDate ?? p.StartDate ?? p.start_date ?? p.Start_Date ?? null,
+        dueDate: p.dueDate ?? p.DueDate ?? p.due_date ?? p.Due_Date ?? null,
+
+        CreatedAt: p.CreatedAt ?? p.createdAt ?? p.created_at ?? "",
         totalPaid: p.totalPaid ?? p.TotalPaid ?? p.total_paid ?? null,
         outstanding: p.outstanding ?? p.Outstanding ?? p.outstanding_amount ?? null,
+        createdAt: p.createdAt ?? p.CreatedAt ?? "",
       }));
-      console.log("All Projects Fetched (normalized):", normalized);
-      setProjects(normalized);
+
+      setProjects(normalized as Project[]);
     } catch (err) {
       console.error("Fetch Error:", err);
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -319,24 +322,23 @@ export default function ManagementPage() {
     return () => { mounted = false; };
   }, []);
 
-  // Map Project data to ManagementClientRow for table display
-  // Filter out completed projects from management view
-  const activeProjects = projects.filter((project) => project.status !== "Completed");
-  
+  // Show all projects (removed the Completed filter as requested)
+  const activeProjects = projects;
+
   const tableRows: ManagementClientRow[] = activeProjects.map((project) => {
-    const clientInitials = project.clientName
+    const clientName = project.clientName || "";
+    const clientInitials = clientName
       .split(" ")
-      .map((word) => word[0])
+      .map((word) => word[0] || "")
       .join("")
       .toUpperCase()
-      .slice(0, 2);
+      .slice(0, 2) || "--";
 
     return {
       clientId: project.projectID.toString(),
       initials: clientInitials,
       name: project.name,
-      company: project.clientName,
-      // Use proper ZAR currency formatting (same style as Clients page)
+      company: clientName,
       totalPaid: project.totalPaid != null ? formatCurrency(Number(project.totalPaid)) : "—",
       outstanding: project.outstanding != null ? formatCurrency(Number(project.outstanding)) : "—",
       projects: "—",
@@ -351,8 +353,6 @@ export default function ManagementPage() {
   };
 
   const handleRowAction = (row: ManagementClientRow) => {
-    // Same pattern as ClientsPage: onRowAction opens the edit modal (payments/status)
-    // while onRowClick is reserved for navigation/detail view.
     const foundProject = projects.find(p => p.projectID.toString() === row.clientId);
     if (foundProject) {
       setSelectedProject(foundProject);

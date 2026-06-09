@@ -133,3 +133,11 @@
 		grid-template-columns: 1fr;
 	}
 }
+
+/* Fix for search bar cutting off text on Workers page */
+.workers-page__controls .StyledContainer,
+.workers-page__controls .StyledSearchInput {
+    flex: 1 1 320px;
+    min-width: 280px;
+    width: 100%;
+}

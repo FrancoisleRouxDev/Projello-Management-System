@@ -156,6 +156,11 @@ export default function SingleProjectViewPage() {
 
   const STATUS_OPTIONS = ["Not Started", "Planning", "In Progress", "Completed"];
 
+  // Description editing state
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [descriptionValue, setDescriptionValue] = useState("");
+  const [descriptionSaving, setDescriptionSaving] = useState(false);
+
   const openRenameModal = () => {
     setRenameValue(project?.name || "");
     setShowRenameModal(true);
@@ -205,6 +210,57 @@ export default function SingleProjectViewPage() {
     }
   };
 
+  // Description edit handlers
+  const startEditingDescription = () => {
+    if (!project) return;
+    setDescriptionValue(project.description || "");
+    setIsEditingDescription(true);
+  };
+
+  const cancelDescriptionEdit = () => {
+    setIsEditingDescription(false);
+    setDescriptionValue("");
+  };
+
+  const saveDescription = async () => {
+    if (!project) return;
+
+    const trimmedDesc = descriptionValue.trim();
+
+    setDescriptionSaving(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/api/projects/${project.projectID}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          name: project.name,
+          description: trimmedDesc,
+          clientID: project.clientID,
+          startDate: project.startDate,
+          dueDate: project.dueDate,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to update description.");
+      }
+
+      setProject((prev) => (prev ? { ...prev, description: trimmedDesc } : prev));
+      antdMessage.success("Description updated successfully.");
+      setIsEditingDescription(false);
+    } catch (err: any) {
+      antdMessage.error(err.message || "Failed to update description.");
+    } finally {
+      setDescriptionSaving(false);
+    }
+  };
+
   const handleStatusSelect = (status: string) => {
     setSelectedStatus(status);
   };
@@ -224,7 +280,7 @@ export default function SingleProjectViewPage() {
         },
         body: JSON.stringify({
           name: project.name,
-          description: trimmedDesc,
+          description: project.description,
           clientID: project.clientID,
           startDate: project.startDate,
           dueDate: project.dueDate,

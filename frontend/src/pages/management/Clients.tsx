@@ -458,7 +458,7 @@ export default function ClientsPage() {
         <div className="clients-page">
             <div className="clients-page__stats">
                 {/* Total Revenue */}
-                {/* <StatCard
+                <StatCard
                     value={formatCurrency(summary.totalRevenue)}
                     label="Total Revenue"
                     tone="success"
@@ -467,10 +467,10 @@ export default function ClientsPage() {
                             <path d="M21 7.5a.75.75.0 0 0-.75-.75H3.75A.75.75.0 0 0 3 7.5v9a.75.75.0 0 0 .75.75h16.5a.75.75.0 0 0 .75-.75v-9ZM12 12.75a.75.75.0 0 1 .75-.75h3a.75.75.0 0 1 0 1.5h-3a.75.75.0 0 1-.75-.75Z" />
                         </svg>
                     }
-                /> */}
+                />
 
                 {/* Outstanding - Using the exact icon you wanted */}
-                {/* <StatCard
+                <StatCard
                     value={formatCurrency(summary.outstanding)}
                     label="Total Outstanding"
                     tone="warning"
@@ -479,7 +479,7 @@ export default function ClientsPage() {
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                         </svg>
                     }
-                /> */}
+                />
 
                 <StatCard
                     value={String(summary.activeClients)}
