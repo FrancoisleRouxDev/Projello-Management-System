@@ -1,3 +1,6 @@
+
+
+Thought for 4s
 # Projello
 
 ## Lightweight Project Management System Built for the Construction Industry
@@ -46,95 +49,78 @@ This structural domain is supported by role-based access controls that secure vi
 ---
 
 ## Tech Stack & Architecture
-
 Projello is built using a robust, decoupled client-server architecture designed to ensure environment consistency, high availability, and native desktop deployment lifecycle management.
 
-![Architecture Image](ReadmeImages/Architecture.png)
-
----
+<img src="ReadmeImages/Architecture.png" alt="Architecture Image">
 
 ### Presentation Layer (Frontend)
 
 #### Core Technologies
+UI Framework: React 19 (TypeScript)
 
-* **UI Framework:** React 19 (TypeScript)
-* **Desktop Runtime:** Electron Shell Wrapper
-* **Build System:** Webpack and Electron Forge
-* **Compilation Tooling:** `@electron-forge/cli`
-* **Asset Management:**
+Desktop Runtime: Electron Shell Wrapper
 
-  * `@vercel/webpack-asset-relocator-loader`
-  * `css-loader`
-  * `@svgr/webpack`
+Build System: Webpack and Electron Forge
 
-#### Real-Time Communication
+Compilation Tooling: @electron-forge/cli
 
-* Native HTML5 WebRTC API
-* SignalR Client Hub integration for real-time audio and video communication
+Asset Management:
+
+@vercel/webpack-asset-relocator-loader
+css-loader
+@svgr/webpack
+Real-Time Communication
+Native HTML5 WebRTC API
+SignalR Client Hub integration for real-time audio and video communication
 
 #### Theming & Visual Identity
-
 Projello uses a modular CSS architecture built around an optimised sage green palette designed to remain legible under direct sunlight and outdoor working conditions.
 
-```css
 --primary-sage-green: #4A6B52;
 --light-background:   #EAF0EB;
 --dark-slate-green:   #2C3E31;
 --semantic-highlight: #F7F7F3;
-```
-![Colour Palette](ReadmeImages/Light%20Palette.png)
-![Colour Palette](ReadmeImages/Systematic%20colours.png)
----
+<img src="ReadmeImages/Light%20Palette.png" alt="Colour Palette"> <img src="ReadmeImages/Systematic%20colours.png" alt="Colour Palette">
 
 ### Service Infrastructure (Backend)
 
 #### Core Technologies
-
-* **API Framework:** ASP.NET Core 10.0 Web API
-* **Programming Language:** C# 14 (.NET 10 SDK)
-* **ORM:** Entity Framework Core 10
-* **Database Engine:** PostgreSQL
-* **Database Driver:** Npgsql
+API Framework: ASP.NET Core 10.0 Web API
+Programming Language: C# 14 (.NET 10 SDK)
+ORM: Entity Framework Core 10
+Database Engine: PostgreSQL
+Database Driver: Npgsql
 
 #### Identity & Security
-
-* ASP.NET Core Identity
-* JSON Web Token (JWT) Authentication
-* BCrypt.Net-Next Password Hashing
-* Otp.NET Two-Factor Authentication (2FA)
+ASP.NET Core Identity
+JSON Web Token (JWT) Authentication
+BCrypt.Net-Next Password Hashing
+Otp.NET Two-Factor Authentication (2FA)
 
 #### Real-Time Services
-
-* ASP.NET Core SignalR Hub for WebRTC channel synchronisation
+ASP.NET Core SignalR Hub for WebRTC channel synchronisation
 
 #### Cloud Infrastructure
-
-* Docker containerisation
-* Persistent cloud-hosted PostgreSQL infrastructure via Aiven Managed PostgreSQL
+Docker containerisation
+Persistent cloud-hosted PostgreSQL infrastructure via Aiven Managed PostgreSQL
 
 #### File & Media Management
-
-* CloudinaryDotNet for image and media verification uploads
+CloudinaryDotNet for image and media verification uploads
 
 #### API Documentation
+Swashbuckle OpenAPI Swagger (6.x)
 
-* Swashbuckle OpenAPI Swagger (6.x)
+### Data Flow Example
 
----
+#### 1. React → API Communication
 
-## Data Flow Example
+**Fetch Available Users**
 
-### 1. React → API Communication
-
-When a project manager assigns an on-site user to a project roster through `AddProjectMemberModal.tsx`, the frontend first retrieves available users from the API.
-
-#### Fetch Available Users
-
-```http
+```
 GET /api/users
 ```
 
-The project manager selects a user and submits the assignment payload:
+**Assign User**
 
 ```json
 {
@@ -143,20 +129,17 @@ The project manager selects a user and submits the assignment payload:
 }
 ```
 
-The authenticated JWT token is automatically attached to the request headers:
+**Request Headers**
 
-```http
+```
 Authorization: Bearer <token_string_here>
 ```
 
----
-
-### 2. ASP.NET Controller Processing
+#### 2. ASP.NET Controller Processing
 
 The backend receives and validates the request through a protected API endpoint secured by JWT authentication.
 
 ```csharp
-[Route("api/[controller]")]
 [ApiController]
 [Authorize]
 public class ProjectsController : ControllerBase
@@ -201,290 +184,253 @@ public class ProjectsController : ControllerBase
 }
 ```
 
+#### 3. Database Synchronisation & State Rehydration
+
+Entity Framework Core translates the tracking sequence into a parameterised, highly efficient SQL statement executed against the Aiven Managed PostgreSQL database.
+
+Upon successful commitment of the transaction, the backend API issues an HTTP 200 OK confirmation payload.
+
+The React runtime captures the successful response within AddProjectMemberModal.tsx, invokes the onMemberAdded() callback, updates local state arrays, and triggers an immediate interface re-render.
+
 ---
 
 ## Key Features
 
-* Functional-first construction project management
-* Native desktop application support via Electron
-* Role-based access management
-* JWT-secured authentication pipeline
-* Two-factor authentication support
-* Hierarchical project structures
-* Milestone and task tracking
-* On-site worker check-in workflows
-* Client visibility and reporting layers
-* Media proof collection and verification
-* Real-time communication using SignalR and WebRTC
-* Cloud-hosted PostgreSQL infrastructure
-* Docker-based deployment architecture
-* Swagger API documentation
+- Functional-first construction project management
+- Native desktop application support via Electron
+- Role-based access management
+- JWT-secured authentication pipeline
+- Two-factor authentication support
+- Hierarchical project structures
+- Milestone and task tracking
+- On-site worker check-in workflows
+- Client visibility and reporting layers
+- Media proof collection and verification
+- Real-time communication using SignalR and WebRTC
+- Cloud-hosted PostgreSQL infrastructure
+- Docker-based deployment architecture
+- Swagger API documentation
 
 ---
 
 ## Project Vision
-
 Projello aims to provide a focused, construction-specific project management solution that prioritises operational efficiency over feature complexity.
 
 Rather than adapting generic software designed for software development teams, Projello delivers workflows intentionally built around the realities of construction projects, enabling project managers, site workers, contractors, and clients to collaborate through a streamlined and transparent platform.
 
----
-
-## 3. Database Synchronisation & State Rehydration
-
+3. Database Synchronisation & State Rehydration
 Entity Framework Core translates the tracking sequence into a parameterised, highly efficient SQL statement executed against the Aiven Managed PostgreSQL database.
 
-Upon successful commitment of the transaction, the backend API issues an HTTP `200 OK` confirmation payload.
+Upon successful commitment of the transaction, the backend API issues an HTTP 200 OK confirmation payload.
 
-The React runtime captures the successful response within `AddProjectMemberModal.tsx`, invokes the `onMemberAdded()` callback, updates local state arrays, and triggers an immediate interface re-render.
+The React runtime captures the successful response within AddProjectMemberModal.tsx, invokes the onMemberAdded() callback, updates local state arrays, and triggers an immediate interface re-render.
 
-![ERD](ReadmeImages/ERD.png)
+<img src="ReadmeImages/ERD.png" alt="ERD">
 
----
+### Granular Role-Based Access Control (RBAC)
 
-# Key Features
+**Admin**
+- Full global system access
+- Team and user profile management
+- Company and client blacklist administration
 
+**Foreman / Project Head**
+- Team coordination
+- Milestone creation and management
+- Task allocation
+- Progress monitoring and reporting
 
-## Granular Role-Based Access Control (RBAC)
+**Worker / Builder**
+- View-only access to assigned projects
+- Daily log submissions
+- Photo upload permissions
+- Reaction and feedback capabilities
 
-### Admin
-
-* Full global system access
-* Team and user profile management
-* Company and client blacklist administration
-
-### Foreman / Project Head
-
-* Team coordination
-* Milestone creation and management
-* Task allocation
-* Progress monitoring and reporting
-
-### Worker / Builder
-
-* View-only access to assigned projects
-* Daily log submissions
-* Photo upload permissions
-* Reaction and feedback capabilities
-
-### Client
-
-* Restricted access to commissioned project information only
-* No visibility into administrative functions
-* Read-only project progress monitoring
+**Client**
+- Restricted access to commissioned project information only
+- No visibility into administrative functions
+- Read-only project progress monitoring
 
 ---
 
-## Hierarchical Milestone & Task Tracking
+## Advanced Features
 
+### Hierarchical Milestone & Task Tracking
 Interactive chronological timelines provide visibility into project progress, task configurations, deadlines, and milestone completion states.
 
 Tasks are grouped systematically beneath milestones, allowing project managers and stakeholders to understand project progression at a glance.
 
----
-
-## Hardened Security Core
-
+### Hardened Security Core
 Projello incorporates multiple security layers, including:
 
-* JWT Bearer Authentication
-* ASP.NET Identity integration
-* Encrypted authentication workflows
-* Secure invitation onboarding tokens
-* Automated Two-Factor Authentication (2FA) via Otp.NET
-* Role-based permission enforcement
+JWT Bearer Authentication
+ASP.NET Identity integration
+Encrypted authentication workflows
+Secure invitation onboarding tokens
+Automated Two-Factor Authentication (2FA) via Otp.NET
+Role-based permission enforcement
 
----
-
-## On-Site Photo Verification Uploads
-
+### On-Site Photo Verification Uploads
 A high-performance media pipeline integrated through Cloudinary enables field crews to capture and upload photographic evidence directly against project updates and milestone completions.
 
 This provides transparent visual verification of work completed on site.
 
----
-
-## Integrated Emergency Communication Channel
-
+### Integrated Emergency Communication Channel
 Projello includes built-in WebRTC voice and video communication channels coordinated through a SignalR signalling hub.
 
 The communication layer enables immediate, one-click contact for critical on-site incidents while keeping routine project communication lightweight and non-disruptive.
 
 Key characteristics include:
 
-* Real-time voice calls
-* Real-time video calls
-* Temporary communication rooms
-* Automatic room removal when empty
-* No persistent database storage footprint
+Real-time voice calls
+Real-time video calls
+Temporary communication rooms
+Automatic room removal when empty
+No persistent database storage footprint
 
 This approach aligns with Projello's lightweight, functional-first philosophy.
 
 ---
 
+## Application Screenshots
 
-# Application Screenshots
-
-## Dashboard Workspace
+### Dashboard Workspace
 
 The primary operational dashboard displaying:
 
-* Active projects
-* Project health indicators
-* Team performance metrics
-* High-level operational summaries
-![JelloJobs](ReadmeImages/JelloJobs.png)
+- Active projects
+- Project health indicators
+- Team performance metrics
+- High-level operational summaries
 
----
+<img src="ReadmeImages/JelloJobs.png" alt="JelloJobs">
 
-## Project Tracking
+### Project Tracking
 
 Interactive timeline visualisations showing:
 
-* Project milestones
-* Progress indicators
-* Task completion states
-* Due dates and deadlines
-![History](ReadmeImages/History.png)
-![Clients](ReadmeImages/MClients.png)
-![Projects](ReadmeImages/MProjects.png)
-![Workers](ReadmeImages/MWorkers.png)
+- Project milestones
+- Progress indicators
+- Task completion states
+- Due dates and deadlines
 
----
+<img src="ReadmeImages/History.png" alt="History">
+<img src="ReadmeImages/MClients.png" alt="Clients">
+<img src="ReadmeImages/MProjects.png" alt="Projects">
+<img src="ReadmeImages/MWorkers.png" alt="Workers">
 
-## Client Portal
+### Client Portal
 
 A restricted reporting environment designed specifically for external clients.
 
 The portal provides transparent project visibility while protecting internal operational information.
-![Company](ReadmeImages/RegisterCompany.png)
 
----
+<img src="ReadmeImages/RegisterCompany.png" alt="Company">
 
-## Project Creation
+### Project Creation
 
 Structured form interfaces enabling project managers to:
 
-* Create new projects
-* Define project scopes
-* Assign project leads
-* Link client organisations
-![Project](ReadmeImages/AddProject.png)
-![Client](ReadmeImages/AddClient.png)
+- Create new projects
+- Define project scopes
+- Assign project leads
+- Link client organisations
 
----
+<img src="ReadmeImages/AddProject.png" alt="Project">
+<img src="ReadmeImages/AddClient.png" alt="Client">
 
-## User Management
+### User Management
 
 Administrative interfaces used to manage:
 
-* User accounts
-* Security permissions
-* Team memberships
-* Onboarding states
-* Access roles
-![Signup](ReadmeImages/CreateAccount.png)
-![Login](ReadmeImages/Login.png)
-![Settings](ReadmeImages/Settings.png)
+- User accounts
+- Security permissions
+- Team memberships
+- Onboarding states
+- Access roles
+
+<img src="ReadmeImages/CreateAccount.png" alt="Signup">
+<img src="ReadmeImages/Login.png" alt="Login">
+<img src="ReadmeImages/Settings.png" alt="Settings">
+
 ---
 
-# Project Structure
+## Project Structure
 
-```plaintext
-projello-workspace/
-├── Projello.Api/                     # ASP.NET Core 10.0 Web API Service
-│
-│   ├── Controllers/                  # REST API Response Handlers
-│   │   ├── AuthController.cs         # Identity, Registration, JWT Issuance & 2FA
-│   │   ├── ClientsController.cs      # Client Records & Blacklist Management
-│   │   ├── MilestonesController.cs   # Milestone Definitions & Status Tracking
-│   │   ├── ProjectsController.cs     # Projects, Workspaces & Team Assignment
-│   │   └── UpdatesController.cs      # Daily Check-ins & Photo Uploads
-│
-│   ├── Data/                         # Entity Framework Core Data Layer
-│   │   └── AppDbContext.cs           # Database Schema Configuration
-│
-│   ├── DTOs/                         # Data Transfer Objects
-│   │   ├── UserRegisterDto.cs
-│   │   ├── MilestoneCreateDto.cs
-│   │   ├── TaskUpdateDto.cs
-│   │   ├── TaskStatusUpdateDto.cs
-│   │   ├── UserUpdateDto.cs
-│   │   └── ProjectCreateDto.cs
-│
-│   ├── Hubs/                         # Real-Time Communication Layer
-│   │   └── ProjectCallHub.cs         # SignalR WebRTC Signalling Server
-│
-│   ├── Models/                       # Core Database Entities
-│   │   ├── User.cs
-│   │   ├── Client.cs
-│   │   ├── Project.cs
-│   │   ├── Milestone.cs
-│   │   ├── Task.cs
-│   │   ├── ProjectMember.cs
-│   │   ├── ProgressUpdate.cs
-│   │   ├── Reaction.cs
-│   │   ├── Company.cs
-│   │   └── CompanyInvite.cs
-│
-│   ├── Projello.Api.csproj           # Project Build Configuration
-│   ├── appsettings.json              # Local Configuration & Secrets
-│   └── Dockerfile                    # Production Container Build
-│
-└── Projello.Frontend/                # Electron Desktop Client
-
-    ├── src/
-
-    │   ├── assets/                   # Static Assets
-    │   │   └── fonts/                # Offline Roboto Font Files
-
-    │   ├── components/               # Reusable UI Components
-    │   │   ├── AddButton.tsx
-    │   │   ├── AddProjectMemberModal.tsx
-    │   │   ├── CallOverlay.tsx
-    │   │   ├── ItemCard.tsx
-    │   │   ├── ManagementTopNav.tsx
-    │   │   ├── ProjectAddModal.tsx
-    │   │   ├── ProfileSection.tsx
-    │   │   ├── SortButton.tsx
-    │   │   ├── FilterButton.tsx
-    │   │   └── Navbar.tsx
-
-    │   ├── views/                    # Permission-Based Application Views
-    │   │   ├── Dashboard.tsx
-    │   │   ├── ClientPortal.tsx
-    │   │   ├── DailyCheckIn.tsx
-    │   │   └── SplashPage.tsx
-
-    │   ├── config.ts                 # Environment Configuration
-    │   ├── App.tsx                   # Application Routing & Permissions
-    │   └── index.tsx                 # Application Bootstrap Entry Point
-
-    ├── package.json                  # Node Dependencies & Scripts
-    └── webpack.config.js             # Webpack Build Configuration
 ```
-# Installation & Setup
 
-## Prerequisites
+├── backend/
+│   ├── Projello.Api/                     # ASP.NET Core 10.0 Web API Service
+│   │   ├── Controllers/                  # REST API Response Handlers
+│   │   │   ├── AuthController.cs         # Identity, Registration, JWT Issuance & 2FA
+│   │   │   ├── ClientsController.cs      # Client Records & Blacklist Management
+│   │   │   ├── MilestonesController.cs   # Milestone Definitions & Status Tracking
+│   │   │   ├── ProjectsController.cs     # Projects, Workspaces & Team Assignment
+│   │   │   └── UpdatesController.cs      # Daily Check-ins & Photo Uploads
+│   │   ├── Data/                         # Entity Framework Core Data Layer
+│   │   │   └── AppDbContext.cs           # Database Schema Configuration
+│   │   ├── DTOs/                         # Data Transfer Objects
+│   │   ├── Enums/
+│   │   ├── Hubs/                         # Real-Time Communication Layer
+│   │   │   └── ProjectCallHub.cs         # SignalR WebRTC Signalling Server
+│   │   ├── Migrations/
+│   │   ├── Models/                       # Core Database Entities
+│   │   ├── Services/
+│   │   ├── Program.cs
+│   │   ├── Projello.Api.csproj
+│   │   ├── appsettings.json
+│   │   └── Dockerfile
+│   └── Projello.Api.Tests/
+│
+├── frontend/                             # Electron Desktop Client (React 19 + TS)
+│   ├── src/
+│   │   ├── assets/
+│   │   │   └── fonts/
+│   │   ├── components/
+│   │   ├── views/
+│   │   ├── config.ts
+│   │   ├── App.tsx
+│   │   └── index.tsx
+│   ├── forge.config.ts
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── webpack.main.config.ts
+│   ├── webpack.renderer.config.ts
+│   ├── webpack.rules.ts
+│   ├── webpack.plugins.ts
+│   └── ...
+│
+├── database/
+├── ReadmeImages/
+├── .gitignore
+├── Projello-Management-System.sln
+├── package-lock.json
+└── README.md
+```
+
+---
+
+## Installation & Setup
+
+### Prerequisites
 
 Before running Projello, ensure the following software is installed:
 
-* .NET 10.0 SDK (for local development and Entity Framework tooling)
-* Node.js v18 or newer
-* Docker Desktop (or Docker Engine)
-* An active Aiven Cloud account with a managed PostgreSQL database instance
+- .NET 10.0 SDK (for local development and Entity Framework tooling)
+- Node.js v18 or newer
+- Docker Desktop (or Docker Engine)
+- An active Aiven Cloud account with a managed PostgreSQL database instance
 
 ---
 
-# Backend & Database Setup (Docker + Aiven)
+### Backend & Database Setup (Docker + Aiven)
 
-## Step 1: Obtain Your Aiven Connection Details
-
+#### Step 1: Obtain Your Aiven Connection Details
 Log in to your Aiven Console, navigate to your managed PostgreSQL cluster, and retrieve your production connection string.
 
 Example:
 
-```plaintext
+```
 Host=YOUR-PROJECT.aivencloud.com;
 Port=YOUR-PORT;
 Database=ProjelloDb;
@@ -493,17 +439,15 @@ Password=YOUR-SECURE-PASSWORD;
 SSL Mode=Require;
 ```
 
----
-
-## Step 2: Configure Environment Variables
+#### Step 2: Configure Environment Variables
 
 Navigate to the API project directory:
 
 ```bash
-cd Projello.Api
+cd backend/Projello.Api
 ```
 
-Open `appsettings.json` and insert your database credentials:
+Open appsettings.json and insert your database credentials:
 
 ```json
 {
@@ -513,9 +457,7 @@ Open `appsettings.json` and insert your database credentials:
 }
 ```
 
----
-
-## Step 3: Apply Database Migrations
+#### Step 3: Apply Database Migrations
 
 Use Entity Framework Core to create and update database schemas:
 
@@ -523,9 +465,7 @@ Use Entity Framework Core to create and update database schemas:
 dotnet ef database update
 ```
 
----
-
-## Step 4: Build the Backend Docker Image
+#### Step 4: Build the Backend Docker Image
 
 Projello includes a multi-stage production Dockerfile to ensure environment consistency across development and deployment targets.
 
@@ -535,35 +475,30 @@ Build the image locally:
 docker build -t projello-api:latest .
 ```
 
----
-
-## Step 5: Run the Backend Container
+#### Step 5: Run the Backend Container
 
 Launch the container and expose the required ports:
 
 ```bash
+
 docker run -d \
 -p 5000:80 \
 --name projello-backend-service \
 projello-api:latest
 ```
 
-The API will now be available locally at:
-
-```plaintext
-http://localhost:5000
-```
+The API will now be available locally at: `http://localhost:5000`
 
 All database transactions will be routed directly to the configured Aiven PostgreSQL instance.
 
 ---
 
-# Desktop Frontend Setup
+### Desktop Frontend Setup
 
 Navigate to the frontend project directory:
 
 ```bash
-cd ../Projello.Frontend
+cd frontend
 ```
 
 Install project dependencies:
@@ -572,19 +507,15 @@ Install project dependencies:
 npm install
 ```
 
----
+#### Configure API Endpoints
 
-## Configure API Endpoints
-
-Verify that `src/config.ts` points to the active backend service:
+Verify that src/config.ts points to the active backend service:
 
 ```typescript
 export const API_BASE_URL = "http://localhost:5000";
 ```
 
----
-
-## Launch the Electron Application
+#### Launch the Electron Application
 
 Start the desktop client:
 
@@ -596,96 +527,90 @@ Electron will launch the Projello desktop application connected to the configure
 
 ---
 
-# Challenges & Solutions
+## Challenges & Solutions
 
-## Challenge 1: Enterprise System Over-Engineering vs On-Site Usability
+### Challenge 1: Enterprise System Over-Engineering vs On-Site Usability
 
-### The Problem
-
+#### The Problem
 Construction supervisors and field workers operate in fast-moving environments where time, visibility, and simplicity are critical.
 
 Traditional project management platforms often require users to navigate dense Kanban systems, manage story points, and interact with complex task hierarchies that are poorly suited to on-site work.
 
-### The Solution
+#### The Solution
 
-Projello introduced the **30-Second Daily Check-in Workflow**.
+Projello introduced the 30-Second Daily Check-in Workflow.
 
 Instead of navigating multiple administrative layers, field personnel interact with a single, highly readable submission interface that enables them to:
 
-* Submit a brief status update
-* Select one of five predefined emoji indicators
-* Attach photographic evidence
-* Submit progress reports instantly
+- Submit a brief status update
+- Select one of five predefined emoji indicators
+- Attach photographic evidence
+- Submit progress reports instantly
 
 Cloudinary integration ensures uploaded media is handled efficiently while maintaining a lightweight user experience.
 
----
+### Challenge 2: Desktop Cross-Platform Consistency & Presentation Reliability
 
-## Challenge 2: Desktop Cross-Platform Consistency & Presentation Reliability
-
-### The Problem
+#### The Problem
 
 The application needed to maintain consistent layouts, responsive performance, and reliable real-time communication across a mixture of:
 
-* Legacy Windows environments
-* Modern Windows systems
-* macOS devices
+- Legacy Windows environments
+- Modern Windows systems
+- macOS devices
 
 Platform-specific rendering differences and environmental conflicts posed significant risks.
 
-### The Solution
+#### The Solution
 
 The frontend was deployed inside a dedicated Electron shell running React 19 and Webpack.
 
 This architecture:
 
-* Isolates the application environment
-* Standardises rendering behaviour
-* Reduces platform-specific inconsistencies
-* Provides secure hardware-accelerated execution
-* Supports low-latency WebRTC communications
+- Isolates the application environment
+- Standardises rendering behaviour
+- Reduces platform-specific inconsistencies
+- Provides secure hardware-accelerated execution
+- Supports low-latency WebRTC communications
 
 The result is a stable and predictable desktop experience across operating systems.
 
----
+### Challenge 3: Multi-Developer Environment Drift & Deployment Consistency
 
-## Challenge 3: Multi-Developer Environment Drift & Deployment Consistency
-
-### The Problem
+#### The Problem
 
 Maintaining identical environments across multiple developer workstations while ensuring smooth deployment to production can lead to:
 
-* Database inconsistencies
-* Dependency conflicts
-* Deployment failures
-* Configuration drift
+- Database inconsistencies
+- Dependency conflicts
+- Deployment failures
+- Configuration drift
 
-### The Solution
+#### The Solution
 
 Team Cepression adopted a fully containerised deployment strategy using Docker and Aiven Cloud Infrastructure.
 
 This approach provides:
 
-* Consistent operating environments
-* Reproducible deployments
-* Standardised dependency management
-* Managed PostgreSQL hosting
-* Reduced infrastructure maintenance overhead
+- Consistent operating environments
+- Reproducible deployments
+- Standardised dependency management
+- Managed PostgreSQL hosting
+- Reduced infrastructure maintenance overhead
 
 By combining Docker with Aiven's managed cloud services, all operational data remains highly available and centrally managed.
 
 ---
 
-# Reflection
-
+## Reflection
 Developing Projello reinforced the importance of user-centred, functional-first software design.
 
 During the project's early architectural planning stages, the natural inclination was to incorporate numerous enterprise features, including:
 
-* Full calendar integration
-* Deep hierarchical asset management
-* Extensive nested task structures
-* Additional reporting systems
+- Full calendar integration
+- Deep hierarchical asset management
+- Extensive nested task structures
+- Additional reporting systems
 
 However, research into construction and field-service workflows demonstrated that operational speed, clarity, and ease of use were more valuable than feature quantity.
 
@@ -697,72 +622,73 @@ Projello demonstrates that software specifically designed around the operational
 
 ---
 
-# Future Improvements
+## Future Improvements
 
-## Local Offline Synchronisation
+### Local Offline Synchronisation
 
 Implement a local SQLite caching layer within the Electron application.
 
 This would allow site crews to:
 
-* Continue working without internet connectivity
-* Store daily updates locally
-* Cache image uploads
-* Automatically synchronise data once connectivity returns
+- Continue working without internet connectivity
+- Store daily updates locally
+- Cache image uploads
+- Automatically synchronise data once connectivity returns
 
----
-
-## Real-Time Alerts & Roadblock Notifications
+### Real-Time Alerts & Roadblock Notifications
 
 Expand SignalR functionality to provide:
 
-* Instant milestone notifications
-* High-priority issue alerts
-* Administrative dashboard warnings
-* Escalation workflows for critical site problems
+- Instant milestone notifications
+- High-priority issue alerts
+- Administrative dashboard warnings
+- Escalation workflows for critical site problems
 
 Notifications would appear immediately when field personnel report major operational roadblocks.
 
----
-
-## AI-Powered Progress Summarisation
+### AI-Powered Progress Summarisation
 
 Integrate lightweight Natural Language Processing (NLP) services within the backend infrastructure.
 
 Potential functionality includes:
 
-* Weekly progress summaries
-* Executive project reports
-* Automated client updates
-* Risk and delay identification
+- Weekly progress summaries
+- Executive project reports
+- Automated client updates
+- Risk and delay identification
 
 Generated summaries could be delivered directly to stakeholders through professionally formatted email reports.
 
 ---
 
-# Licence
+## Licence
 
 This project is distributed under the terms of the MIT Licence.
 
-For full licensing information, refer to the `LICENSE` file included within the repository.
+For full licensing information, refer to the LICENSE file included within the repository.
 
 ---
 
-# Authors
+## Authors
 
-Developed by **Team Cepression** for the academic assessment requirements of **Interactive Development 300** at the Open Window Institute.
+Developed by Team Cepression for the academic assessment requirements of Interactive Development 300 at the Open Window Institute.
 
 ### Team Members
 
-* Angie van Rooyen
-* Xander Poalses
-* David Golding
-* Francois le Roux
-* William Basson
+- Angie van Rooyen
+- Xander Poalses
+- David Golding
+- Francois le Roux
+
+**Client / Stakeholder:** William Basson
 
 ---
 
-**Project Developed for Academic Assessment**
-Open Window Institute
-Interactive Development 300
-2026
+## Project Information
+
+**Institution:** Open Window Institute  
+**Module:** Interactive Development 300  
+**Year:** 2026
+
+This project was developed for academic assessment purposes.
+
