@@ -6,7 +6,7 @@
 
 ---
 
-## 📄 Description
+## Description
 
 Projello is a tailored, functional-first project management system designed specifically to bridge the gap between heavy, bloated enterprise project management software and the fast-paced, high-pressure execution environment of the construction and project-based services sector.
 
@@ -16,7 +16,7 @@ Developed by Team Cepression for the Interactive Development 300 module at the O
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
 In industries such as construction, generic agile project tracking tools (e.g. Jira and Trello) often fail because they expect workers in the field to manage complex card configurations, story points, and lengthy text-based documentation.
 
@@ -26,7 +26,7 @@ Projello was designed specifically to address these challenges by prioritising s
 
 ---
 
-## 👤 Our Client
+## Our Client
 
 Our primary stakeholder and client for this system is **William Basson**, operating within the construction and project-based services sector.
 
@@ -45,7 +45,7 @@ This structural domain is supported by role-based access controls that secure vi
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## Tech Stack & Architecture
 
 Projello is built using a robust, decoupled client-server architecture designed to ensure environment consistency, high availability, and native desktop deployment lifecycle management.
 
@@ -122,7 +122,7 @@ Projello uses a modular CSS architecture built around an optimised sage green pa
 
 ---
 
-## ⚙️ Data Flow Example
+## Data Flow Example
 
 ### 1. React → API Communication
 
@@ -203,7 +203,7 @@ public class ProjectsController : ControllerBase
 
 ---
 
-## ✅ Key Features
+## Key Features
 
 * Functional-first construction project management
 * Native desktop application support via Electron
@@ -222,7 +222,7 @@ public class ProjectsController : ControllerBase
 
 ---
 
-## 🏗️ Project Vision
+## Project Vision
 
 Projello aims to provide a focused, construction-specific project management solution that prioritises operational efficiency over feature complexity.
 
@@ -242,10 +242,10 @@ The React runtime captures the successful response within `AddProjectMemberModal
 
 ---
 
-# ✨ Key Features
+# Key Features
 
 
-## 🔐 Granular Role-Based Access Control (RBAC)
+## Granular Role-Based Access Control (RBAC)
 
 ### Admin
 
@@ -275,7 +275,7 @@ The React runtime captures the successful response within `AddProjectMemberModal
 
 ---
 
-## 📊 Hierarchical Milestone & Task Tracking
+## Hierarchical Milestone & Task Tracking
 
 Interactive chronological timelines provide visibility into project progress, task configurations, deadlines, and milestone completion states.
 
@@ -283,7 +283,7 @@ Tasks are grouped systematically beneath milestones, allowing project managers a
 
 ---
 
-## 🛡️ Hardened Security Core
+## Hardened Security Core
 
 Projello incorporates multiple security layers, including:
 
@@ -296,7 +296,7 @@ Projello incorporates multiple security layers, including:
 
 ---
 
-## 📸 On-Site Photo Verification Uploads
+## On-Site Photo Verification Uploads
 
 A high-performance media pipeline integrated through Cloudinary enables field crews to capture and upload photographic evidence directly against project updates and milestone completions.
 
@@ -304,7 +304,7 @@ This provides transparent visual verification of work completed on site.
 
 ---
 
-## 📞 Integrated Emergency Communication Channel
+## Integrated Emergency Communication Channel
 
 Projello includes built-in WebRTC voice and video communication channels coordinated through a SignalR signalling hub.
 
@@ -323,7 +323,7 @@ This approach aligns with Projello's lightweight, functional-first philosophy.
 ---
 
 
-# 📸 Application Screenshots
+# Application Screenshots
 
 ## Dashboard Workspace
 
@@ -333,6 +333,7 @@ The primary operational dashboard displaying:
 * Project health indicators
 * Team performance metrics
 * High-level operational summaries
+![JelloJobs](ReadmeImages/JelloJobs.png)
 
 ---
 
@@ -344,6 +345,10 @@ Interactive timeline visualisations showing:
 * Progress indicators
 * Task completion states
 * Due dates and deadlines
+![History](ReadmeImages/History.png)
+![Clients](ReadmeImages/MClients.png)
+![Projects](ReadmeImages/MProjects.png)
+![Workers](ReadmeImages/MWorkers.png)
 
 ---
 
@@ -352,6 +357,7 @@ Interactive timeline visualisations showing:
 A restricted reporting environment designed specifically for external clients.
 
 The portal provides transparent project visibility while protecting internal operational information.
+![Company](ReadmeImages/RegisterCompany.png)
 
 ---
 
@@ -363,6 +369,8 @@ Structured form interfaces enabling project managers to:
 * Define project scopes
 * Assign project leads
 * Link client organisations
+![Project](ReadmeImages/AddProject.png)
+![Client](ReadmeImages/AddClient.png)
 
 ---
 
@@ -375,10 +383,12 @@ Administrative interfaces used to manage:
 * Team memberships
 * Onboarding states
 * Access roles
-
+![Signup](ReadmeImages/CreateAccount.png)
+![Login](ReadmeImages/Login.png)
+![Settings](ReadmeImages/Settings.png)
 ---
 
-# 📂 Project Structure
+# Project Structure
 
 ```plaintext
 projello-workspace/
@@ -453,7 +463,7 @@ projello-workspace/
     ├── package.json                  # Node Dependencies & Scripts
     └── webpack.config.js             # Webpack Build Configuration
 ```
-# 🚀 Installation & Setup
+# Installation & Setup
 
 ## Prerequisites
 
@@ -466,7 +476,7 @@ Before running Projello, ensure the following software is installed:
 
 ---
 
-# 🐳 Backend & Database Setup (Docker + Aiven)
+# Backend & Database Setup (Docker + Aiven)
 
 ## Step 1: Obtain Your Aiven Connection Details
 
@@ -548,7 +558,7 @@ All database transactions will be routed directly to the configured Aiven Postgr
 
 ---
 
-# 💻 Desktop Frontend Setup
+# Desktop Frontend Setup
 
 Navigate to the frontend project directory:
 
@@ -586,7 +596,7 @@ Electron will launch the Projello desktop application connected to the configure
 
 ---
 
-# ⚡ Challenges & Solutions
+# Challenges & Solutions
 
 ## Challenge 1: Enterprise System Over-Engineering vs On-Site Usability
 
@@ -666,7 +676,7 @@ By combining Docker with Aiven's managed cloud services, all operational data re
 
 ---
 
-# 💭 Reflection
+# Reflection
 
 Developing Projello reinforced the importance of user-centred, functional-first software design.
 
@@ -687,9 +697,9 @@ Projello demonstrates that software specifically designed around the operational
 
 ---
 
-# 🔮 Future Improvements
+# Future Improvements
 
-## 🔄 Local Offline Synchronisation
+## Local Offline Synchronisation
 
 Implement a local SQLite caching layer within the Electron application.
 
@@ -702,7 +712,7 @@ This would allow site crews to:
 
 ---
 
-## 🔔 Real-Time Alerts & Roadblock Notifications
+## Real-Time Alerts & Roadblock Notifications
 
 Expand SignalR functionality to provide:
 
@@ -715,7 +725,7 @@ Notifications would appear immediately when field personnel report major operati
 
 ---
 
-## 🤖 AI-Powered Progress Summarisation
+## AI-Powered Progress Summarisation
 
 Integrate lightweight Natural Language Processing (NLP) services within the backend infrastructure.
 
@@ -730,7 +740,7 @@ Generated summaries could be delivered directly to stakeholders through professi
 
 ---
 
-# 🪪 Licence
+# Licence
 
 This project is distributed under the terms of the MIT Licence.
 
@@ -738,7 +748,7 @@ For full licensing information, refer to the `LICENSE` file included within the 
 
 ---
 
-# 👥 Authors
+# Authors
 
 Developed by **Team Cepression** for the academic assessment requirements of **Interactive Development 300** at the Open Window Institute.
 
