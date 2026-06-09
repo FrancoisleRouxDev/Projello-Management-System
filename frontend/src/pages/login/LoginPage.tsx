@@ -38,11 +38,11 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToRegisterCompany,
 
     try {
       // Send POST request to the backend login API with email and password
-      const response = await fetch(`${API_BASE_URL}/api/Auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+        const response = await fetch(`${API_BASE_URL}/api/Auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
       
       const data = await response.json();
 
