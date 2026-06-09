@@ -51,7 +51,7 @@ This structural domain is supported by role-based access controls that secure vi
 ## Tech Stack & Architecture
 Projello is built using a robust, decoupled client-server architecture designed to ensure environment consistency, high availability, and native desktop deployment lifecycle management.
 
-<img src="ReadmeImages/Architecture.png" alt="Architecture Image">
+![Architecture Diagram](ReadmeImages/Architecture.png)
 
 ### Presentation Layer (Frontend)
 
@@ -75,7 +75,7 @@ Projello is built using a robust, decoupled client-server architecture designed 
 
 #### Theming & Visual Identity
 
-Projectllo uses a modular CSS architecture built around an optimised sage green palette designed to remain legible under direct sunlight and outdoor working conditions.
+Projello uses a modular CSS architecture built around an optimised sage green palette designed to remain legible under direct sunlight and outdoor working conditions.
 
 ```css
 --primary-sage-green: #4A6B52;
@@ -84,8 +84,8 @@ Projectllo uses a modular CSS architecture built around an optimised sage green 
 --semantic-highlight: #F7F7F3;
 ```
 
-<img src="ReadmeImages/Light%20Palette.png" alt="Light Colour Palette" width="400">
-<img src="ReadmeImages/Systematic%20colours.png" alt="Systematic Colours"  width="400">
+![Light Colour Palette](ReadmeImages/Light%20Palette.png)
+![Systematic Colours](ReadmeImages/Systematic%20colours.png)
 
 ### Service Infrastructure (Backend)
 
@@ -229,7 +229,11 @@ Projello aims to provide a focused, construction-specific project management sol
 
 Rather than adapting generic software designed for software development teams, Projello delivers workflows intentionally built around the realities of construction projects, enabling project managers, site workers, contractors, and clients to collaborate through a streamlined and transparent platform.
 
-<img src="ReadmeImages/ERD.png" alt="ERD">
+---
+
+### Entity Relationship Diagram
+
+![Entity Relationship Diagram](ReadmeImages/ERD.png)
 
 ---
 
@@ -266,7 +270,7 @@ Tasks are grouped systematically beneath milestones, allowing project managers a
 
 ## Hardened Security Core
 
-Projectllo incorporates multiple security layers, including:
+Projello incorporates multiple security layers, including:
 
 - JWT Bearer Authentication
 - ASP.NET Identity integration
@@ -311,7 +315,7 @@ The primary operational dashboard displaying:
 - Team performance metrics
 - High-level operational summaries
 
-<img src="ReadmeImages/JelloJobs.png" alt="JelloJobs">
+![Dashboard Workspace](ReadmeImages/JelloJobs.png)
 
 ### Project Tracking
 
@@ -322,10 +326,10 @@ Interactive timeline visualisations showing:
 - Task completion states
 - Due dates and deadlines
 
-<img src="ReadmeImages/History.png" alt="History">
-<img src="ReadmeImages/MClients.png" alt="Clients">
-<img src="ReadmeImages/MProjects.png" alt="Projects">
-<img src="ReadmeImages/MWorkers.png" alt="Workers">
+![Project Timeline History](ReadmeImages/History.png)
+![Clients Management](ReadmeImages/MClients.png)
+![Projects Dashboard](ReadmeImages/MProjects.png)
+![Workers Overview](ReadmeImages/MWorkers.png)
 
 ### Client Portal
 
@@ -333,7 +337,7 @@ A restricted reporting environment designed specifically for external clients.
 
 The portal provides transparent project visibility while protecting internal operational information.
 
-<img src="ReadmeImages/RegisterCompany.png" alt="Company">
+![Company Registration](ReadmeImages/RegisterCompany.png)
 
 ### Project Creation
 
@@ -344,8 +348,8 @@ Structured form interfaces enabling project managers to:
 - Assign project leads
 - Link client organisations
 
-<img src="ReadmeImages/AddProject.png" alt="Project">
-<img src="ReadmeImages/AddClient.png" alt="Client">
+![Add Project](ReadmeImages/AddProject.png)
+![Add Client](ReadmeImages/AddClient.png)
 
 ### User Management
 
@@ -357,9 +361,9 @@ Administrative interfaces used to manage:
 - Onboarding states
 - Access roles
 
-<img src="ReadmeImages/CreateAccount.png" alt="Signup">
-<img src="ReadmeImages/Login.png" alt="Login">
-<img src="ReadmeImages/Settings.png" alt="Settings">
+![Create Account](ReadmeImages/CreateAccount.png)
+![Login Interface](ReadmeImages/Login.png)
+![Settings](ReadmeImages/Settings.png)
 
 ---
 
@@ -689,14 +693,7 @@ Developed by Team Cepression for the academic assessment requirements of Interac
 - Francois le Roux
 
 **Client / Stakeholder:** William Basson
-
----
-
-## Project Information
-
 **Institution:** Open Window Institute  
 **Module:** Interactive Development 300  
 **Year:** 2026
-
-This project was developed for academic assessment purposes.
 
