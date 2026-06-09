@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // 1. Imported the navigation hook
 import { API_BASE_URL } from "../../config"; 
 import "./history.css";
 
@@ -14,6 +15,8 @@ interface CompletedProjectItem {
 }
 
 export default function HistoryPage() {
+  const navigate = useNavigate(); // 2. Initialized the hook
+
   // Core State
   const [completedProjects, setCompletedProjects] = useState<CompletedProjectItem[]>([]);
   
@@ -113,7 +116,12 @@ export default function HistoryPage() {
         ) : (
           <div className="archive-grid-layout">
             {filteredArchive.map((project) => (
-              <div key={project.projectID} className="archive-project-card">
+              <div 
+                key={project.projectID} 
+                className="archive-project-card"
+                onClick={() => navigate(`/single-view/${project.projectID}`)} // 3. Redirect to the single view page layout matching your App.tsx route
+                style={{ cursor: "pointer" }} // 4. Added inline style for mouse pointer visual affordance
+              >
                 <div className="archive-card-status-badge">ARCHIVED SECURELY</div>
                 <h3 className="archive-project-title">{project.name}</h3>
                 <span className="archive-client-label">Client Account: {project.clientName || "Internal Account"}</span>
