@@ -218,16 +218,11 @@ Projello aims to provide a focused, construction-specific project management sol
 
 Rather than adapting generic software designed for software development teams, Projello delivers workflows intentionally built around the realities of construction projects, enabling project managers, site workers, contractors, and clients to collaborate through a streamlined and transparent platform.
 
-3. Database Synchronisation & State Rehydration
-Entity Framework Core translates the tracking sequence into a parameterised, highly efficient SQL statement executed against the Aiven Managed PostgreSQL database.
-
-Upon successful commitment of the transaction, the backend API issues an HTTP 200 OK confirmation payload.
-
-The React runtime captures the successful response within AddProjectMemberModal.tsx, invokes the onMemberAdded() callback, updates local state arrays, and triggers an immediate interface re-render.
-
 <img src="ReadmeImages/ERD.png" alt="ERD">
 
-### Granular Role-Based Access Control (RBAC)
+---
+
+## Granular Role-Based Access Control (RBAC)
 
 **Admin**
 - Full global system access
@@ -253,40 +248,42 @@ The React runtime captures the successful response within AddProjectMemberModal.
 
 ---
 
-## Advanced Features
-
-### Hierarchical Milestone & Task Tracking
+## Hierarchical Milestone & Task Tracking
 Interactive chronological timelines provide visibility into project progress, task configurations, deadlines, and milestone completion states.
 
 Tasks are grouped systematically beneath milestones, allowing project managers and stakeholders to understand project progression at a glance.
 
-### Hardened Security Core
-Projello incorporates multiple security layers, including:
+## Hardened Security Core
 
-JWT Bearer Authentication
-ASP.NET Identity integration
-Encrypted authentication workflows
-Secure invitation onboarding tokens
-Automated Two-Factor Authentication (2FA) via Otp.NET
-Role-based permission enforcement
+Projectllo incorporates multiple security layers, including:
 
-### On-Site Photo Verification Uploads
+- JWT Bearer Authentication
+- ASP.NET Identity integration
+- Encrypted authentication workflows
+- Secure invitation onboarding tokens
+- Automated Two-Factor Authentication (2FA) via Otp.NET
+- Role-based permission enforcement
+
+## On-Site Photo Verification Uploads
+
 A high-performance media pipeline integrated through Cloudinary enables field crews to capture and upload photographic evidence directly against project updates and milestone completions.
 
 This provides transparent visual verification of work completed on site.
 
-### Integrated Emergency Communication Channel
+---
+
+## Integrated Emergency Communication Channel
 Projello includes built-in WebRTC voice and video communication channels coordinated through a SignalR signalling hub.
 
 The communication layer enables immediate, one-click contact for critical on-site incidents while keeping routine project communication lightweight and non-disruptive.
 
 Key characteristics include:
 
-Real-time voice calls
-Real-time video calls
-Temporary communication rooms
-Automatic room removal when empty
-No persistent database storage footprint
+- Real-time voice calls
+- Real-time video calls
+- Temporary communication rooms
+- Automatic room removal when empty
+- No persistent database storage footprint
 
 This approach aligns with Projello's lightweight, functional-first philosophy.
 
