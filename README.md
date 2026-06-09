@@ -1,6 +1,3 @@
-
-
-Thought for 4s
 # Projello
 
 ## Lightweight Project Management System Built for the Construction Industry
