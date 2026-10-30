@@ -89,3 +89,41 @@
   justify-content: flex-start;
   width: 100%;
 }
+
+/* ---- Refreshed project rows ---- */
+.JelloItem {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  height: auto;
+  min-height: 76px;
+}
+.JelloItem.clickable:hover,
+.JelloItem.clickable:focus-visible {
+  background-color: var(--surface-muted);
+  transform: translateY(-1px);
+}
+.ItemNames h5 {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.Item_ClientName {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.JelloInfo {
+  flex: 4 1 0;
+}
+.JelloInfo > div {
+  border-left: 1px solid var(--border-color);
+}
+.Item_Date h5,
+.Item_ActiveWorkers h5 {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+.Item_Status {
+  justify-content: center;
+}

@@ -797,7 +797,7 @@ export default function SingleProjectViewPage() {
                   <button
                     type="button"
                     onClick={startEditingDescription}
-                    style={{ background: "none", border: "none", color: "#5e745f", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}
+                    style={{ background: "none", border: "none", color: "var(--accent-1-text)", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}
                   >
                     Edit
                   </button>

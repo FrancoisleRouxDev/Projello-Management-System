@@ -5,6 +5,7 @@ import "./dashboard.css";
 import SearchIcon from "../../assets/Logo/SearchIcon.svg";
 import JelloItem from "../../components/JelloItem";
 import { AddButton } from "../../components/AddButton";
+import StatCard from "../../components/StatCard";
 import { ProjectAddModal } from "../../components/ProjectAddModal";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../config";
@@ -192,11 +193,32 @@ export default function DashboardPage() {
     }
   };
 
+  const statusOf = (p: any) => p.status || p.Status || "";
+  const activeCount = projects.filter((p) => statusOf(p) !== "Completed").length;
+  const inProgressCount = projects.filter((p) => statusOf(p) === "In Progress").length;
+  const notStartedCount = projects.filter((p) => statusOf(p) === "Not Started").length;
+  const completedCount = projects.filter((p) => statusOf(p) === "Completed").length;
+
   return (
     <div className="dashboard-page">
-      {/* <div className="pageHeader">
-        <h3>Active Jellos</h3>
-      </div> */}
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-subtitle">
+            {activeCount} active {activeCount === 1 ? "project" : "projects"}
+          </p>
+        </div>
+        {[1, 4].includes(currentUserRole) && (
+          <AddButton label="Add Project" onClick={() => setShowProjectAddModal(true)} />
+        )}
+      </header>
+
+      <section className="dashboard-stats" aria-label="Project summary">
+        <StatCard value={String(activeCount)} label="Active projects" tone="success" icon={<span className="stat-dot" />} />
+        <StatCard value={String(inProgressCount)} label="In progress" tone="warning" icon={<span className="stat-dot" />} />
+        <StatCard value={String(notStartedCount)} label="Not started" tone="neutral" icon={<span className="stat-dot" />} />
+        <StatCard value={String(completedCount)} label="Completed" tone="success" icon={<span className="stat-dot" />} />
+      </section>
 
       <div className="filterBar">
         <div className="searchBar">
@@ -287,18 +309,13 @@ export default function DashboardPage() {
                 clientName={project.clientName || project.ClientName || "Unknown Client"}
                 dueDate={project.dueDate || project.DueDate || ""}
                 workers={project.members ? project.members.length : 0}
+                status={statusOf(project)}
                 onClick={() => navigate(`/single-view/${project.projectID || project.ProjectID}`)}
               />
             ))
           )}
         </div>
       </div>
-
-      {[1, 4].includes(currentUserRole) && (
-        <div className="dashboard-add-button">
-          <AddButton label="Add Project" onClick={() => setShowProjectAddModal(true)} />
-        </div>
-      )}
 
       <ProjectAddModal
         open={showProjectAddModal}

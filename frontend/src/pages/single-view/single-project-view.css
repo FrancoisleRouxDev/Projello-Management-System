@@ -600,3 +600,24 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   border: 2px solid #fff;
 }
+
+/* ---- Refreshed project view cards ---- */
+.single-project-view__header {
+  border-radius: var(--radius-card);
+}
+.single-project-view__stat-card,
+.single-project-view__panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.single-project-view__stat-label {
+  color: var(--text-muted);
+}
+.single-project-view__panel-title {
+  color: var(--text-dark);
+}
+.single-project-view__photo-label {
+  color: var(--text-dark);
+}

@@ -7,6 +7,7 @@ interface JelloItemProps {
     clientName: string;
     dueDate: string;
     workers: number;
+    status?: string;
     onClick?: () => void;
 }
 
@@ -26,6 +27,7 @@ export default function JelloItem({
     clientName,
     dueDate,
     workers,
+    status,
     onClick,
 }: JelloItemProps) {
     const navigate = useNavigate();
@@ -45,6 +47,11 @@ export default function JelloItem({
             </div>
 
             <div className="JelloInfo">
+                {status && (
+                    <div className="Item_Status">
+                        <span className={`status-pill ${status === "Completed" ? "status-pill--ok" : status === "In Progress" ? "status-pill--warn" : ""}`}>{status}</span>
+                    </div>
+                )}
                 <div className="Item_Date"> <h5>{formatDueDate(dueDate)}</h5> </div>
                 <div className="Item_ActiveWorkers"> <h5>{workers} Workers</h5> </div>
             </div>

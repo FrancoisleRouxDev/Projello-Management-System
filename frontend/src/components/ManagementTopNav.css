@@ -60,3 +60,39 @@
 .management-top-nav__tab--active .management-top-nav__label {
   color: #ffffff;
 } 
+
+/* ---- Refreshed tab bar ---- */
+.management-top-nav {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  height: 56px;
+  padding: 0 16px;
+  align-items: center;
+  gap: 4px;
+}
+.management-top-nav__tab {
+  height: 56px;
+  border-bottom: 3px solid transparent;
+  margin-bottom: 0;
+  padding: 0 16px;
+}
+.management-top-nav__tab--active {
+  border-bottom: 3px solid var(--accent-1);
+  border-radius: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.management-top-nav__label {
+  color: var(--text-muted);
+  font-size: 16px;
+  font-weight: 500;
+}
+.management-top-nav__tab:hover .management-top-nav__label,
+.management-top-nav__tab--active .management-top-nav__label {
+  color: var(--text-dark);
+}
+.management-top-nav__tab--active .management-top-nav__label {
+  font-weight: 700;
+}

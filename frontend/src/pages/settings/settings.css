@@ -1,6 +1,3 @@
-* {
-  color: var(--text-dark, #28332b);
-}
 
 .settings-outer {
   max-width: 540px;
@@ -199,4 +196,33 @@ body {
   font-weight: 500;
   font-size: 1rem;
   color: var(--text-dark, #28332b);
+}
+
+/* ---- Refreshed settings ---- */
+.settings-outer {
+  max-width: 720px;
+  margin: 0;
+}
+.settings-title {
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
+}
+.settings-user {
+  color: var(--text-muted);
+}
+.settings-cards {
+  gap: 20px;
+}
+.settings-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.settings-card-title {
+  color: var(--text-dark);
+  font-size: 1.1rem;
+}
+.settings-card-logout {
+  background: var(--card-bg);
 }

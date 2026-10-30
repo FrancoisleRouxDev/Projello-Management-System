@@ -64,3 +64,9 @@
   width: 100%;
   max-width: 320px;
 }
+
+/* Dark mode: the search icon is a dark SVG */
+[data-theme="dark"] .searchBar img,
+[data-theme="dark"] [class*="search"] img {
+  filter: invert(1) brightness(1.2);
+}

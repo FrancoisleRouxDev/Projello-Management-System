@@ -239,3 +239,64 @@ h5 {
   margin-bottom: 0.1rem;
   color: var(--text-dark);
 }
+
+/* ---- Shared design tokens (card look, spacing) ---- */
+:root {
+  --radius-card: 16px;
+  --radius-control: 12px;
+  --shadow-card: 0 1px 2px rgba(31, 42, 34, 0.06), 0 4px 16px rgba(31, 42, 34, 0.06);
+  --link-accent: #8a6a00;
+  --focus-ring: #d6ae34;
+}
+[data-theme="dark"] {
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --link-accent: #e0c05d;
+}
+
+body {
+  color: var(--text-dark);
+}
+
+/* Consistent keyboard focus everywhere */
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Page header: title + subtitle on the left, actions on the right */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-bottom: 24px;
+}
+.page-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-dark);
+}
+.page-subtitle {
+  margin-top: 2px;
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+/* Pills used for project / client status */
+.status-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--status-neutral-bg);
+  color: var(--text-dark);
+}
+.status-pill--ok { background: var(--status-ok-bg); color: var(--status-ok-fg); }
+.status-pill--warn { background: var(--status-warn-bg); color: var(--status-warn-fg); }
+.status-pill--bad { background: var(--status-bad-bg); color: var(--status-bad-fg); }

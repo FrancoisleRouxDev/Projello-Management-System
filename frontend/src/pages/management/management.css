@@ -1,6 +1,4 @@
-*{
-    color: var(--text-dark);
-}
+
 
 .management-page {
     display: flex;
@@ -61,4 +59,15 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+}
+
+/* ---- Refreshed cards ---- */
+.management-page__heading-box {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.management-page__heading-box h2 {
+  font-size: 22px;
 }

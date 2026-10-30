@@ -14,6 +14,7 @@ import SplashPage from "./pages/splash/SplashPage";
 import RegisterCompanyPage from "./pages/signup/RegisterCompanyPage";
 import { useIncomingCallNotifications } from "./features/realtime/hooks/useIncomingCallNotifications"; // Do not remove
 
+import "./pages/auth-refresh.css";
 import { useTeamNotifications } from "./features/realtime/hooks/useTeamNotifications"; // Do not remove
 
 function LoginWrapper() {

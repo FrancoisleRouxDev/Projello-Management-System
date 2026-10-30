@@ -430,3 +430,23 @@ body {
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+
+/* ---- Refreshed history ---- */
+.history-page-container {
+  padding: 0;
+  max-width: 100%;
+}
+.history-title {
+  color: var(--text-dark);
+  font-size: 1.75rem;
+}
+.history-subtitle {
+  color: var(--text-muted);
+}
+.history-header {
+  border-bottom: 1px solid var(--border-color);
+}
+.refresh-history-btn {
+  border-radius: var(--radius-control);
+  min-height: 44px;
+}

@@ -237,3 +237,11 @@
     font-size: 12px;
   }
 }
+
+/* ---- Refreshed table card ---- */
+.management-client-table {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}

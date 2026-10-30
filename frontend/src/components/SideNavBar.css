@@ -296,3 +296,38 @@
 .theme-toggle[aria-checked="true"] .theme-toggle-track::after {
   transform: translateX(18px);
 }
+
+/* ---- Refreshed nav ---- */
+.pageNavContainer {
+  gap: 6px;
+}
+.pageNavContainer a {
+  border: 0;
+  border-radius: 12px;
+  min-height: 44px;
+}
+.pageNavContainer a h5 {
+  margin: 0 0 0 14px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.pageNavContainer a:hover {
+  background-color: rgba(247, 247, 243, 0.1);
+  border: 0;
+}
+.pageNavContainer a.active {
+  background: var(--accent-1);
+  border: 0;
+  box-shadow: none;
+}
+.pageNavContainer a.active h5 {
+  color: #ffffff;
+  font-weight: 600 !important;
+}
+.theme-toggle {
+  border-radius: 12px;
+  border: 0;
+}
+.userInfo {
+  border-radius: 12px;
+}

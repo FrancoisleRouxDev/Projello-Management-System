@@ -283,3 +283,82 @@ body {
   width: 100%;
   position: relative;
 }
+
+/* ---- Refreshed dashboard ---- */
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+.dashboard-stats .stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  gap: 12px;
+}
+.stat-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-3);
+  display: block;
+}
+.dashboard-stats .stat-card__icon {
+  background: transparent;
+  width: auto;
+  height: auto;
+  place-items: start;
+}
+.dashboard-stats .stat-card__label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.filterBar {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  height: 60px;
+  padding: 0 16px;
+  margin-bottom: 16px;
+}
+.searchBar {
+  height: 40px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  box-shadow: none;
+}
+.searchInput {
+  color: var(--text-dark);
+}
+.searchInput::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+.sortDropdownWrapper {
+  padding-right: 0;
+}
+.sortDropdown {
+  height: 40px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+}
+.sortDropdown__label {
+  color: var(--text-dark) !important;
+}
+.sortDropdown__selected {
+  color: var(--text-muted) !important;
+}
+.dashboard-add-button {
+  position: static;
+}
+.jelloGallery {
+  gap: 12px;
+}
