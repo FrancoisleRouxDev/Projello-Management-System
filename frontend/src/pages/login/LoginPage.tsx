@@ -174,14 +174,11 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToRegisterCompany,
       <div className="login-right">
         <div className="login-overlay" />
         
-        {/* Logo image that acts as a button to navigate to the dashboard */}
         <div className="login-logo">
           <img
             className="login-logo-img"
             src={Logo}
             alt="Projello Logo"
-            style={{ cursor: "pointer" }}
-            onClick={() => navigate("/dashboard")}
           />
         </div>
         
