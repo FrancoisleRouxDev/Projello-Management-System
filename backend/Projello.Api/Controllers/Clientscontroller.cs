@@ -30,6 +30,8 @@ namespace Projello.Api.Controllers
         public async Task<IActionResult> GetClients()
         {
             var role = GetUserRole();
+            // Workers only see clients through the projects they are assigned to.
+            if (role == "3") return Forbid();
             var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
 
             var query = _context.Clients
@@ -71,6 +73,8 @@ namespace Projello.Api.Controllers
         public async Task<IActionResult> GetClient(int id)
         {
             var role = GetUserRole();
+            // Workers only see clients through the projects they are assigned to.
+            if (role == "3") return Forbid();
             var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
 
             var client = await _context.Clients
@@ -79,7 +83,7 @@ namespace Projello.Api.Controllers
 
             if (client == null) return NotFound();
 
-            if (role == "4" && client.CompanyID != currentUser?.CompanyId)
+            if (role != "1" && client.CompanyID != currentUser?.CompanyId)
                 return Forbid();
 
             var activeProjects = await _context.Projects
@@ -237,6 +241,7 @@ namespace Projello.Api.Controllers
 public async Task<ActionResult<ClientSummaryDto>> GetClientSummary()
 {
     var role = GetUserRole();
+    if (role == "3") return Forbid();
     var currentUser = await _userManager.FindByIdAsync(GetCurrentUserId()!);
 
     var query = _context.Clients.AsQueryable();

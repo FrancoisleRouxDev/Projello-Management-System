@@ -231,8 +231,8 @@ namespace Projello.Api.Tests
 
             var result = await controller.GetTasksByProject(999); // Non-existent project
 
-            // FIXED: Changed from NotFoundResult to ForbidResult to match actual API behavior
-            Assert.IsType<NotFoundResult>(result.Result);
+            // Access is checked before existence, so unknown projects are indistinguishable from forbidden ones
+            Assert.IsType<ForbidResult>(result.Result);
         }
 
        [Fact]

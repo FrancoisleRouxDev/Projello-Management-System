@@ -268,7 +268,7 @@ namespace Projello.Api.Tests
         }        
 
         [Fact]
-        public async Task GetClients_RegularUserRole_FiltersByCompanyId()
+        public async Task GetClients_ForemanRole_FiltersByCompanyId()
         {
             var context = GetInMemoryDbContext();
             var userId = "regular-user-123";
@@ -288,7 +288,7 @@ namespace Projello.Api.Tests
             var controller = new ClientsController(context, userManager);
             controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = CreateMockUser(userId, "3") } // Role "3" = Regular User
+                HttpContext = new DefaultHttpContext { User = CreateMockUser(userId, "2") } // Role "2" = Foreman
             };
 
             var result = await controller.GetClients();
@@ -300,6 +300,26 @@ namespace Projello.Api.Tests
             // Assert that ONLY 1 client was returned (the one matching the user's company)
             Assert.Equal(1, doc.RootElement.GetArrayLength());
             Assert.Equal(1, doc.RootElement[0].GetProperty("clientID").GetInt32());
+        }
+
+        [Fact]
+        public async Task GetClients_WorkerRole_ReturnsForbid()
+        {
+            var context = GetInMemoryDbContext();
+            var userId = "worker-1";
+            context.Users.Add(new User { Id = userId, FullName = "Worker", Email = "w@comp1.com", CompanyId = 1 });
+            context.Clients.Add(new Client { ClientID = 1, Name = "Client", CompanyID = 1 });
+            context.SaveChanges();
+
+            var controller = new ClientsController(context, GetMockUserManager(context));
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = CreateMockUser(userId, "3") }
+            };
+
+            Assert.IsType<ForbidResult>(await controller.GetClients());
+            Assert.IsType<ForbidResult>(await controller.GetClient(1));
+            Assert.IsType<ForbidResult>((await controller.GetClientSummary()).Result);
         }
 
         [Fact]
