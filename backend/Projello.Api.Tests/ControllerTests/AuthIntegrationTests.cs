@@ -208,8 +208,13 @@ namespace Projello.Api.Tests.Integration
             var email = $"2fastatus_{Guid.NewGuid()}@test.com";
             await _client.PostAsJsonAsync("/api/auth/register", new UserRegisterDto { FullName = "2FA Status Check", Email = email, Password = "Password123!" });
 
-            // Act
-            var response = await _client.GetAsync($"/api/auth/2fa-status?email={email}");
+            var login = await _client.PostAsJsonAsync("/api/auth/login", new UserLoginDto { Email = email, Password = "Password123!" });
+            var token = (await login.Content.ReadFromJsonAsync<LoginResponseData>())!.Token;
+
+            // Act: the email comes from the token; a different ?email= must be ignored
+            using var request = new HttpRequestMessage(HttpMethod.Get, "/api/auth/2fa-status?email=someone_else@test.com");
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            var response = await _client.SendAsync(request);
 
             // Assert
             response.EnsureSuccessStatusCode();
@@ -327,13 +332,13 @@ namespace Projello.Api.Tests.Integration
         }
 
         [Fact]
-        public async Task Get2FAStatus_NonExistentUser_ReturnsNotFound()
+        public async Task Get2FAStatus_Anonymous_ReturnsUnauthorized()
         {
-            // Act: Request status configuration for an email that completely does not exist in Db Context
+            // Act: no token, so existence of the account must not be revealed either way
             var response = await _client.GetAsync("/api/auth/2fa-status?email=ghost_profile_does_not_exist@test.com");
 
             // Assert
-            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
     } // <-- Properly closes the class scope
 

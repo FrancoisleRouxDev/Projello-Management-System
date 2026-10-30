@@ -346,10 +346,16 @@ namespace Projello.Api.Controllers
         }
 
         // --- 2FA: STATUS ---
+        [Authorize]
         [HttpGet("2fa-status")]
-        public async Task<IActionResult> Get2FAStatus([FromQuery] string email)
+        public async Task<IActionResult> Get2FAStatus([FromQuery] string? email = null)
         {
-            var user = await _userManager.FindByEmailAsync(email);
+            // The ?email= parameter is ignored (kept only so old clients don't break);
+            // the status always belongs to the authenticated caller.
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return NotFound();
 
             return Ok(new { is2FAEnabled = user.IsTwoFactorEnabled });
