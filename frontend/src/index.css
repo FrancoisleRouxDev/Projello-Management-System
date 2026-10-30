@@ -88,7 +88,7 @@ html, body {
   --shadow-gray: #e5e5e2;
   --text-light: #f7f7f3;
   --text-dark: #28332b;
-  --secondary-background: #F4F2EB;
+  --secondary-background: #eaf0eb;
   --secondary-background-item: #f7f7f3;
   --white: #ffffff;
   --black: #000000;
@@ -96,10 +96,26 @@ html, body {
   --sage-green-bg: #f7f7f3;
   --deep-green-accent: #28332b;
   --text-light-gray: #28332b;
-  --border-color: #e5e5e2;
+  --border-color: #d5dfd7;
   --card-bg: #ffffff;
   --warning-red: #c34949;
   --bright-yellow: #deab3d;
+  --surface-muted: #f1f4f1;
+  --text-muted: #55655a;
+  --input-border: #b9c6bc;
+  --disabled-bg: #ccd4ce;
+  --btn-secondary-bg: #f5f7f5;
+  --btn-secondary-fg: #28332b;
+  --status-ok-bg: #dcfce7;
+  --status-ok-fg: #166534;
+  --status-warn-bg: #fdf0d5;
+  --status-warn-fg: #8a5a00;
+  --status-bad-bg: #f8dede;
+  --status-bad-fg: #a63232;
+  --status-neutral-bg: #e4e9e5;
+  --tag-sage-bg: #e1ebe6;
+  --tag-gold-bg: #fdf6e2;
+  --tag-gold-fg: #795548;
 }
 
 [data-theme="dark"] {
@@ -108,7 +124,7 @@ html, body {
   --accent-1-text: #88dca8;
   --accent-2: #f7f7f3;
   --accent-3: #e0c05d;
-  --accent-2-10_Opacity: rgba(13, 18, 13, 0.5);
+  --accent-2-10_Opacity: rgba(247, 247, 243, 0.14);
   --accent-2-40_Opacity: rgba(247, 247, 243, 0.8);
   --accent-2-5_Opacity: rgba(247, 247, 243, 0.02);
   --success-green: #bdd04e;
@@ -121,18 +137,34 @@ html, body {
   --shadow-gray: #1a1a19;
   --text-light: #28332b;
   --text-dark: #f7f7f3;
-  --secondary-background: #28332b;
-  --secondary-background-item: #334239;
+  --secondary-background: #1c2620;
+  --secondary-background-item: #232f28;
   --white: #ffffff;
   --black: #000000;
   /* angie - die is joune */
-  --sage-green-bg: #334239;
+  --sage-green-bg: #232f28;
   --deep-green-accent: #f7f7f3;
   --text-light-gray: #f7f7f3;
-  --border-color: #1a1a19;
-  --card-bg: #334239;
+  --border-color: #324138;
+  --card-bg: #232f28;
   --warning-red: #c34949;
   --bright-yellow: #deab3d;
+  --surface-muted: #2a372f;
+  --text-muted: #a8b8ac;
+  --input-border: #4a5d50;
+  --disabled-bg: #3a473f;
+  --btn-secondary-bg: #2a372f;
+  --btn-secondary-fg: #f7f7f3;
+  --status-ok-bg: #2a3416;
+  --status-ok-fg: #c5db6a;
+  --status-warn-bg: #3a2f12;
+  --status-warn-fg: #ebc15a;
+  --status-bad-bg: #3d1f1f;
+  --status-bad-fg: #f08a8a;
+  --status-neutral-bg: #324138;
+  --tag-sage-bg: #2e4a38;
+  --tag-gold-bg: #3a2f12;
+  --tag-gold-fg: #ebc15a;
 }
 
 @media (prefers-color-scheme: dark) {

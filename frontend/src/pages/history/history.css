@@ -157,9 +157,9 @@ body {
 
 /* --- Alert Messages & Interface Feedback States --- */
 .history-error-alert {
-  background-color: #fce8e6;
+  background-color: var(--status-bad-bg, #fce8e6);
   border: 1px solid var(--warning-red);
-  color: #a94442;
+  color: var(--status-bad-fg, #a94442);
   padding: 1rem;
   border-radius: 6px;
   margin-bottom: 1.5rem;
@@ -263,7 +263,7 @@ body {
 }
 
 .project-tag {
-  background: #e1ebe6;
+  background: var(--tag-sage-bg, #e1ebe6);
   color: var(--deep-green-accent);
   padding: 0.25rem 0.6rem;
   border-radius: 4px;
@@ -274,8 +274,8 @@ body {
 }
 
 .milestone-tag {
-  background: #fdf6e2;
-  color: #795548;
+  background: var(--tag-gold-bg, #fdf6e2);
+  color: var(--tag-gold-fg, #795548);
   padding: 0.25rem 0.6rem;
   border-radius: 4px;
   font-size: 0.8rem;
@@ -388,8 +388,8 @@ body {
 .archive-card-status-badge {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #2e7d32;
-  background: #e8f5e9;
+  color: var(--status-ok-fg, #2e7d32);
+  background: var(--status-ok-bg, #e8f5e9);
   padding: 0.25rem 0.6rem;
   border-radius: 4px;
   align-self: flex-start;

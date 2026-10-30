@@ -9,8 +9,8 @@
 
 /* Header container */
 .management-client-table__header {
-  background: #f3f5f7;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--surface-muted, #f3f5f7);
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
 }
 
 /* Header row - THIS needs the grid */
@@ -26,7 +26,7 @@
 .management-client-table__header {
   padding: 18px 28px;
   background: var(--secondary-background-item, #f7f7f3);
-  color: #4b5563;
+  color: var(--text-muted, #4b5563);
   font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
@@ -93,7 +93,7 @@
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: #e5e7eb40;
+  background: var(--status-neutral-bg, #e5e7eb40);
   color: var(--text-dark);
   font-size: 16px;
   font-weight: 600;
@@ -149,25 +149,25 @@
 }
 
 .management-client-table__badge--success {
-  background: #dcfce7;
+  background: var(--status-ok-bg, #dcfce7);
   box-shadow: 0 0px 4px 0 var(--success-green_20);
-  color: #016630;
+  color: var(--status-ok-fg, #016630);
 }
 
 .management-client-table__badge--warning {
-  background: #ffedd4;
+  background: var(--status-warn-bg, #ffedd4);
   box-shadow: 0 0px 4px 0 var(--warning-yellow_20);
-  color: var(--warning-yellow);
+  color: var(--status-warn-fg, #8a5a00);
 }
 
 .management-client-table__badge--danger {
-  background: #f3e0e0;
+  background: var(--status-bad-bg, #f3e0e0);
   box-shadow: 0 0px 4px 0 var(--error-red_20);
-  color: var(--error-red);
+  color: var(--status-bad-fg, #a63232);
 }
 
 .management-client-table__badge--neutral {
-  background: #cccccc40;
+  background: var(--status-neutral-bg, #cccccc40);
   /* box-shadow: 0 0px 4px 0 var(--accent-2-10_Opacity, rgba(40, 51, 43, 0.1)); */
   color: var(--text-dark);
 }
@@ -176,7 +176,7 @@
 .management-client-table__action-button {
   border: 0;
   background: transparent;
-  color: #6b7280;
+  color: var(--text-muted, #6b7280);
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
@@ -187,8 +187,8 @@
 }
 
 .management-client-table__action-button:hover {
-  color: #0b1220;
-  background: rgba(11, 18, 32, 0.04);
+  color: var(--text-dark, #0b1220);
+  background: var(--accent-2-5_Opacity, rgba(11, 18, 32, 0.04));
 }
 
 .management-client-table__body

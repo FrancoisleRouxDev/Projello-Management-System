@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { getTheme, setTheme, onThemeChange, Theme } from "../theme";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./SideNavBar.css";
 import BearLogo from "../assets/Logo/Navbar_Logo.svg";
@@ -85,6 +86,9 @@ export default function SideNavBar() {
         }).toString();
     }
 
+    const [theme, setThemeState] = useState<Theme>(getTheme);
+    useEffect(() => onThemeChange(setThemeState), []);
+
     return (
         <div className="side-nav-wrapper">
             <div className="side-nav-main">
@@ -114,6 +118,16 @@ export default function SideNavBar() {
                 </div>
             </div>
             <div className="side-nav-footer">
+                <button
+                    type="button"
+                    role="switch"
+                    aria-checked={theme === "dark"}
+                    className="theme-toggle"
+                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                >
+                    <span>{theme === "dark" ? "Dark mode" : "Light mode"}</span>
+                    <span className="theme-toggle-track" aria-hidden="true" />
+                </button>
                 <div
                     className={`userInfo${location.pathname === "/settings" ? " active" : ""}`}
                     onClick={() => navigate("/settings")}

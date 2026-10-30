@@ -2,11 +2,9 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
+import { applyTheme, getTheme } from "./theme";
 
-const savedTheme = localStorage.getItem("theme");
-if (savedTheme) {
-  document.documentElement.setAttribute("data-theme", savedTheme);
-}
+applyTheme(getTheme());
 
 const container = document.getElementById("root");
 if (container) {

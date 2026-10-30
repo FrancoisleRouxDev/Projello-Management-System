@@ -8,5 +8,5 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  padding: 60px 121px;
+  padding: clamp(32px, 4vw, 60px) clamp(24px, 6vw, 121px);
 }

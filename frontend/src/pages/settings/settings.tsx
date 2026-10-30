@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getTheme, setTheme, onThemeChange, Theme } from "../../theme";
 import { createAvatar } from '@dicebear/core';
 import { botttsNeutral } from '@dicebear/collection';
 import UserDefaultPfp from "../../assets/UserDefaultPfp.svg";
@@ -96,7 +97,7 @@ export default function SettingsPage() {
   const [modalBg, setModalBg] = useState(avatarBg || "");
   const [modalSelectedSeed, setModalSelectedSeed] = useState<string>(avatarSeed || "");
 
-  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
+  const [theme, setThemeState] = useState<Theme>(getTheme);
 
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
@@ -127,11 +128,8 @@ export default function SettingsPage() {
     fetch2FAStatus();
   }, [userEmail]);
 
-  // Persist theme
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+  // Stay in sync with the side-nav theme switch
+  useEffect(() => onThemeChange(setThemeState), []);
 
   // Secured: Unified reset logic to prevent state footprint pollution
   const handleCloseSetup = () => {
