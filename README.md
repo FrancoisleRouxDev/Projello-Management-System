@@ -510,7 +510,7 @@ cp .env.example .env   # then edit the values, including JWT_KEY
 docker compose up --build
 ```
 
-This starts PostgreSQL and the API (http://localhost:8080, Swagger at `/swagger`) and applies EF migrations on startup. The Electron app is still run locally.
+This starts PostgreSQL (host port 5434) and the API (http://localhost:5049, Swagger at `/swagger`) and applies EF migrations on startup. The Electron app is still run locally.
 
 ### JWT Signing Key
 
