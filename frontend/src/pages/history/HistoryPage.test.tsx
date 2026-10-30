@@ -1,195 +1,124 @@
-import React from "react";
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
-import "@testing-library/jest-dom";
-import HistoryPage from "./history";
-import { API_BASE_URL } from "../../config";
+import { TextEncoder, TextDecoder } from 'util';
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder as any;
 
-// --- Mock Data Payloads ---
-const mockUpdates = [
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import { MemoryRouter } from "react-router-dom";
+import HistoryPage from "./history";
+
+const mockNavigate = jest.fn();
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useNavigate: () => mockNavigate,
+}));
+
+const mockProjects = [
   {
-    updateID: 101,
-    milestoneID: 1,
-    milestoneTitle: "Foundations Concrete",
     projectID: 10,
-    projectName: "Cape Town Commercial Build",
-    userID: "usr-admin",
-    userFullName: "Francois le Roux",
-    optionalComment: "Completed Phase 1 framework grid layout.",
-    updateDate: "2026-05-28T12:00:00Z",
-    createdAt: "2026-05-28T12:00:00Z",
-    reactions: [
-      { reactionID: 1, updateID: 101, userID: "usr-worker", emoji: "👍" }
-    ]
+    name: "Cape Town Commercial Build",
+    description: "Steel frame office block",
+    clientName: "Atlantic Developers",
+    status: "Completed",
+    startDate: "2026-01-10T00:00:00Z",
+    dueDate: "2026-05-28T00:00:00Z",
   },
   {
-    updateID: 102,
-    milestoneID: 2,
-    milestoneTitle: "Excavation Works",
     projectID: 20,
-    projectName: "Durban High-Bay Warehouse",
-    userID: "usr-foreman",
-    userFullName: "David Golding",
-    optionalComment: "Encountered shallow rock layers during trenching.",
-    updateDate: "2026-05-27T14:30:00Z",
-    createdAt: "2026-05-27T14:30:00Z",
-    reactions: []
-  }
-];
-
-const mockCompletedProjects = [
+    name: "Durban High-Bay Warehouse",
+    description: "Logistics warehouse",
+    clientName: "",
+    status: "Archived",
+    startDate: null,
+    dueDate: null,
+  },
   {
-    projectID: 50,
-    name: "Pretoria Retail Center",
-    description: "Façade upgrade and structural repairs for retail plaza.",
-    startDate: "2026-01-10",
-    dueDate: "2026-04-15",
-    status: "Completed",
-    clientName: "William Basson Assets"
-  }
+    projectID: 30,
+    name: "Still Running Project",
+    description: "Not finished yet",
+    clientName: "Someone",
+    status: "In Progress",
+    startDate: null,
+    dueDate: null,
+  },
 ];
 
-// --- Web API Fetch Call Interceptors ---
-beforeEach(() => {
-  localStorage.setItem("token", "mocked-jwt-security-token");
-  
-  // Safeguard Electron Node-mock environment by initializing a fetch property stub if missing
-  if (!global.fetch) {
-    global.fetch = jest.fn();
-  } else {
-    global.fetch = jest.fn(global.fetch);
-  }
-  
-  jest.spyOn(global, "fetch");
-});
+const renderPage = () =>
+  render(
+    <MemoryRouter>
+      <HistoryPage />
+    </MemoryRouter>
+  );
 
-afterEach(() => {
-  jest.restoreAllMocks();
-  localStorage.clear();
-  
-  if (jest.isMockFunction(global.fetch)) {
-    (global.fetch as jest.Mock).mockReset();
-  }
-});
+describe("HistoryPage", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    localStorage.clear();
+    global.fetch = jest.fn() as jest.Mock;
+  });
 
-describe("HistoryPage Component - Core Integration Testing", () => {
-  
-  test("renders loading state initially and transitions to data display", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUpdates,
-    });
+  test("shows a loader, then the completed and archived projects only", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true, json: async () => mockProjects });
 
-    render(<HistoryPage />);
+    renderPage();
 
-    // Assert skeleton loader appears
     expect(screen.getByText(/Compiling historical data arrays/i)).toBeInTheDocument();
 
-    // Wait for the asynchronous fetch pipeline to fill states
-    await waitFor(() => {
-      expect(screen.getByText("Francois le Roux")).toBeInTheDocument();
-    });
-
-    expect(screen.getByText(/"Completed Phase 1 framework grid layout."/)).toBeInTheDocument();
-    
-    // FIXED: Using getAllByText to assert that multiple components rendering the name are safely mounted
-    expect(screen.getAllByText("Cape Town Commercial Build")[0]).toBeInTheDocument();
+    expect(await screen.findByText("Cape Town Commercial Build")).toBeInTheDocument();
+    expect(screen.getByText("Durban High-Bay Warehouse")).toBeInTheDocument();
+    expect(screen.queryByText("Still Running Project")).not.toBeInTheDocument();
+    expect(screen.getByText(/Atlantic Developers/)).toBeInTheDocument();
+    expect(screen.getByText(/Internal Account/)).toBeInTheDocument();
   });
 
-  test("handles authorization or network server connection failures gracefully", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: false,
-      status: 401,
-    });
+  test("requests completed projects and sends the bearer token", async () => {
+    localStorage.setItem("token", "abc123");
+    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true, json: async (): Promise<unknown[]> => [] });
 
-    render(<HistoryPage />);
+    renderPage();
 
-    await waitFor(() => {
-      expect(screen.getByText(/Security or Connection Interruption:/i)).toBeInTheDocument();
-    });
-    expect(screen.getByText(/Daily Log sync failed with code: 401/i)).toBeInTheDocument();
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+    const [url, init] = (global.fetch as jest.Mock).mock.calls[0];
+    expect(String(url)).toContain("/api/projects?status=Completed");
+    expect(init.headers.Authorization).toBe("Bearer abc123");
   });
 
-  test("allows interactive switching between live stream and archived completed projects", async () => {
-    // 1st Fetch: Load initial log stream
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUpdates,
-    });
-    // 2nd Fetch: Load archive when clicking archive tab
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockCompletedProjects,
-    });
+  test("shows an error banner when the server rejects the request", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: false, status: 401 });
 
-    render(<HistoryPage />);
+    renderPage();
 
-    // Wait for initial load
-    await screen.findByText("Francois le Roux");
-
-    // Click the Archive Tab
-    const archiveTabButton = screen.getByRole("button", { name: /Completed Projects Archive/i });
-    fireEvent.click(archiveTabButton);
-
-    // Verify loading state changes to archive dataset
-    await waitFor(() => {
-      expect(screen.getByText("Pretoria Retail Center")).toBeInTheDocument();
-    });
-    expect(screen.getByText("Client Account: William Basson Assets")).toBeInTheDocument();
-    expect(screen.queryByText("Francois le Roux")).not.toBeInTheDocument();
+    expect(await screen.findByText(/Security or Connection Interruption:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Archive retrieval failed with code: 401/i)).toBeInTheDocument();
   });
 
-  test("filters timeline entries client-side using the search bar input engine", async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockUpdates,
-    });
+  test("shows the empty state when nothing is archived", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true, json: async (): Promise<unknown[]> => [] });
 
-    render(<HistoryPage />);
-    await screen.findByText("Francois le Roux");
+    renderPage();
 
-    const searchInput = screen.getByPlaceholderText(/Search logs by username/i);
-    
-    // Type 'David' to filter out 'Francois'
-    fireEvent.change(searchInput, { target: { value: "David" } });
-
-    expect(screen.getByText("David Golding")).toBeInTheDocument();
-    expect(screen.queryByText("Francois le Roux")).not.toBeInTheDocument();
+    expect(await screen.findByText(/No completed or archived project rows/i)).toBeInTheDocument();
   });
 
-  test("posts structural reaction payloads to the corrected plural backend route", async () => {
-    (global.fetch as jest.Mock)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockUpdates,
-      }) // Initial render load
-      .mockResolvedValueOnce({
-        ok: true,
-      }) // Post reaction action
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockUpdates,
-      }); // Automated tracking re-fetch loop
+  test("filters the archive client-side by name or description", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true, json: async () => mockProjects });
 
-    render(<HistoryPage />);
-    
-    // Find specific card module container
-    const cardElement = await screen.findByText("Francois le Roux");
-    const historyCard = cardElement.closest(".history-card");
-    expect(historyCard).toBeInTheDocument();
+    renderPage();
+    await screen.findByText("Cape Town Commercial Build");
 
-    // Click the Fire reaction button inside this specific card element
-    const fireButton = within(historyCard as HTMLElement).getByTitle("Tag status as 🔥");
-    fireEvent.click(fireButton);
+    fireEvent.change(screen.getByPlaceholderText(/Filter archive/i), { target: { value: "warehouse" } });
 
-    // Assert it hits the strict endpoint route path containing plural /reactions suffix
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining(`${API_BASE_URL}/api/updates/101/reactions`),
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify({ emoji: "🔥" })
-        })
-      );
-    });
+    expect(screen.queryByText("Cape Town Commercial Build")).not.toBeInTheDocument();
+    expect(screen.getByText("Durban High-Bay Warehouse")).toBeInTheDocument();
+  });
+
+  test("opens the single project view when a card is clicked", async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({ ok: true, json: async () => mockProjects });
+
+    renderPage();
+    fireEvent.click(await screen.findByText("Cape Town Commercial Build"));
+
+    expect(mockNavigate).toHaveBeenCalledWith("/single-view/10");
   });
 });

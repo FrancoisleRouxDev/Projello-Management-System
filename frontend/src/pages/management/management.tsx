@@ -172,8 +172,9 @@ function ProjectActionModal({ project, onClose, onRefresh, allProjects }: Projec
           </div>
           <div className="action-modal__body">
             <div style={{ marginBottom: "12px" }}>
-              <label>Total Paid</label>
+              <label htmlFor="edit-total-paid">Total Paid</label>
               <input
+                id="edit-total-paid"
                 type="number"
                 className="action-modal__input"
                 value={editTotalPaid}
@@ -181,8 +182,9 @@ function ProjectActionModal({ project, onClose, onRefresh, allProjects }: Projec
               />
             </div>
             <div style={{ marginBottom: "12px" }}>
-              <label>Outstanding</label>
+              <label htmlFor="edit-outstanding">Outstanding</label>
               <input
+                id="edit-outstanding"
                 type="number"
                 className="action-modal__input"
                 value={editOutstanding}
@@ -190,8 +192,9 @@ function ProjectActionModal({ project, onClose, onRefresh, allProjects }: Projec
               />
             </div>
             <div>
-              <label>Status</label>
+              <label htmlFor="edit-status">Status</label>
               <select
+                id="edit-status"
                 className="action-modal__input"
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value)}

@@ -52,6 +52,7 @@ import ManagementPage from "./management";
                     {rows.map((row: any) => (
                     <tr key={row.clientId} data-testid="project-row">
                         <td onClick={() => onRowClick(row)}>{row.initials}</td>
+                        <td>{row.name}</td>
                         {/* Add a specific trigger for the action/modal */}
                         <td>
                             <button 
@@ -71,8 +72,8 @@ import ManagementPage from "./management";
 
    describe("ManagementPage Component", () => {
     const mockProjects = [
-        { projectID: 101, name: "Warehouse Construction", clientID: 5, status: "Active" },
-        { projectID: 102, name: "Office Refurbishment", clientID: 9, status: "Completed" },
+        { projectID: 101, name: "Warehouse Construction", clientID: 5, clientName: "Build Corp", status: "Active" },
+        { projectID: 102, name: "Office Refurbishment", clientID: 9, clientName: "Apex Industries", status: "Completed" },
     ];
     const mockClientsLookup = [{ clientID: 5, name: "Build Corp" }, { clientID: 9, name: "Apex Industries" }];
 
@@ -152,15 +153,13 @@ import ManagementPage from "./management";
     expect(screen.getByText("Edit Payments & Status")).toBeInTheDocument();
 });
 
-it("opens the project action modal when a row is clicked", async () => {
+it("navigates to the single project view when a row is clicked", async () => {
   render(<ManagementPage />);
   await waitFor(() => expect(screen.queryByText(/Loading projects.../i)).not.toBeInTheDocument());
 
-  const rows = screen.getAllByTestId("project-row");
-  fireEvent.click(rows[0]); // This triggers handleRowAction
+  fireEvent.click(screen.getByText("BC")); // triggers handleRowClick
 
-  // Ensure the modal (or its content) is rendered
-  expect(screen.getByText(/Choose an action/i)).toBeInTheDocument();
+  expect(mockNavigate).toHaveBeenCalledWith("/single-view/101");
 });
 
   it("displays fallback user messages if fetched dataset is empty", async () => {
@@ -193,7 +192,7 @@ it("opens the project action modal when a row is clicked", async () => {
     fireEvent.click(actionBtn);
 
     // Verify modal opened
-    expect(screen.getByText("Warehouse Construction")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Warehouse Construction" })).toBeInTheDocument();
     
     // Navigate to edit-payments
     fireEvent.click(screen.getByText(/Edit Payments & Status/i));
@@ -208,23 +207,17 @@ it("opens the project action modal when a row is clicked", async () => {
   });
 
  it("handles API error during project update", async () => {
-      // DO NOT reassign global.fetch. 
-      // Instead, tell the existing mock to behave differently for this specific call:
-      (global.fetch as jest.Mock).mockImplementationOnce((url) => {
-          if (url.includes("/api/projects/101")) {
-              return Promise.resolve({ ok: false, status: 500 });
-          }
-          // Default to returning success for other calls (like the initial load)
-          return Promise.resolve({ ok: true, json: () => Promise.resolve(mockProjects) });
-      });
-
       render(<ManagementPage />);
-      
-      // ... rest of your test remains the same
-      const rows = await screen.findAllByTestId("project-row");
-      fireEvent.click(rows[0]);
+
+      await screen.findAllByTestId("project-row");
+
+      // Fail only the project update; the initial load above already succeeded.
+      (global.fetch as jest.Mock).mockImplementationOnce(() =>
+          Promise.resolve({ ok: false, status: 500, statusText: "Server Error", text: () => Promise.resolve("") })
+      );
+
+      fireEvent.click(screen.getByTestId(`action-btn-${mockProjects[0].projectID}`));
       fireEvent.click(screen.getByText(/Edit Payments & Status/i));
-      
       fireEvent.click(screen.getByText(/Save Changes/i));
 
       await waitFor(() => {
