@@ -26,7 +26,9 @@ namespace Projello.Api.Tests
         private static readonly Dictionary<string, string?> Defaults = new()
         {
             ["Jwt:Key"] = TestJwtKey,
-            ["RateLimiting:Auth:PermitLimit"] = "1000"
+            ["RateLimiting:Auth:PermitLimit"] = "1000",
+            // The InMemory provider can't run migrations, whatever the developer's local config says.
+            ["Database:MigrateOnStartup"] = "false"
         };
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)

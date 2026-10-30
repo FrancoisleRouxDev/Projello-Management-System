@@ -1,10 +1,12 @@
 // ProjectCallHub.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Projello.Api.Data;
 using System.Collections.Concurrent;
 
 namespace Projello.Api.Hubs;
 
+[Authorize]
 public sealed class ProjectCallHub : Hub
 {
     private readonly AppDbContext _dbContext;
