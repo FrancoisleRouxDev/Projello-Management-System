@@ -11,11 +11,11 @@ using Xunit;
 namespace Projello.Api.Tests.Integration
 {
     // WebApplicationFactory boots your REAL API in the background
-    public class AuthIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+    public class AuthIntegrationTests : IClassFixture<TestApiFactory>
     {
         private readonly HttpClient _client;
 
-        public AuthIntegrationTests(WebApplicationFactory<Program> factory)
+        public AuthIntegrationTests(TestApiFactory factory)
         {
             // Creates a real HTTP client pointing at your background API
             _client = factory.CreateClient();

@@ -48,7 +48,8 @@ builder.Services.AddIdentityCore<User>(options => {
 .AddDefaultTokenProviders();
 
 // JWT
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "Projello@SuperSecret!Key#2026$Secure%";
+// The signing key is read lazily (and validated right after Build) so it can come from
+// user-secrets / the Jwt__Key env var, or from a test host's configuration.
 builder.Services.AddAuthentication(options => {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -62,7 +63,6 @@ builder.Services.AddAuthentication(options => {
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ClockSkew = TimeSpan.Zero
     };
     options.Events = new JwtBearerEvents
@@ -79,6 +79,13 @@ builder.Services.AddAuthentication(options => {
         }
     };
 });
+
+builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IConfiguration>((options, config) =>
+    {
+        options.TokenValidationParameters.IssuerSigningKey =
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
+    });
 
 // CORS - Allow localhost (dev) + your Render domain + Electron
 builder.Services.AddCors(options =>
@@ -141,6 +148,14 @@ builder.Services.AddSignalR().AddHubOptions<ProjectCallHub>(options =>
 });
 
 var app = builder.Build();
+
+var configuredJwtKey = app.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(configuredJwtKey) || Encoding.UTF8.GetByteCount(configuredJwtKey) < 32)
+{
+    throw new InvalidOperationException(
+        "Jwt:Key is missing or shorter than 32 bytes. Set it with `dotnet user-secrets set \"Jwt:Key\" <key>` " +
+        "locally, or the Jwt__Key environment variable in production.");
+}
 
 // Fixed conditional redirect blocks to prevent routing layout failure loops on Dev environments
 if (!app.Environment.IsDevelopment())

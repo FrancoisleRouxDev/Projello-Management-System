@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>projello-api-4f1c7e2a-9b3d-4a86-8e51-2c6d0f7a1b94</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

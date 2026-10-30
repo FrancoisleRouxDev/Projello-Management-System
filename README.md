@@ -502,6 +502,16 @@ All database transactions will be routed directly to the configured Aiven Postgr
 
 ---
 
+### JWT Signing Key
+
+The API refuses to start without `Jwt:Key` (at least 32 bytes); no key is committed to the repo.
+
+1. Local: `cd backend/Projello.Api && dotnet user-secrets set "Jwt:Key" "<random 48+ char string>"`
+2. Docker / `database/.env`: set `JWT_KEY=<same kind of string>` (see `database/.env.example`).
+3. Render: add the environment variable `Jwt__Key` (double underscore) in the service's Environment tab.
+4. Generate one with `openssl rand -base64 48`. Use a different key per environment.
+5. Rotate the key by changing it and redeploying; every existing login token is invalidated.
+
 ### Desktop Frontend Setup
 
 Navigate to the frontend project directory:
