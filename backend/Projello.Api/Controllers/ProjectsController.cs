@@ -39,6 +39,8 @@ namespace Projello.Api.Controllers
 
             var query = _context.Projects
                 .Include(p => p.Client)
+                .Include(p => p.Members)
+                    .ThenInclude(pm => pm.User)
                 .AsQueryable();
 
             // ← NEW: Get current user's company for proper scoping
@@ -378,11 +380,18 @@ namespace Projello.Api.Controllers
             Name = p.Name,
             Description = p.Description,
             Status = p.Status,
+            StartDate = p.StartDate,
             DueDate = p.DueDate,
             CreatedAt = p.CreatedAt,
             ClientID = p.ClientID,
             ClientName = p.Client?.Name ?? "Unknown",
             IsClientBlacklisted = p.Client?.IsBlacklisted ?? false,
+            Members = p.Members.Select(m => new ProjectMemberDto
+            {
+                UserID = m.UserID,
+                FullName = m.User?.FullName ?? "",
+                AssignedAs = m.AssignedAs
+            }).ToList(),
 
             TotalPaid = p.TotalPaid,
             Outstanding = p.Outstanding
