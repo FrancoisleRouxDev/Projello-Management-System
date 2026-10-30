@@ -9,6 +9,7 @@ using System.Security.Claims;
 using System.Text;
 using OtpNet; // Required for 2FA
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Projello.Api.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,6 +31,7 @@ namespace Projello.Api.Controllers
         }
 
         // --- CREATE: REGISTER ---
+        [EnableRateLimiting("auth")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] UserRegisterDto model)
         {
@@ -94,14 +96,22 @@ namespace Projello.Api.Controllers
         }
 
         // --- READ: LOGIN ---
+        [EnableRateLimiting("auth")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserLoginDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user != null && await _userManager.IsLockedOutAsync(user))
+            {
+                return LockedOut();
+            }
+
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
                 if (user.IsTwoFactorEnabled)
                 {
+                    // Failure count is NOT reset here, otherwise a correct password
+                    // would hand out unlimited 2FA guesses. verify-2fa resets it on success.
                     return Ok(new
                     {
                         Requires2FA = true,
@@ -110,6 +120,7 @@ namespace Projello.Api.Controllers
                     });
                 }
 
+                await _userManager.ResetAccessFailedCountAsync(user);
                 var token = GenerateJwtToken(user);
                 return Ok(new
                 {
@@ -118,8 +129,18 @@ namespace Projello.Api.Controllers
                     Requires2FA = false
                 });
             }
+
+            if (user != null)
+            {
+                await _userManager.AccessFailedAsync(user);
+                if (await _userManager.IsLockedOutAsync(user)) return LockedOut();
+            }
             return Unauthorized(new { Message = "Invalid credentials" });
         }
+
+        private ObjectResult LockedOut() =>
+            StatusCode(StatusCodes.Status423Locked,
+                new { Message = "Account temporarily locked. Please try again later." });
 
         // --- READ: GET CURRENT USER (ME) ---
         [Authorize]
@@ -185,6 +206,7 @@ namespace Projello.Api.Controllers
 
         // --- 2FA: STEP 1 - GENERATE TEMPORARY UNVERIFIED SECRET KEY ---
         [Authorize]
+        [EnableRateLimiting("auth")]
         [HttpPost("generate-2fa-secret")]
         public async Task<IActionResult> Generate2FASecret([FromBody] Setup2FaDto model)
         {
@@ -223,11 +245,14 @@ namespace Projello.Api.Controllers
         }
 
         // --- 2FA: STEP 2 - VERIFY SETUP CHALLENGE AND ACTIVATE CORES ---
+        [EnableRateLimiting("auth")]
         [HttpPost("verify-2fa")]
         public async Task<IActionResult> Verify2FA([FromBody] Verify2FaDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null) return BadRequest(new { Message = "User not found." });
+
+            if (await _userManager.IsLockedOutAsync(user)) return LockedOut();
 
             string base32Secret;
             bool isInitialSetupWorkflow = !user.IsTwoFactorEnabled;
@@ -255,8 +280,10 @@ namespace Projello.Api.Controllers
             
             bool isValid = totp.VerifyTotp(model.Code, out long timeStepMatched, new VerificationWindow(previous: 1, future: 1));
 
-        if (isValid)
-{
+            if (isValid)
+            {
+                await _userManager.ResetAccessFailedCountAsync(user);
+
                 if (isInitialSetupWorkflow)
                 {
                     // === FIRST SUCCESSFUL SCAN WINS ===
@@ -284,6 +311,9 @@ namespace Projello.Api.Controllers
 
                 return Ok(new { Token = token, User = user.FullName });
             }
+
+            await _userManager.AccessFailedAsync(user);
+            if (await _userManager.IsLockedOutAsync(user)) return LockedOut();
 
             // Invalid code during setup — do NOT destroy the session (user-friendly)
             // Only the first correct code activates 2FA

@@ -63,6 +63,9 @@ namespace Projello.Tests
                     return IdentityResult.Success;
                 });
 
+            // AuthController now consults lockout state; a loose lockout store reports "not locked out".
+            store.As<IUserLockoutStore<User>>();
+
             var tokensDict = new Dictionary<string, string>();
             store.Setup(s => s.SetTokenAsync(It.IsAny<User>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                  .Returns((User u, string loginProvider, string name, string value, CancellationToken ct) => {

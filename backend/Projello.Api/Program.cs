@@ -7,6 +7,9 @@ using Projello.Api.Data;
 using Projello.Api.Models;
 using Projello.Api.Hubs;
 using System.Text;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using CloudinaryDotNet;
 using Microsoft.Extensions.Options;
 
@@ -42,6 +45,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddIdentityCore<User>(options => {
     options.Password.RequireDigit = true;
     options.Password.RequiredLength = 8;
+    options.Lockout.AllowedForNewUsers = true;
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<AppDbContext>()
@@ -86,6 +92,37 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         options.TokenValidationParameters.IssuerSigningKey =
             new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
     });
+
+// Render terminates TLS and proxies requests, so the real client IP arrives in X-Forwarded-For.
+// Render's proxy addresses are not fixed, so the default loopback-only trust list is cleared.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+// Rate limiting for credential endpoints. Limit and window are configurable
+// (RateLimiting:Auth:PermitLimit / RateLimiting:Auth:WindowSeconds) so tests can use tiny values.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("auth", httpContext =>
+    {
+        var config = httpContext.RequestServices.GetRequiredService<IConfiguration>();
+        var permitLimit = config.GetValue("RateLimiting:Auth:PermitLimit", 10);
+        var windowSeconds = config.GetValue("RateLimiting:Auth:WindowSeconds", 60);
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = permitLimit,
+                Window = TimeSpan.FromSeconds(windowSeconds),
+                QueueLimit = 0
+            });
+    });
+});
 
 // CORS - Allow localhost (dev) + your Render domain + Electron
 builder.Services.AddCors(options =>
@@ -157,6 +194,8 @@ if (string.IsNullOrEmpty(configuredJwtKey) || Encoding.UTF8.GetByteCount(configu
         "locally, or the Jwt__Key environment variable in production.");
 }
 
+app.UseForwardedHeaders();
+
 // Fixed conditional redirect blocks to prevent routing layout failure loops on Dev environments
 if (!app.Environment.IsDevelopment())
 {
@@ -167,6 +206,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseCors("AllowApp");
+app.UseRateLimiter();
 app.UseAuthentication();
 
 app.Use(async (context, next) =>

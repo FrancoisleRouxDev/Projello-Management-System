@@ -22,11 +22,18 @@ namespace Projello.Api.Tests
         // Subclasses override this to add or change configuration for a single fixture.
         protected virtual Dictionary<string, string?> ExtraSettings => new();
 
+        // Generous default so tests sharing one (null) client IP don't trip the auth rate limiter.
+        private static readonly Dictionary<string, string?> Defaults = new()
+        {
+            ["Jwt:Key"] = TestJwtKey,
+            ["RateLimiting:Auth:PermitLimit"] = "1000"
+        };
+
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.ConfigureAppConfiguration((_, config) =>
             {
-                var settings = new Dictionary<string, string?> { ["Jwt:Key"] = TestJwtKey };
+                var settings = new Dictionary<string, string?>(Defaults);
                 foreach (var kv in ExtraSettings) settings[kv.Key] = kv.Value;
                 config.AddInMemoryCollection(settings);
             });
