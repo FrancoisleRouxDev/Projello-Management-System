@@ -69,7 +69,7 @@
 .clients-page__action-menu {
   position: absolute;
   background: white;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   z-index: 100;
@@ -87,12 +87,12 @@
   text-align: left;
   cursor: pointer;
   font-size: 14px;
-  color: #333;
+  color: var(--text-dark);
   transition: background 0.2s ease;
 }
 
 .clients-page__action-menu-item:hover {
-  background: #f5f5f5;
+  background: var(--surface-muted);
 }
 
 .clients-page__action-menu-item:first-child {
@@ -126,8 +126,8 @@
 }
 
 .action-modal {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 24px;
   padding: 0;
   min-width: 320px;
@@ -144,14 +144,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px;
-  border-bottom: 1px solid #f3f4f6;
-  background: #f9f9f6;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface-muted);
 }
 
 .action-modal__header .action-modal__title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #28332b;
+  color: var(--text-dark);
   margin: 0;
 }
 
@@ -160,7 +160,7 @@
   border: none;
   font-size: 28px;
   line-height: 1;
-  color: #6b7280;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
@@ -168,8 +168,8 @@
 }
 
 .action-modal__close:hover {
-  color: #0a0a0a;
-  background: #f3f4f6;
+  color: var(--text-dark);
+  background: var(--surface-muted);
 }
 
 .action-modal__body {
@@ -181,13 +181,13 @@
 
 .action-modal__sub {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--text-muted);
   margin: 0;
 }
 
 .action-modal__feedback {
   font-size: 0.95rem;
-  color: #0a0a0a;
+  color: var(--text-dark);
   margin: 0;
   line-height: 1.5;
   padding: 8px 0;
@@ -195,10 +195,10 @@
 
 .action-modal__textarea {
   width: 100%;
-  background: #e5e5e2;
+  background: var(--control-bg);
   border: none;
   border-radius: 20px;
-  color: #444;
+  color: var(--text-dark);
   font-size: 0.95rem;
   padding: 14px 20px;
   resize: vertical;
@@ -214,7 +214,7 @@
 
 .action-modal__textarea:focus,
 .action-modal__textarea:active {
-  background: #dddddd;
+  background: var(--control-bg-hover);
 }
 
 .action-modal__actions {
@@ -268,13 +268,13 @@
 }
 
 .action-modal__btn--secondary {
-  background: #f3f4f6;
-  color: #0a0a0a;
-  border: 1px solid #e5e7eb;
+  background: var(--surface-muted);
+  color: var(--text-dark);
+  border: 1px solid var(--border-color);
 }
 
 .action-modal__btn--secondary:hover:not(:disabled) {
-  background: #e5e7eb;
+  background: var(--control-bg);
   transform: translateY(-1px);
 }
 
@@ -302,22 +302,22 @@
 
 .action-modal__btn--ghost {
   background: transparent;
-  color: #6b7280;
-  border: 1px solid #e5e7eb;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
   font-weight: 500;
 }
 
 .action-modal__btn--ghost:hover:not(:disabled) {
-  background: #f3f4f6;
-  color: #0a0a0a;
+  background: var(--surface-muted);
+  color: var(--text-dark);
 }
 
 .action-modal__input {
   width: 100%;
-  background: #e5e5e2;
+  background: var(--control-bg);
   border: none;
   border-radius: 999px;
-  color: #444;
+  color: var(--text-dark);
   font-size: 0.95rem;
   padding: 14px 20px;
   box-sizing: border-box;
@@ -332,7 +332,7 @@
 
 .action-modal__input:focus,
 .action-modal__input:active {
-  background: #dddddd;
+  background: var(--control-bg-hover);
 }
 
 select.action-modal__input {
@@ -348,7 +348,7 @@ select.action-modal__input {
 .clients-page__message {
   padding: 20px;
   font-size: 1rem;
-  color: #0a0a0a;
+  color: var(--text-dark);
 }
 
 .clients-page__message--error {

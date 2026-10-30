@@ -9,8 +9,8 @@
 
 /* Error message styling */
 .reusable-entity-modal__error {
-  color: #d32f2f;
-  background-color: #ffebee;
+  color: var(--status-bad-fg);
+  background-color: var(--status-bad-bg);
   padding: 12px 16px;
   border-radius: 8px;
   font-size: 14px;
@@ -31,7 +31,7 @@
 .reusable-entity-modal__label {
   font-size: 14px;
   font-weight: 600;
-  color: #1a2420;
+  color: var(--text-dark);
   display: flex;
   align-items: center;
   gap: 4px;
@@ -39,7 +39,7 @@
 
 .reusable-entity-modal__label--required::after {
   content: " *";
-  color: #d32f2f;
+  color: var(--status-bad-fg);
 }
 
 /* Input field styling - matches login form */
@@ -53,7 +53,7 @@
   border: none;
   padding: 16px 24px;
   font-size: 15px;
-  color: #444;
+  color: var(--text-dark);
   font-family: "Roboto", sans-serif;
   outline: none;
   width: 100%;
@@ -67,7 +67,7 @@
 .reusable-entity-modal__textarea:active,
 .reusable-entity-modal__select:focus,
 .reusable-entity-modal__select:active {
-  background: #dddddd;
+  background: var(--control-bg-hover);
 }
 
 /* Textarea specific styling */
@@ -95,7 +95,7 @@
   gap: 12px;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #e5e5e2;
+  border-top: 1px solid var(--border-color);
 }
 
 .reusable-entity-modal .ant-modal-footer .ant-btn {
@@ -142,7 +142,7 @@
 }
 
 .reusable-entity-modal .ant-modal-container {
-  background: #ffffff;
+  background: var(--card-bg);
   border-radius: 28px !important;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
   overflow: hidden;
@@ -157,11 +157,11 @@
 .reusable-entity-modal .ant-modal-title {
   font-size: 24px;
   font-weight: 800;
-  color: #1a2420;
+  color: var(--text-dark);
 }
 
 .reusable-entity-modal .ant-modal-body {
-  background: #ffffff;
+  background: var(--card-bg);
   padding: 24px 32px;
 }
 

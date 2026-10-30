@@ -100,6 +100,8 @@ html, body {
   --card-bg: #ffffff;
   --warning-red: #c34949;
   --bright-yellow: #deab3d;
+  --control-bg: #e5e5e2;
+  --control-bg-hover: #dddddd;
   --surface-muted: #f1f4f1;
   --text-muted: #55655a;
   --input-border: #b9c6bc;
@@ -149,6 +151,8 @@ html, body {
   --card-bg: #232f28;
   --warning-red: #c34949;
   --bright-yellow: #deab3d;
+  --control-bg: #324138;
+  --control-bg-hover: #3d4e43;
   --surface-muted: #2a372f;
   --text-muted: #a8b8ac;
   --input-border: #4a5d50;
