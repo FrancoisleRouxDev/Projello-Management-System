@@ -502,6 +502,16 @@ All database transactions will be routed directly to the configured Aiven Postgr
 
 ---
 
+### One-Command Local Stack
+
+```bash
+cd database
+cp .env.example .env   # then edit the values, including JWT_KEY
+docker compose up --build
+```
+
+This starts PostgreSQL and the API (http://localhost:8080, Swagger at `/swagger`) and applies EF migrations on startup. The Electron app is still run locally.
+
 ### JWT Signing Key
 
 The API refuses to start without `Jwt:Key` (at least 32 bytes); no key is committed to the repo.

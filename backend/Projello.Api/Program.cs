@@ -194,6 +194,12 @@ if (string.IsNullOrEmpty(configuredJwtKey) || Encoding.UTF8.GetByteCount(configu
         "locally, or the Jwt__Key environment variable in production.");
 }
 
+if (app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+{
+    using var scope = app.Services.CreateScope();
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+}
+
 app.UseForwardedHeaders();
 
 // Fixed conditional redirect blocks to prevent routing layout failure loops on Dev environments
