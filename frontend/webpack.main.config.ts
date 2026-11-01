@@ -11,7 +11,7 @@ const env = dotenv.config({ path: envFile }).parsed || {};
 
 // Create DefinePlugin to inject env vars
 const definePlugin = new DefinePlugin({
-  'process.env.API_BASE_URL': JSON.stringify(env.API_BASE_URL || ''),
+  'process.env.API_BASE_URL': JSON.stringify(process.env.API_BASE_URL || env.API_BASE_URL || ''),
 });
 
 export const mainConfig: Configuration = {
