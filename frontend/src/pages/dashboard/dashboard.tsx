@@ -41,17 +41,19 @@ export default function DashboardPage() {
       .then((data) => setProjects(data))
       .catch(() => setProjects([]));
 
+    let role = 0;
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
-        const role = parseInt(payload.RoleID || payload["RoleID"] || "0", 10);
-        setCurrentUserRole(role);
+        role = parseInt(payload.RoleID || payload["RoleID"] || "0", 10);
       } catch {
-        setCurrentUserRole(0);
+        role = 0;
       }
+      setCurrentUserRole(role);
     }
 
-    if (token) {
+    // Workers aren't allowed to list clients (the API returns 403), so don't ask.
+    if (token && role !== 3) {
       fetch(`${API_BASE_URL}/api/clients`, {
         headers: {
           Authorization: token ? `Bearer ${token}` : "",

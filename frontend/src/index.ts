@@ -28,8 +28,11 @@ const connectSrc = [
   "'self'",
   'https://projello-management-system.onrender.com',
   'wss://projello-management-system.onrender.com',
+  // Local/LAN API on port 5049 (demos against a laptop); the hosted API stays allowed above.
+  'http://*:5049',
+  'ws://*:5049',
   ...(isDev ? ['http://localhost:*', 'ws://localhost:*', 'ws://127.0.0.1:*'] : []),
-];//test
+];
 
   const cspDirectives = [
     "default-src 'self'",
@@ -53,8 +56,10 @@ const connectSrc = [
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // Only open the DevTools when running from source.
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
 };
 
 // This method will be called when Electron has finished
