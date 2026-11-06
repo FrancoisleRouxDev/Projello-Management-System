@@ -1,5 +1,6 @@
 import React from "react";
 import { Modal } from "antd";
+import "./CustomModal.css";
 
 interface CustomModalProps {
   open: boolean;
@@ -26,7 +27,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
     title={title}
     footer={footer}
     width={width || 420}
-    wrapClassName={wrapClassName}
+    wrapClassName={["custom-modal", wrapClassName].filter(Boolean).join(" ")}
     centered
     destroyOnHidden
     mask={{ closable: !footer }}

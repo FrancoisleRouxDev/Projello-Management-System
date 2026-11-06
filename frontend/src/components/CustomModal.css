@@ -1,0 +1,69 @@
+.custom-modal .ant-modal-content,
+.custom-modal .ant-modal-container {
+  background: var(--card-bg);
+  color: var(--text-dark);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+}
+
+.custom-modal .ant-modal-header,
+.custom-modal .ant-modal-body,
+.custom-modal .ant-modal-footer {
+  background: transparent;
+}
+
+.custom-modal .ant-modal-header {
+  padding: 24px 32px 0;
+  border-bottom: 0;
+}
+
+.custom-modal .ant-modal-title,
+.custom-modal .ant-modal-body {
+  color: var(--text-dark);
+}
+
+.custom-modal .ant-modal-title {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.custom-modal .ant-modal-body {
+  padding: 24px 32px;
+}
+
+.custom-modal .ant-modal-close {
+  color: var(--text-muted);
+  background: var(--surface-muted);
+  border-radius: 8px;
+}
+
+.custom-modal .ant-modal-close:hover {
+  color: var(--text-dark);
+  background: var(--control-bg-hover);
+}
+
+.custom-modal input,
+.custom-modal textarea,
+.custom-modal select {
+  color: var(--text-dark);
+  background: var(--control-bg);
+  border-color: var(--input-border);
+}
+
+.custom-modal input::placeholder,
+.custom-modal textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.custom-modal .ant-btn-default {
+  color: var(--btn-secondary-fg);
+  background: var(--btn-secondary-bg);
+  border-color: var(--input-border);
+}
+
+.custom-modal .ant-btn-default:hover {
+  color: var(--text-dark);
+  background: var(--control-bg-hover);
+  border-color: var(--input-border);
+}
