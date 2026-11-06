@@ -141,6 +141,7 @@
   border-radius: 28px;
 }
 
+.reusable-entity-modal .ant-modal-content,
 .reusable-entity-modal .ant-modal-container {
   background: var(--card-bg);
   border-radius: 28px !important;
@@ -157,12 +158,18 @@
 .reusable-entity-modal .ant-modal-title {
   font-size: 24px;
   font-weight: 800;
-  color: var(--text-dark);
+  color: var(--text-dark) !important;
 }
 
 .reusable-entity-modal .ant-modal-body {
   background: var(--card-bg);
   padding: 24px 32px;
+}
+
+.reusable-entity-modal__input::placeholder,
+.reusable-entity-modal__textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
 }
 
 .reusable-entity-modal .ant-modal-footer {
