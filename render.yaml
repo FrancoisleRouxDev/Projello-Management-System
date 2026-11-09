@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: projello-management-system
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Projello.Api/Dockerfile
+    dockerContext: ./backend/Projello.Api
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Database__MigrateOnStartup
+        value: "true"
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: Jwt__Key
+        sync: false
+      - key: Cors__AllowedOrigins__0
+        value: https://projello-management-system.onrender.com
+      - key: WebRtc__IceServers__0__Urls__0
+        value: stun:stun.l.google.com:19302
+      - key: WebRtc__IceServers__1__Urls__0
+        sync: false
+      - key: WebRtc__IceServers__1__Username
+        sync: false
+      - key: WebRtc__IceServers__1__Credential
+        sync: false

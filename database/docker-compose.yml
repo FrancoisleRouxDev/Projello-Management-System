@@ -8,7 +8,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5434:5432"   # host port 5434 avoids clashing with a local Postgres on 5432/5433
+      - "127.0.0.1:5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -32,12 +32,15 @@ services:
       Jwt__Key: ${JWT_KEY}
       Database__MigrateOnStartup: "true"
       WebRtc__IceServers__0__Urls__0: ${STUN_URL:-stun:stun.l.google.com:19302}
+      WebRtc__IceServers__1__Urls__0: ${TURN_URL:-}
+      WebRtc__IceServers__1__Username: ${TURN_USERNAME:-}
+      WebRtc__IceServers__1__Credential: ${TURN_CREDENTIAL:-}
       CloudinarySettings__CloudName: ${CLOUDINARY_CLOUD_NAME:-}
       CloudinarySettings__ApiKey: ${CLOUDINARY_API_KEY:-}
       CloudinarySettings__ApiSecret: ${CLOUDINARY_API_SECRET:-}
     restart: unless-stopped
     ports:
-      - "5049:8080"   # the Electron app expects the API on http://localhost:5049
+      - "5049:8080"
 
 volumes:
   postgres_data:

@@ -124,18 +124,21 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-// CORS - Allow localhost (dev) + your Render domain + Electron
+// CORS - Allow localhost (dev), Electron, and explicitly configured frontend origins.
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowApp", policy =>
     {
+        var configuredOrigins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>() ?? [];
+
         policy.SetIsOriginAllowed(origin =>
-            origin.StartsWith("http://localhost") ||
-            origin.StartsWith("https://localhost") ||
-            origin == "https://projello-management-system.onrender.com" ||
-            origin.StartsWith("app://") ||           // Common for Electron
-            origin.StartsWith("file://")              // Sometimes used by Electron
-        )
+            configuredOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase) ||
+            origin.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase) ||
+            origin.StartsWith("https://localhost", StringComparison.OrdinalIgnoreCase) ||
+            origin.StartsWith("app://", StringComparison.OrdinalIgnoreCase) ||
+            origin.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
         .AllowAnyHeader()
         .AllowAnyMethod()
         .AllowCredentials();
@@ -176,7 +179,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddSignalR();
 builder.Services.Configure<WebRtcOptions>(
     builder.Configuration.GetSection(WebRtcOptions.SectionName));
 builder.Services.AddSignalR().AddHubOptions<ProjectCallHub>(options =>
@@ -230,6 +232,7 @@ app.Use(async (context, next) =>
 });
 
 app.UseAuthorization();
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapControllers();
 app.MapHub<ProjectCallHub>("/callhub");
 app.MapHub<TeamNotificationHub>("/teamnotificationHub");

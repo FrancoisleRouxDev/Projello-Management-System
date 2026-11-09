@@ -7,7 +7,7 @@ const getApiBaseUrl = (): string => {
 
   // Priority 2: Production build
   if (process.env.NODE_ENV === 'production') {
-    return 'https://projello-management-system.onrender.com';
+    return 'https://projello-management-system-o383.onrender.com';
   }
 
   // Default: Local development

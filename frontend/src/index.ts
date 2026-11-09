@@ -26,8 +26,8 @@ const createWindow = (): void => {
 
 const connectSrc = [
   "'self'",
-  'https://projello-management-system.onrender.com',
-  'wss://projello-management-system.onrender.com',
+  'https://projello-management-system-o383.onrender.com',
+  'wss://projello-management-system-o383.onrender.com',
   // Local/LAN API on port 5049 (demos against a laptop); the hosted API stays allowed above.
   'http://*:5049',
   'ws://*:5049',

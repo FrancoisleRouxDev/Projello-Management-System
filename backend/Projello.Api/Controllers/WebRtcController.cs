@@ -27,8 +27,19 @@ public sealed class WebRtcController : ControllerBase
     public IActionResult GetConfig()
     {
         var config = _options.Value;
+        var iceServers = config.IceServers
+            .Select(server => new IceServer
+            {
+                Urls = server.Urls
+                    .Where(url => !string.IsNullOrWhiteSpace(url))
+                    .ToArray(),
+                Username = server.Username,
+                Credential = server.Credential
+            })
+            .Where(server => server.Urls.Length > 0)
+            .ToList();
 
-        if (config.IceServers is null || config.IceServers.Count == 0)
+        if (iceServers.Count == 0)
         {
             return Problem(
                 title: "WebRTC configuration missing",
@@ -36,7 +47,7 @@ public sealed class WebRtcController : ControllerBase
                 statusCode: StatusCodes.Status500InternalServerError);
         }
 
-        return Ok(config);
+        return Ok(new WebRtcOptions { IceServers = iceServers });
     }
     // This endpoint will return the WebRTC configuration (e.g. ICE servers) to authenticated clients.
 

@@ -522,6 +522,19 @@ The API refuses to start without `Jwt:Key` (at least 32 bytes); no key is commit
 4. Generate one with `openssl rand -base64 48`. Use a different key per environment.
 5. Rotate the key by changing it and redeploying; every existing login token is invalidated.
 
+### Deploying the API to Render with Aiven and TURN
+
+The repository includes [`render.yaml`](./render.yaml), which provisions the API as a free Docker web service. In Render, create a Blueprint from this repository and provide these secret environment variables when prompted:
+
+- `ConnectionStrings__DefaultConnection`: your Aiven PostgreSQL connection string, including `SSL Mode=Require`
+- `Jwt__Key`: a random value of at least 32 bytes
+- `WebRtc__IceServers__1__Urls__0`: your TURN URL, such as `turn:host.example.com:3478`
+- `WebRtc__IceServers__1__Username` and `WebRtc__IceServers__1__Credential`: the TURN credentials
+
+The first ICE entry is Google's public STUN server. A TURN service is required for calls between some restricted networks; use a provider's free tier or trial for testing, and do not commit its credentials. The API exposes `/health` for the Render health check and `/callhub` plus `/teamnotificationHub` for authenticated SignalR connections.
+
+If you use a different frontend URL, change `Cors__AllowedOrigins__0` in Render to that exact origin (without a trailing slash). After deployment, set `API_BASE_URL` in `frontend/.env.production` to the API URL and rebuild the Electron client.
+
 ### Desktop Frontend Setup
 
 Navigate to the frontend project directory:
@@ -713,4 +726,3 @@ Developed by Team Cepression for the academic assessment requirements of Interac
 **Institution:** Open Window Institute  
 **Module:** Interactive Development 300  
 **Year:** 2026
-
