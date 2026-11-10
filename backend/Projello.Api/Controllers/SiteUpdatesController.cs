@@ -7,6 +7,7 @@ using CloudinaryDotNet.Actions;
 
 using Projello.Api.DTOs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Security.Claims;
 
 namespace Projello.Api.Controllers;
@@ -18,11 +19,21 @@ public class SiteUpdatesController : ControllerBase
 {
     private readonly AppDbContext _context;
     private readonly Cloudinary _cloudinary;
+    private readonly ILogger<SiteUpdatesController> _logger;
 
     public SiteUpdatesController(AppDbContext context, Cloudinary cloudinary)
+        : this(context, cloudinary, NullLogger<SiteUpdatesController>.Instance)
+    {
+    }
+
+    public SiteUpdatesController(
+        AppDbContext context,
+        Cloudinary cloudinary,
+        ILogger<SiteUpdatesController> logger)
     {
         _context = context;
         _cloudinary = cloudinary;
+        _logger = logger;
     }
 
     // GET: Get all updates for a project
@@ -119,6 +130,31 @@ public class SiteUpdatesController : ControllerBase
             };
 
             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+            if (uploadResult.Error is not null)
+            {
+                _logger.LogError(
+                    "Cloudinary upload failed for project {ProjectId}: {ErrorMessage}",
+                    projectId,
+                    uploadResult.Error.Message);
+
+                return Problem(
+                    title: "Image upload failed",
+                    detail: "Cloudinary rejected the image upload.",
+                    statusCode: StatusCodes.Status502BadGateway);
+            }
+
+            if (uploadResult.SecureUrl is null)
+            {
+                _logger.LogError(
+                    "Cloudinary returned no secure URL for project {ProjectId}.",
+                    projectId);
+
+                return Problem(
+                    title: "Image upload failed",
+                    detail: "Cloudinary did not return an image URL.",
+                    statusCode: StatusCodes.Status502BadGateway);
+            }
+
             imageUrl = uploadResult.SecureUrl.ToString();
         }
 
