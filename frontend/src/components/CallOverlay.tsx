@@ -12,6 +12,7 @@ interface CallOverlayProps {
   projectId: number;
   projectName: string;
   members: any[];
+  images?: Array<{ id: number; imageUrl: string; caption?: string | null }>;
 }
 
 const CallOverlay: React.FC<CallOverlayProps> = ({
@@ -20,6 +21,7 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
   projectId,
   projectName,
   members,
+  images = [],
 }) => {
   const {
     joinCall,
@@ -46,6 +48,8 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const [cameraMenuOpen, setCameraMenuOpen] = useState(false);
+  const [imagesOpen, setImagesOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   // NEW: Track how many people are already in the call
   const [activeParticipants, setActiveParticipants] = useState<string[]>([]);
@@ -68,6 +72,14 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
       localVideoRef.current.play().catch(console.error);
     }
   }, [localStream]);
+
+  useEffect(() => {
+    if (isJoined) {
+      refreshVideoDevices().catch((deviceError) => {
+        console.error("Failed to enumerate cameras:", deviceError);
+      });
+    }
+  }, [isJoined, refreshVideoDevices]);
 
   // After attaching remote stream
   useEffect(() => {
@@ -133,6 +145,18 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
   const handleSwitchCamera = async (deviceId: string) => {
     if (switchCamera) await switchCamera(deviceId);
     setCameraMenuOpen(false);
+  };
+
+  const handleCameraMenuToggle = async () => {
+    const shouldOpen = !cameraMenuOpen;
+    if (shouldOpen) {
+      try {
+        await refreshVideoDevices();
+      } catch (deviceError) {
+        console.error("Failed to refresh cameras:", deviceError);
+      }
+    }
+    setCameraMenuOpen(shouldOpen);
   };
 
   // ADDED: Handle ringing selected members then joining
@@ -271,7 +295,7 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
                   <button
                     type="button"
                     className={`control-btn camera-btn ${cameraEnabled ? "is-on" : "is-off"}`}
-                    onClick={() => setCameraMenuOpen((open) => !open)}
+                    onClick={handleCameraMenuToggle}
                     aria-haspopup="menu"
                   >
                     {cameraEnabled ? "📹 Camera" : "📷 Camera Off"}
@@ -321,10 +345,65 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
                   )}
                 </div>
 
+                <button
+                  type="button"
+                  className="control-btn"
+                  onClick={() => setImagesOpen(true)}
+                  disabled={images.length === 0}
+                >
+                  🖼 Photos ({images.length})
+                </button>
+
                 <button onClick={leaveCall} className="control-btn end-call">
                   End Call
                 </button>
               </div>
+
+              {imagesOpen && (
+                <div
+                  className="call-images-panel"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Project photos"
+                  onClick={() => setImagesOpen(false)}
+                >
+                  <div className="call-images-panel__content" onClick={(event) => event.stopPropagation()}>
+                    <div className="call-images-panel__header">
+                      <h3>Project photos</h3>
+                      <button type="button" onClick={() => setImagesOpen(false)} aria-label="Close photos">
+                        ✕
+                      </button>
+                    </div>
+                    <div className="call-images-grid">
+                      {images.map((image) => (
+                        <button
+                          type="button"
+                          className="call-image-button"
+                          key={image.id}
+                          onClick={() => setSelectedImageUrl(image.imageUrl)}
+                        >
+                          <img src={image.imageUrl} alt={image.caption || "Project photo"} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedImageUrl && (
+                <div
+                  className="call-image-lightbox"
+                  role="dialog"
+                  aria-modal="true"
+                  onClick={() => setSelectedImageUrl(null)}
+                >
+                  <img
+                    src={selectedImageUrl}
+                    alt="Enlarged project photo"
+                    onClick={(event) => event.stopPropagation()}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

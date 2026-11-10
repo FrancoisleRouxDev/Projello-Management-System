@@ -306,6 +306,70 @@
   font-size: 0.95rem;
 }
 
+.call-images-panel,
+.call-image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+  padding: 20px;
+}
+
+.call-images-panel__content {
+  width: min(760px, 92vw);
+  max-height: 82vh;
+  overflow: auto;
+  padding: 18px;
+  border-radius: 14px;
+  background: #1b1b1b;
+}
+
+.call-images-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+}
+
+.call-images-panel__header button {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.call-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.call-image-button {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+  cursor: pointer;
+}
+
+.call-image-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.call-image-lightbox img {
+  max-width: 95vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
 .camera-menu__item:hover,
 .camera-menu__item.is-active {
   background: rgba(94, 116, 95, 0.22);
