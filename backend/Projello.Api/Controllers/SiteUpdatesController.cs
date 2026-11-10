@@ -7,7 +7,6 @@ using CloudinaryDotNet.Actions;
 
 using Projello.Api.DTOs;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging.Abstractions;
 using System.Security.Claims;
 
 namespace Projello.Api.Controllers;
@@ -20,11 +19,6 @@ public class SiteUpdatesController : ControllerBase
     private readonly AppDbContext _context;
     private readonly Cloudinary _cloudinary;
     private readonly ILogger<SiteUpdatesController> _logger;
-
-    public SiteUpdatesController(AppDbContext context, Cloudinary cloudinary)
-        : this(context, cloudinary, NullLogger<SiteUpdatesController>.Instance)
-    {
-    }
 
     public SiteUpdatesController(
         AppDbContext context,

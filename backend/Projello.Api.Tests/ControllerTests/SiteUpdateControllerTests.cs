@@ -2,6 +2,7 @@ using CloudinaryDotNet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Projello.Api.Controllers;
 using Projello.Api.Data;
@@ -32,7 +33,10 @@ namespace Projello.Api.Tests.Controllers
             var account = new Account("dummy_cloud", "dummy_key", "dummy_secret");
             _dummyCloudinary = new Cloudinary(account);
 
-            _controller = new SiteUpdatesController(_context, _dummyCloudinary);
+            _controller = new SiteUpdatesController(
+                _context,
+                _dummyCloudinary,
+                NullLogger<SiteUpdatesController>.Instance);
         }
 
         private void SetCurrentUser(string userId, string roleId = null)
