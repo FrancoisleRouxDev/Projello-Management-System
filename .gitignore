@@ -46,3 +46,6 @@ backend/Projello.Api/bin/Debug/net10.0/Projello.Api.exe
 
 # Local-only notes (fake logins, machine-specific commands)
 LOCAL_DEV_NOTES.md
+
+# Local database backups
+*.sql
