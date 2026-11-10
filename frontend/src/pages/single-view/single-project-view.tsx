@@ -44,6 +44,7 @@ function RecentSitePhotosSection({
   isUploading: boolean;
 }) {
   const recentImages = updates.slice(0, 6);
+  const [selectedImage, setSelectedImage] = useState<SiteImageUpdate | null>(null);
 
   return (
     <section className="single-project-view__photo-section">
@@ -95,7 +96,16 @@ function RecentSitePhotosSection({
                 borderRadius: "10px",
                 cursor: "pointer"
               }}
-              onClick={() => console.log("Clicked image:", update)}
+              onClick={() => setSelectedImage(update)}
+              role="button"
+              tabIndex={0}
+              aria-label={`Enlarge site photo${update.caption ? `: ${update.caption}` : ""}`}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setSelectedImage(update);
+                }
+              }}
             />
           ))
         ) : (
@@ -108,6 +118,29 @@ function RecentSitePhotosSection({
           ))
         )}
       </div>
+
+      <Modal
+        open={selectedImage !== null}
+        onCancel={() => setSelectedImage(null)}
+        footer={null}
+        centered
+        width="min(90vw, 1000px)"
+        styles={{ body: { padding: 0, textAlign: "center" } }}
+      >
+        {selectedImage && (
+          <img
+            src={selectedImage.imageUrl}
+            alt={selectedImage.caption || "Enlarged site photo"}
+            style={{
+              display: "block",
+              maxWidth: "100%",
+              maxHeight: "80vh",
+              margin: "0 auto",
+              objectFit: "contain"
+            }}
+          />
+        )}
+      </Modal>
     </section>
   );
 }
