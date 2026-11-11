@@ -4,6 +4,8 @@ import DashboardPage from "./pages/dashboard/dashboard";
 import LoginPage from "./pages/login/LoginPage";
 import SignUpPage from "./pages/signup/SignupPage";
 import Verify2FAPage from "./pages/login/Verify2FAPage"; // Make sure this path matches where you saved it!
+import ForgotPasswordPage from "./pages/login/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/login/ResetPasswordPage";
 import ManagementPage from "./pages/management/management";
 import SettingsPage from "./pages/settings/settings";
 import SingleProjectViewPage from "./pages/single-view/single-project-view";
@@ -50,13 +52,23 @@ function Verify2FAWrapper() {
   return <Verify2FAPage key="verify-2fa" onLoginSuccess={() => navigate("/dashboard")} />;
 }
 
+function ForgotPasswordWrapper() {
+  const navigate = useNavigate();
+  return <ForgotPasswordPage onSwitchToLogin={() => navigate("/login")} />;
+}
+
+function ResetPasswordWrapper() {
+  const navigate = useNavigate();
+  return <ResetPasswordPage onSwitchToLogin={() => navigate("/login")} />;
+}
+
 function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   useTeamNotifications(); // Keep this here to ensure notifications work across the app
   useIncomingCallNotifications();
   
   // Added "/verify-2fa" to the array so the sidebar is hidden on this page too
-  const hideNav = ["/", "/login", "/signup", "/verify-2fa"].includes(location.pathname);
+  const hideNav = ["/", "/login", "/signup", "/verify-2fa", "/forgot-password", "/reset-password"].includes(location.pathname);
   
   return (
     <div style={{ display: "flex" }}>
@@ -86,6 +98,8 @@ export default function App() {
           
           {/* NEW 2FA ROUTE */}
           <Route path="/verify-2fa" element={<Verify2FAWrapper />} />
+          <Route path="/forgot-password" element={<ForgotPasswordWrapper />} />
+          <Route path="/reset-password" element={<ResetPasswordWrapper />} />
           
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/management" element={<ManagementPage />} />

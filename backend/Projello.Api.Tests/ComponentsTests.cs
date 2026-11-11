@@ -3,12 +3,16 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 using OtpNet;
 using Projello.Api.Controllers;
 using Projello.Api.Data;
 using Projello.Api.DTOs;
 using Projello.Api.Models;
+using Projello.Api.Configuration;
+using Projello.Api.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -187,7 +191,13 @@ namespace Projello.Tests
             mockConfig.Setup(c => c["Jwt:Audience"]).Returns("Projello-Users");
 
             var userManager = GetMockUserManager(context);
-            var authController = new AuthController(userManager, mockConfig.Object, context); 
+            var authController = new AuthController(
+                userManager,
+                mockConfig.Object,
+                context,
+                Mock.Of<IEmailSender>(),
+                Options.Create(new EmailSettings()),
+                NullLogger<AuthController>.Instance);
             authController.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext { User = CreateMockUserPrincipal(targetUserId, "1", targetEmail) }

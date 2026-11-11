@@ -6,6 +6,36 @@ declare const process: NodeJS.Process;
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
+let mainWindow: BrowserWindow | null = null;
+let pendingDeepLink: string | null = process.argv.find((argument) => argument.startsWith('projello://')) ?? null;
+
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+}
+
+const applyDeepLink = (deepLink: string): void => {
+  if (!mainWindow) {
+    pendingDeepLink = deepLink;
+    return;
+  }
+
+  try {
+    const url = new URL(deepLink);
+    if (url.protocol !== 'projello:') return;
+
+    const query = url.searchParams.toString();
+    const resetHash = `#/reset-password${query ? `?${query}` : ''}`;
+    mainWindow.show();
+    mainWindow.focus();
+    void mainWindow.webContents.executeJavaScript(
+      `window.location.hash = ${JSON.stringify(resetHash)};`,
+      true
+    );
+  } catch {
+    // Ignore malformed external links rather than navigating to an unsafe location.
+  }
+};
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -13,7 +43,7 @@ if (require('electron-squirrel-startup')) {
 
 const createWindow = (): void => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     height: 800,
     width: 1200,
     webPreferences: {
@@ -55,6 +85,13 @@ const connectSrc = [
 
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+  mainWindow.webContents.once('did-finish-load', () => {
+    if (pendingDeepLink) {
+      const deepLink = pendingDeepLink;
+      pendingDeepLink = null;
+      applyDeepLink(deepLink);
+    }
+  });
 
   // Only open the DevTools when running from source.
   if (isDev) {
@@ -65,7 +102,20 @@ const connectSrc = [
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('second-instance', (_event, commandLine) => {
+  const deepLink = commandLine.find((argument) => argument.startsWith('projello://'));
+  if (deepLink) applyDeepLink(deepLink);
+});
+
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  applyDeepLink(url);
+});
+
+app.on('ready', () => {
+  app.setAsDefaultProtocolClient('projello');
+  createWindow();
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits

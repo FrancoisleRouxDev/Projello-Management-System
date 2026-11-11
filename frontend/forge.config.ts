@@ -14,6 +14,12 @@ import { rendererConfig } from './webpack.renderer.config';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    protocols: [
+      {
+        name: "Projello",
+        schemes: ["projello"],
+      },
+    ],
   },
   rebuildConfig: {},
   makers: [

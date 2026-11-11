@@ -113,6 +113,12 @@ export default function LoginPage({ onSwitchToSignUp, onSwitchToRegisterCompany,
               required
               autoComplete="current-password"
             />
+
+            <p className="login-signup-text">
+            <span className="login-link" onClick={() => navigate("/forgot-password")}>
+              Forgot your password?
+            </span>
+            </p>
             
             {/* Conditionally render the error message if the error state is not empty */}
             {error && <p className="login-error-text" style={{ color: 'red' }}>{error}</p>}

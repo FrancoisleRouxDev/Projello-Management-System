@@ -6,6 +6,8 @@ using Microsoft.OpenApi.Models;
 using Projello.Api.Data;
 using Projello.Api.Models;
 using Projello.Api.Hubs;
+using Projello.Api.Configuration;
+using Projello.Api.Services;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -41,6 +43,10 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("Email"));
+builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
+
 // Identity - using AddIdentityCore to prevent cookie auth overriding JWT
 builder.Services.AddIdentityCore<User>(options => {
     options.Password.RequireDigit = true;
@@ -52,6 +58,8 @@ builder.Services.AddIdentityCore<User>(options => {
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+    options.TokenLifespan = TimeSpan.FromHours(1));
 
 // JWT
 // The signing key is read lazily (and validated right after Build) so it can come from

@@ -17,6 +17,20 @@ services:
         sync: false
       - key: Cors__AllowedOrigins__0
         value: https://projello-management-system.onrender.com
+      - key: Email__SmtpHost
+        value: sandbox.smtp.mailtrap.io
+      - key: Email__SmtpPort
+        value: "2525"
+      - key: Email__SmtpUsername
+        sync: false
+      - key: Email__SmtpPassword
+        sync: false
+      - key: Email__FromEmail
+        sync: false
+      - key: Email__FromName
+        value: Projello
+      - key: Email__FrontendBaseUrl
+        value: projello://reset-password
       - key: WebRtc__IceServers__0__Urls__0
         value: stun:stun.l.google.com:19302
       - key: WebRtc__IceServers__1__Urls__0

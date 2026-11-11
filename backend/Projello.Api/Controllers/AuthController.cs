@@ -12,6 +12,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using Projello.Api.Enums;
 using Microsoft.EntityFrameworkCore;
+using Projello.Api.Services;
+using Projello.Api.Configuration;
+using Microsoft.Extensions.Options;
+using System.Net.Mail;
 
 namespace Projello.Api.Controllers
 {
@@ -22,12 +26,81 @@ namespace Projello.Api.Controllers
         private readonly UserManager<User> _userManager;
         private readonly IConfiguration _config;
         private readonly AppDbContext _context;       
+        private readonly IEmailSender _emailSender;
+        private readonly EmailSettings _emailSettings;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(UserManager<User> userManager, IConfiguration config, AppDbContext context)
+        public AuthController(
+            UserManager<User> userManager,
+            IConfiguration config,
+            AppDbContext context,
+            IEmailSender emailSender,
+            IOptions<EmailSettings> emailOptions,
+            ILogger<AuthController> logger)
         {
             _userManager = userManager;
             _config = config;
-            _context = context;                     
+            _context = context;
+            _emailSender = emailSender;
+            _emailSettings = emailOptions.Value;
+            _logger = logger;
+        }
+
+        [EnableRateLimiting("auth")]
+        [HttpPost("request-password-reset")]
+        public async Task<IActionResult> RequestPasswordReset(
+            [FromBody] PasswordResetRequest model,
+            CancellationToken cancellationToken)
+        {
+            var genericResponse = new
+            {
+                Message = "If an account exists for that email, a password reset link has been sent."
+            };
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return Ok(genericResponse);
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var resetLink = _emailSettings.FrontendBaseUrl.StartsWith("projello://", StringComparison.OrdinalIgnoreCase)
+                ? $"{_emailSettings.FrontendBaseUrl}?email={Uri.EscapeDataString(user.Email!)}&token={Uri.EscapeDataString(token)}"
+                : $"{_emailSettings.FrontendBaseUrl.TrimEnd('/')}/#/reset-password" +
+                  $"?email={Uri.EscapeDataString(user.Email!)}&token={Uri.EscapeDataString(token)}";
+
+            try
+            {
+                await _emailSender.SendPasswordResetAsync(
+                    user.Email!,
+                    user.FullName,
+                    resetLink,
+                    cancellationToken);
+            }
+            catch (Exception exception) when (exception is InvalidOperationException or SmtpException)
+            {
+                _logger.LogError(exception, "Password reset email could not be sent.");
+                return Problem(
+                    statusCode: StatusCodes.Status503ServiceUnavailable,
+                    title: "Password reset is temporarily unavailable.",
+                    detail: "Please try again later.");
+            }
+
+            return Ok(genericResponse);
+        }
+
+        [EnableRateLimiting("auth")]
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(
+            [FromBody] PasswordResetConfirmRequest model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+                return BadRequest(new { Message = "This password reset link is invalid or expired." });
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+            if (!result.Succeeded)
+                return BadRequest(new { Message = "This password reset link is invalid or expired." });
+
+            return Ok(new { Message = "Password reset successfully. You can now log in." });
         }
 
         // --- CREATE: REGISTER ---
