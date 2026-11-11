@@ -20,6 +20,10 @@
   animation: fadeIn 0.25s ease-out forwards;
 }
 
+.call-overlay-wrapper.images-open .overlay-backdrop {
+  justify-content: flex-start;
+}
+
 .overlay-container {
   background: #1a1a1a;
   width: 92%;
@@ -31,6 +35,15 @@
   flex-direction: column;
   max-height: 90vh;
   animation: scaleIn 0.3s ease-out forwards;
+}
+
+.call-overlay-wrapper.images-open .overlay-container {
+  margin-left: 24px;
+  width: min(460px, calc(100% - 48px));
+}
+
+.call-overlay-wrapper.images-open .video-grid {
+  grid-template-columns: 1fr;
 }
 
 /* Header */
@@ -321,6 +334,95 @@
   padding: 10px 12px;
   color: #9b9b9b;
   font-size: 0.92rem;
+}
+
+.call-images-panel {
+  position: fixed;
+  top: 50%;
+  right: 24px;
+  width: min(520px, calc(100% - 520px));
+  max-height: 82vh;
+  overflow: auto;
+  transform: translateY(-50%);
+  padding: 18px;
+  border-radius: 14px;
+  background: #1b1b1b;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  z-index: 3;
+}
+
+.call-images-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+}
+
+.call-images-panel__header button {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.call-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.call-image-button {
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+  cursor: pointer;
+}
+
+.call-image-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.call-image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.call-image-lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+@media (max-width: 900px) {
+  .call-overlay-wrapper.images-open .overlay-backdrop {
+    justify-content: center;
+  }
+
+  .call-overlay-wrapper.images-open .overlay-container {
+    margin-left: 0;
+    width: 92%;
+  }
+
+  .call-images-panel {
+    top: auto;
+    right: 4%;
+    bottom: 20px;
+    width: 92%;
+    max-height: 45vh;
+    transform: none;
+  }
 }
 
 /* Animations */

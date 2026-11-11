@@ -956,6 +956,7 @@ export default function SingleProjectViewPage() {
           projectId={project.projectID}
           projectName={project.name}
           members={teamMembers}
+          images={siteUpdates.filter((update) => Boolean(update.imageUrl))}
         />
       )}
 

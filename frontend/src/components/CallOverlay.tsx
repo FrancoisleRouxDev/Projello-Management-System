@@ -12,6 +12,7 @@ interface CallOverlayProps {
   projectId: number;
   projectName: string;
   members: any[];
+  images?: Array<{ id: number; imageUrl: string; caption?: string | null }>;
 }
 
 const CallOverlay: React.FC<CallOverlayProps> = ({
@@ -20,6 +21,7 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
   projectId,
   projectName,
   members,
+  images = [],
 }) => {
   const {
     joinCall,
@@ -46,6 +48,8 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const [cameraMenuOpen, setCameraMenuOpen] = useState(false);
+  const [imagesOpen, setImagesOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   // NEW: Track how many people are already in the call
   const [activeParticipants, setActiveParticipants] = useState<string[]>([]);
@@ -154,8 +158,8 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="call-overlay-wrapper">
-      <div className="overlay-backdrop" onClick={onClose}>
+    <div className={`call-overlay-wrapper ${imagesOpen ? "images-open" : ""}`}>
+      <div className="overlay-backdrop">
         <div className="overlay-container" onClick={(e) => e.stopPropagation()}>
           {/* Header */}
           <div className="overlay-header">
@@ -321,10 +325,57 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
                   )}
                 </div>
 
+                <button
+                  type="button"
+                  className="control-btn"
+                  onClick={() => setImagesOpen(true)}
+                  disabled={images.length === 0}
+                >
+                  Photos ({images.length})
+                </button>
+
                 <button onClick={leaveCall} className="control-btn end-call">
                   End Call
                 </button>
               </div>
+
+              {imagesOpen && (
+                <div className="call-images-panel" role="dialog" aria-modal="true" aria-label="Project photos">
+                  <div className="call-images-panel__header">
+                    <h3>Project photos</h3>
+                    <button type="button" onClick={() => setImagesOpen(false)} aria-label="Close photos">
+                      ✕
+                    </button>
+                  </div>
+                  <div className="call-images-grid">
+                    {images.map((image) => (
+                      <button
+                        type="button"
+                        className="call-image-button"
+                        key={image.id}
+                        onClick={() => setSelectedImageUrl(image.imageUrl)}
+                      >
+                        <img src={image.imageUrl} alt={image.caption || "Project photo"} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedImageUrl && (
+                <div
+                  className="call-image-lightbox"
+                  role="dialog"
+                  aria-modal="true"
+                  onClick={() => setSelectedImageUrl(null)}
+                >
+                  <img
+                    src={selectedImageUrl}
+                    alt="Enlarged project photo"
+                    onClick={(event) => event.stopPropagation()}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
