@@ -6,6 +6,11 @@ import outgoingRingtoneSrc from "../assets/notifcations/mixkit-waiting-ringtone-
 const outgoingRingtone = new Audio(outgoingRingtoneSrc);
 outgoingRingtone.loop = true;
 
+const stopOutgoingRingtone = () => {
+  outgoingRingtone.pause();
+  outgoingRingtone.currentTime = 0;
+};
+
 interface CallOverlayProps {
   isOpen: boolean;
   onClose: () => void;
@@ -49,7 +54,7 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const [cameraMenuOpen, setCameraMenuOpen] = useState(false);
   const [imagesOpen, setImagesOpen] = useState(false);
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   // NEW: Track how many people are already in the call
   const [activeParticipants, setActiveParticipants] = useState<string[]>([]);
@@ -99,8 +104,7 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
 
   useEffect(() => {
     if (isJoined) {
-      outgoingRingtone.pause();
-      outgoingRingtone.currentTime = 0;
+      stopOutgoingRingtone();
     }
   }, [isJoined]);
 
@@ -108,10 +112,20 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
   // Stop outgoing ringtone when call is connected
   useEffect(() => {
     if (!isOpen && !isJoined) {
-      outgoingRingtone.pause();
-      outgoingRingtone.currentTime = 0;
+      stopOutgoingRingtone();
     }
   }, [isOpen, isJoined]);
+
+  useEffect(() => {
+    if (!isJoined) {
+      setImagesOpen(false);
+      setSelectedImageIndex(null);
+    }
+  }, [isJoined]);
+
+  useEffect(() => {
+    return () => stopOutgoingRingtone();
+  }, []);
 
 
   useEffect(() => {
@@ -139,6 +153,31 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
     setCameraMenuOpen(false);
   };
 
+  const closeImagePreview = () => setSelectedImageIndex(null);
+
+  const showPreviousImage = () => {
+    if (images.length < 2 || selectedImageIndex === null) return;
+    setSelectedImageIndex((selectedImageIndex - 1 + images.length) % images.length);
+  };
+
+  const showNextImage = () => {
+    if (images.length < 2 || selectedImageIndex === null) return;
+    setSelectedImageIndex((selectedImageIndex + 1) % images.length);
+  };
+
+  useEffect(() => {
+    if (selectedImageIndex === null) return;
+
+    const handleImageNavigation = (event: KeyboardEvent) => {
+      if (event.key === "ArrowLeft") showPreviousImage();
+      if (event.key === "ArrowRight") showNextImage();
+      if (event.key === "Escape") closeImagePreview();
+    };
+
+    window.addEventListener("keydown", handleImageNavigation);
+    return () => window.removeEventListener("keydown", handleImageNavigation);
+  }, [selectedImageIndex, images.length]);
+
   // ADDED: Handle ringing selected members then joining
   const handleStartOrRing = async () => {
     outgoingRingtone.currentTime = 0;
@@ -149,8 +188,7 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
       }
       await joinCall();                     // Then join the call room
     } catch (err: any) {
-      outgoingRingtone.pause();
-      outgoingRingtone.currentTime = 0;
+      stopOutgoingRingtone();
       console.error("Failed to ring or start call:", err);
     }
   };
@@ -237,7 +275,7 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
             </div>
           ) : (
             /* ==================== ACTIVE CALL SCREEN ==================== */
-            <div className="call-screen">
+            <div className={`call-screen ${imagesOpen ? "images-visible" : ""}`}>
               <div className="video-grid">
                 {/* Local Video */}
                 <div className="video-tile self">
@@ -339,47 +377,64 @@ const CallOverlay: React.FC<CallOverlayProps> = ({
                 </button>
               </div>
 
-              {imagesOpen && (
-                <div className="call-images-panel" role="dialog" aria-modal="true" aria-label="Project photos">
-                  <div className="call-images-panel__header">
-                    <h3>Project photos</h3>
-                    <button type="button" onClick={() => setImagesOpen(false)} aria-label="Close photos">
-                      ✕
-                    </button>
-                  </div>
-                  <div className="call-images-grid">
-                    {images.map((image) => (
-                      <button
-                        type="button"
-                        className="call-image-button"
-                        key={image.id}
-                        onClick={() => setSelectedImageUrl(image.imageUrl)}
-                      >
-                        <img src={image.imageUrl} alt={image.caption || "Project photo"} />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {selectedImageUrl && (
-                <div
-                  className="call-image-lightbox"
-                  role="dialog"
-                  aria-modal="true"
-                  onClick={() => setSelectedImageUrl(null)}
-                >
-                  <img
-                    src={selectedImageUrl}
-                    alt="Enlarged project photo"
-                    onClick={(event) => event.stopPropagation()}
-                  />
-                </div>
-              )}
             </div>
           )}
         </div>
       </div>
+      {isJoined && imagesOpen && (
+        <div className="call-images-panel" role="dialog" aria-modal="true" aria-label="Project photos">
+          <div className="call-images-panel__header">
+            <h3>Project photos</h3>
+            <button
+              type="button"
+              onClick={() => {
+                setImagesOpen(false);
+                setSelectedImageIndex(null);
+              }}
+              aria-label="Close photos"
+            >
+              ✕
+            </button>
+          </div>
+          {selectedImageIndex !== null && images[selectedImageIndex] ? (
+            <div className="call-image-preview">
+              <button
+                type="button"
+                className="call-image-nav call-image-nav--previous"
+                onClick={showPreviousImage}
+                aria-label="Previous image"
+              >
+                ‹
+              </button>
+              <img
+                src={images[selectedImageIndex].imageUrl}
+                alt={images[selectedImageIndex].caption || "Enlarged project photo"}
+              />
+              <button
+                type="button"
+                className="call-image-nav call-image-nav--next"
+                onClick={showNextImage}
+                aria-label="Next image"
+              >
+                ›
+              </button>
+            </div>
+          ) : (
+            <div className="call-images-grid">
+              {images.map((image, index) => (
+                <button
+                  type="button"
+                  className="call-image-button"
+                  key={image.id}
+                  onClick={() => setSelectedImageIndex(index)}
+                >
+                  <img src={image.imageUrl} alt={image.caption || "Project photo"} />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

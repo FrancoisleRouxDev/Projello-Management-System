@@ -21,7 +21,10 @@
 }
 
 .call-overlay-wrapper.images-open .overlay-backdrop {
-  justify-content: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
 .overlay-container {
@@ -38,12 +41,9 @@
 }
 
 .call-overlay-wrapper.images-open .overlay-container {
-  margin-left: 24px;
-  width: min(460px, calc(100% - 48px));
-}
-
-.call-overlay-wrapper.images-open .video-grid {
-  grid-template-columns: 1fr;
+  margin: 0;
+  width: calc(64% - 36px);
+  max-width: none;
 }
 
 /* Header */
@@ -340,7 +340,7 @@
   position: fixed;
   top: 50%;
   right: 24px;
-  width: min(520px, calc(100% - 520px));
+  width: calc(36% - 36px);
   max-height: 82vh;
   overflow: auto;
   transform: translateY(-50%);
@@ -388,39 +388,67 @@
   object-fit: cover;
 }
 
-.call-image-lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 4;
+.call-image-preview {
+  position: relative;
+  height: min(52vh, 420px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.82);
+  background: #0f0f0f;
+  border-radius: 8px;
 }
 
-.call-image-lightbox img {
-  max-width: 90vw;
-  max-height: 90vh;
+.call-image-preview img {
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
 }
 
-@media (max-width: 900px) {
+.call-image-nav,
+.call-image-lightbox__close {
+  position: absolute;
+  border: 0;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+.call-image-nav {
+  top: 50%;
+  width: 48px;
+  height: 64px;
+  transform: translateY(-50%);
+  border-radius: 8px;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.call-image-nav--previous {
+  left: 24px;
+}
+
+.call-image-nav--next {
+  right: 24px;
+}
+
+@media (max-width: 700px) {
   .call-overlay-wrapper.images-open .overlay-backdrop {
     justify-content: center;
   }
 
   .call-overlay-wrapper.images-open .overlay-container {
     margin-left: 0;
+    margin-right: 0;
     width: 92%;
   }
 
   .call-images-panel {
+    position: fixed;
     top: auto;
     right: 4%;
     bottom: 20px;
     width: 92%;
-    max-height: 45vh;
+    max-height: 180px;
     transform: none;
   }
 }
