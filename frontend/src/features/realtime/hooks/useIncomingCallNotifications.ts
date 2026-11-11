@@ -9,6 +9,12 @@ import ringtoneSrc from "../../../assets/notifcations/mixkit-waiting-ringtone-13
 
 const ringtone = new Audio(ringtoneSrc);
 ringtone.loop = true;
+const INCOMING_CALL_TIMEOUT_MS = 30_000;
+
+const stopRingtone = () => {
+  ringtone.pause();
+  ringtone.currentTime = 0;
+};
 
 type IncomingCallPayload = {
   projectId: string;
@@ -33,6 +39,19 @@ export function useIncomingCallNotifications() {
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
+    let unansweredTimeout: ReturnType<typeof setTimeout> | undefined;
+    let activeModal: { destroy: () => void } | undefined;
+
+    const clearIncomingCall = () => {
+      if (unansweredTimeout) {
+        clearTimeout(unansweredTimeout);
+        unansweredTimeout = undefined;
+      }
+      stopRingtone();
+      activeModal?.destroy();
+      activeModal = undefined;
+      setIncomingCall(null);
+    };
 
     const start = async () => {
       const token = localStorage.getItem("token");
@@ -42,23 +61,22 @@ export function useIncomingCallNotifications() {
         await callNotificationClient.start();
 
         unsubscribe = callNotificationClient.on("IncomingProjectCall", (projectId, callerUserId, callerName) => {
+          clearIncomingCall();
           setIncomingCall({ projectId, callerUserId, callerName });
 
           // Play ringtone
-          ringtone.currentTime = 0;
+          stopRingtone();
           ringtone.play().catch(console.error);
 
-          Modal.confirm({
+          activeModal = Modal.confirm({
             title: "Incoming Call",
             content: `${callerName} is calling you`,
             okText: "Accept",
             cancelText: "Decline",
             onOk: () => {
-              ringtone.pause();
-              ringtone.currentTime = 0;
+              clearIncomingCall();
 
               const callData = { projectId, callerUserId, callerName };
-              setIncomingCall(null);
 
               navigate(`/single-view/${projectId}`);
 
@@ -69,11 +87,11 @@ export function useIncomingCallNotifications() {
               }, 400);
             },
             onCancel: () => {
-              ringtone.pause();
-              ringtone.currentTime = 0;
-              setIncomingCall(null);
+              clearIncomingCall();
             },
           });
+
+          unansweredTimeout = setTimeout(clearIncomingCall, INCOMING_CALL_TIMEOUT_MS);
         });
       } catch (err) {
         console.error("Incoming call listener failed:", err);
@@ -84,6 +102,7 @@ export function useIncomingCallNotifications() {
 
     return () => {
       unsubscribe?.();
+      clearIncomingCall();
     };
   }, [navigate]);
 
